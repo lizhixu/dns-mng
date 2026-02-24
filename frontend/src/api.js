@@ -1,14 +1,5 @@
-// API Base URL - 根据环境自动选择
-const getApiBase = () => {
-    // 生产环境：使用相对路径（通过 Nginx 代理）
-    if (import.meta.env.PROD) {
-        return '/api';
-    }
-    // 开发环境：直接连接后端
-    return import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-};
-
-const API_BASE = getApiBase();
+// API Base URL - 直接访问后端
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const getHeaders = () => {
     const token = localStorage.getItem('token');
