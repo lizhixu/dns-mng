@@ -71,8 +71,12 @@ func (s *UserService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 		req.Username,
 	).Scan(&user.ID, &user.Username, &passwordHash, &user.CreatedAt)
 
+	// 如果用户不存在，自动注册
 	if err == sql.ErrNoRows {
-		return nil, errors.New("invalid credentials")
+		return s.Register(&models.RegisterRequest{
+			Username: req.Username,
+			Password: req.Password,
+		})
 	}
 	if err != nil {
 		return nil, err
