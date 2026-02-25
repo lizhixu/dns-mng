@@ -37,8 +37,38 @@ const Login = () => {
             alignItems: 'center', 
             minHeight: '100vh',
             background: 'var(--bg-primary)',
-            padding: '24px'
+            padding: '24px',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
+            {/* 背景装饰 */}
+            <div style={{
+                position: 'absolute',
+                top: '-50%',
+                left: '-50%',
+                width: '200%',
+                height: '200%',
+                background: 'radial-gradient(circle at 30% 50%, rgba(0, 112, 243, 0.08) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%)',
+                animation: 'rotate 30s linear infinite',
+                pointerEvents: 'none'
+            }} />
+            
+            {/* 网格背景 */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundImage: `
+                    linear-gradient(var(--border-color) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--border-color) 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px',
+                opacity: 0.3,
+                pointerEvents: 'none'
+            }} />
+
             {/* 右上角工具栏 */}
             <div style={{ 
                 position: 'fixed', 
@@ -46,7 +76,8 @@ const Login = () => {
                 right: '24px',
                 display: 'flex',
                 gap: '12px',
-                alignItems: 'center'
+                alignItems: 'center',
+                zIndex: 10
             }}>
                 {/* Theme Switcher */}
                 <div style={{ 
@@ -56,7 +87,8 @@ const Login = () => {
                     background: 'var(--bg-secondary)', 
                     border: '1px solid var(--border-color)', 
                     borderRadius: 'var(--radius-sm)', 
-                    padding: '2px' 
+                    padding: '2px',
+                    backdropFilter: 'blur(10px)'
                 }}>
                     <button
                         onClick={() => changeTheme('light')}
@@ -123,7 +155,8 @@ const Login = () => {
                         width: 'auto',
                         height: '32px',
                         padding: '0 8px',
-                        fontSize: '13px'
+                        fontSize: '13px',
+                        backdropFilter: 'blur(10px)'
                     }}
                 >
                     {Object.entries(languages).map(([code, lang]) => (
@@ -135,9 +168,29 @@ const Login = () => {
             <div className="glass-panel" style={{ 
                 padding: '40px', 
                 width: '100%', 
-                maxWidth: '400px'
+                maxWidth: '400px',
+                position: 'relative',
+                zIndex: 1,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                    <div style={{
+                        width: '64px',
+                        height: '64px',
+                        margin: '0 auto 16px',
+                        background: 'linear-gradient(135deg, var(--accent-primary) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                        borderRadius: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        fontWeight: '700',
+                        color: '#fff',
+                        boxShadow: '0 4px 16px rgba(0, 112, 243, 0.3)'
+                    }}>
+                        DNS
+                    </div>
                     <h1 style={{ 
                         fontSize: '24px', 
                         fontWeight: '600', 

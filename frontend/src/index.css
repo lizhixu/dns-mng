@@ -389,3 +389,13 @@ aside nav a:hover {
 .settings-dropdown {
     animation: slideIn 0.15s ease-out;
 }
+/* Login pa
+ge background animation */
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
