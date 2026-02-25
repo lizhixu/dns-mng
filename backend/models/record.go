@@ -11,6 +11,7 @@ type Record struct {
 	State      bool   `json:"state"`
 	Content    string `json:"content"`
 	Priority   int    `json:"priority,omitempty"`
+	UpdatedOn  string `json:"updated_on,omitempty"`
 	// Raw stores provider-specific extra fields
 	Raw map[string]interface{} `json:"raw,omitempty"`
 }

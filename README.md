@@ -129,6 +129,7 @@ SERVER_PORT=8080
 ## 支持的 DNS 提供商
 
 - ✅ Dynu.com
+- ✅ 腾讯云 DNSPod
 - 🚧 更多提供商开发中...
 
 ## 添加新的 DNS 提供商

@@ -9,6 +9,7 @@ import (
 	"dns-mng/middleware"
 	"dns-mng/provider"
 	"dns-mng/provider/dynu"
+	"dns-mng/provider/tencentcloud"
 	"dns-mng/service"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ func main() {
 
 	// Register providers
 	provider.Register(dynu.New())
+	provider.Register(tencentcloud.New())
 
 	// Init services
 	userService := service.NewUserService(cfg)

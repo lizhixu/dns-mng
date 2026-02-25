@@ -7,6 +7,8 @@ toolchain go1.24.13
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.3.48
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/dnspod v1.3.24
 	golang.org/x/crypto v0.48.0
 	modernc.org/sqlite v1.45.0
 )

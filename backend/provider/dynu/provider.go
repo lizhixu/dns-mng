@@ -95,6 +95,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			TTL:        domain.TTL,
 			State:      domain.State == "Active",
 			Content:    domain.IPv4Address,
+			UpdatedOn:  domain.UpdatedOn,
 		})
 	}
 
@@ -109,6 +110,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			TTL:        domain.TTL,
 			State:      domain.State == "Active",
 			Content:    domain.IPv6Address,
+			UpdatedOn:  domain.UpdatedOn,
 		})
 	}
 
@@ -148,6 +150,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			State:      r.State,
 			Content:    content,
 			Priority:   r.Priority,
+			UpdatedOn:  r.UpdatedOn,
 		})
 	}
 	return records, nil
@@ -257,6 +260,7 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 		TTL:        domain.TTL,
 		State:      domain.State == "Active",
 		Content:    content,
+		UpdatedOn:  domain.UpdatedOn,
 	}, nil
 }
 
@@ -356,5 +360,6 @@ func (p *Provider) dynuRecordToModel(r *DynuRecord) *models.Record {
 		State:      r.State,
 		Content:    content,
 		Priority:   r.Priority,
+		UpdatedOn:  r.UpdatedOn,
 	}
 }

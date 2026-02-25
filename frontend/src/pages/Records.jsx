@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
-import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useLanguage } from '../LanguageContext';
 
@@ -15,6 +15,7 @@ const Records = () => {
     const [records, setRecords] = useState([]);
     const [filteredRecords, setFilteredRecords] = useState([]);
     const [domain, setDomain] = useState(null);
+    const [account, setAccount] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -44,15 +45,17 @@ const Records = () => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [recordsData, domainData] = await Promise.all([
+                const [recordsData, domainData, accountsData] = await Promise.all([
                     api.getRecords(accountId, domainId),
-                    api.getDomain(accountId, domainId)
+                    api.getDomain(accountId, domainId),
+                    api.getAccounts()
                 ]);
                 
                 if (isMounted) {
                     setRecords(recordsData || []);
                     setFilteredRecords(recordsData || []);
                     setDomain(domainData);
+                    setAccount(accountsData?.find(a => a.id === parseInt(accountId)));
                     setError('');
                 }
             } catch (err) {
@@ -298,60 +301,27 @@ const Records = () => {
 
             {/* Domain Info Card */}
             {domain && (
-                <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                {t.records.domainName || 'Domain Name'}
+                <div className="glass-panel" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                                {t.records.domainName || 'Domain'}
                             </div>
                             <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                                 {domain.unicode_name || domain.name}
                             </div>
                         </div>
-                        {domain.ipv4_address && (
-                            <div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    IPv4
+                        {account && (
+                            <div style={{ minWidth: '150px' }}>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                                    账户
                                 </div>
-                                <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: 'var(--text-primary)' }}>
-                                    {domain.ipv4_address}
-                                </div>
-                            </div>
-                        )}
-                        {domain.ipv6_address && (
-                            <div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    IPv6
-                                </div>
-                                <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: 'var(--text-primary)' }}>
-                                    {domain.ipv6_address}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                                    <Server size={14} style={{ color: 'var(--text-secondary)' }} />
+                                    {account.name}
                                 </div>
                             </div>
                         )}
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                TTL
-                            </div>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                                {domain.ttl} {t.common.seconds || 'seconds'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                {t.records.state || 'Status'}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{
-                                    width: '8px',
-                                    height: '8px',
-                                    borderRadius: '50%',
-                                    backgroundColor: domain.state === 'Active' ? 'var(--success)' : 'var(--text-tertiary)'
-                                }}></div>
-                                <span style={{ fontSize: '0.875rem', color: domain.state === 'Active' ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                                    {domain.state}
-                                </span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             )}
@@ -394,8 +364,7 @@ const Records = () => {
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.ttl}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.state}</th>
+                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>更新时间</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
                             </tr>
                         </thead>
@@ -434,19 +403,14 @@ const Records = () => {
                                             </span>
                                         )}
                                     </td>
-                                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{record.ttl}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <div style={{
-                                            display: 'inline-flex',
-                                            width: '8px',
-                                            height: '8px',
-                                            borderRadius: '50%',
-                                            backgroundColor: record.state ? 'var(--success)' : 'var(--text-tertiary)',
-                                            marginRight: '0.5rem'
-                                        }}></div>
-                                        <span style={{ fontSize: '0.875rem', color: record.state ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                                            {record.state ? t.common.active : t.common.inactive}
-                                        </span>
+                                    <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                                        {record.updated_on ? new Date(record.updated_on).toLocaleString('zh-CN', { 
+                                            year: 'numeric', 
+                                            month: '2-digit', 
+                                            day: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) : '-'}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -462,7 +426,7 @@ const Records = () => {
                             ))}
                             {filteredRecords.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                    <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-tertiary)' }}>
                                         {t.records.noRecords}
                                     </td>
                                 </tr>

@@ -310,7 +310,11 @@ const Accounts = () => {
                             <input
                                 type={showModalApiKey ? "text" : "password"}
                                 className="form-input"
-                                placeholder={t.accounts.apiKeyPlaceholder}
+                                placeholder={
+                                    formData.provider_type === 'tencentcloud' 
+                                        ? 'SecretId,SecretKey' 
+                                        : t.accounts.apiKeyPlaceholder
+                                }
                                 value={formData.api_key}
                                 onChange={e => setFormData({ ...formData, api_key: e.target.value })}
                                 required={modalMode === 'create'}
@@ -339,6 +343,11 @@ const Accounts = () => {
                         {modalMode === 'edit' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px', margin: 0 }}>
                                 {t.accounts.apiKeyKeepBlank}
+                            </p>
+                        )}
+                        {formData.provider_type === 'tencentcloud' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                格式：SecretId,SecretKey（用英文逗号分隔）
                             </p>
                         )}
                     </div>

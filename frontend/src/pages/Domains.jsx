@@ -66,31 +66,41 @@ const Domains = () => {
             ) : (
                 <div style={{ display: 'grid', gap: '1rem' }}>
                     {filteredDomains.map(domain => (
-                        <div key={domain.id} className="glass-panel" style={{ padding: '1.25rem', transition: 'transform 0.2s' }}>
+                        <div key={domain.id} className="glass-panel" style={{ 
+                            padding: '1rem 1.25rem',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'none';
+                        }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                                    <div style={{ marginTop: '0.25rem', color: 'var(--accent-primary)' }}>
-                                        <Globe size={24} />
-                                    </div>
+                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1 }}>
+                                    <Globe size={20} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                     <div>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.25rem' }}>{domain.name}</h3>
-                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', fontSize: '0.875rem' }}>
-                                            <span className={`badge ${domain.state === 'Active' ? 'badge-success' : 'badge-warning'}`}>
-                                                {domain.state}
-                                            </span>
-                                            {domain.ipv4_address && (
-                                                <span style={{ color: 'var(--text-secondary)' }}>{domain.ipv4_address}</span>
-                                            )}
-                                        </div>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
+                                        {domain.updated_on && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                更新于 {new Date(domain.updated_on).toLocaleString('zh-CN', { 
+                                                    year: 'numeric', 
+                                                    month: '2-digit', 
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{t.domains.ttl}: {domain.ttl}s</span>
-                                    <Link to={`/accounts/${accountId}/domains/${domain.id}/records`} className="btn btn-secondary" style={{ fontSize: '0.875rem', padding: '0.4rem 0.8rem' }}>
-                                        {t.domains.manageRecords}
-                                        <ExternalLink size={14} />
-                                    </Link>
-                                </div>
+                                <Link to={`/accounts/${accountId}/domains/${domain.id}/records`} className="btn btn-secondary" style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}>
+                                    {t.domains.manageRecords}
+                                    <ExternalLink size={14} />
+                                </Link>
                             </div>
                         </div>
                     ))}
