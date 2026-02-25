@@ -3,6 +3,7 @@ import { api } from '../api';
 import { Link } from 'react-router-dom';
 import { Plus, Settings, Trash2, ExternalLink, Eye, EyeOff, Copy } from 'lucide-react';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
 
 const Accounts = () => {
@@ -29,6 +30,11 @@ const Accounts = () => {
     // Visibility state
     const [visibleKeys, setVisibleKeys] = useState({});
     const [showModalApiKey, setShowModalApiKey] = useState(false);
+
+    // Delete confirmation dialog state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const toggleKeyVisibility = (id) => {
         setVisibleKeys(prev => ({
@@ -98,14 +104,30 @@ const Accounts = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm(t.accounts.deleteConfirm)) return;
+        const account = accounts.find(acc => acc.id === id);
+        setDeletingAccount(account);
+        setShowDeleteConfirm(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!deletingAccount) return;
+        
+        setDeleting(true);
         try {
-            await api.deleteAccount(id);
-            setAccounts(accounts.filter(acc => acc.id !== id));
+            await api.deleteAccount(deletingAccount.id);
+            setAccounts(accounts.filter(acc => acc.id !== deletingAccount.id));
+            setShowDeleteConfirm(false);
         } catch (err) {
             alert(err.message);
+        } finally {
+            setDeleting(false);
+            setDeletingAccount(null);
         }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setDeletingAccount(null);
     };
 
     if (loading) return <div className="spinner" style={{ margin: '2rem auto' }}></div>;
@@ -366,6 +388,23 @@ const Accounts = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={cancelDelete}
+                onConfirm={confirmDelete}
+                title="确认删除账户"
+                message={
+                    deletingAccount 
+                        ? `确定要删除账户 "${deletingAccount.name}" 吗？这将同时删除该账户下的所有域名和记录，且无法撤销。`
+                        : '确定要删除此账户吗？此操作无法撤销。'
+                }
+                confirmText="删除"
+                cancelText="取消"
+                loading={deleting}
+                danger={true}
+            />
         </div>
     );
 };

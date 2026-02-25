@@ -42,6 +42,19 @@ func createTables() {
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
+		`CREATE TABLE IF NOT EXISTS operation_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			action TEXT NOT NULL,
+			resource TEXT NOT NULL,
+			resource_id TEXT NOT NULL,
+			details TEXT,
+			ip_address TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_logs_user_id ON operation_logs(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_logs_created_at ON operation_logs(created_at DESC)`,
 	}
 
 	for _, q := range queries {

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server } from 'lucide-react';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
 
 const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SPF', 'SRV'];
@@ -25,6 +26,11 @@ const Records = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('create');
     const [currentRecord, setCurrentRecord] = useState(null);
+
+    // Delete confirmation dialog state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletingRecord, setDeletingRecord] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -233,14 +239,30 @@ const Records = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm(t.records.deleteConfirm)) return;
+        const record = records.find(r => r.id === id);
+        setDeletingRecord(record);
+        setShowDeleteConfirm(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!deletingRecord) return;
+        
+        setDeleting(true);
         try {
-            await api.deleteRecord(accountId, domainId, id);
-            setRecords(records.filter(r => r.id !== id));
+            await api.deleteRecord(accountId, domainId, deletingRecord.id);
+            setRecords(records.filter(r => r.id !== deletingRecord.id));
+            setShowDeleteConfirm(false);
         } catch (err) {
             alert(err.message);
+        } finally {
+            setDeleting(false);
+            setDeletingRecord(null);
         }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setDeletingRecord(null);
     };
 
     const getContentLabel = (type) => {
@@ -536,6 +558,23 @@ const Records = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={cancelDelete}
+                onConfirm={confirmDelete}
+                title="确认删除"
+                message={
+                    deletingRecord 
+                        ? `确定要删除 DNS 记录 "${deletingRecord.node_name || '@'}" (${deletingRecord.record_type}) 吗？此操作无法撤销。`
+                        : '确定要删除此记录吗？此操作无法撤销。'
+                }
+                confirmText="删除"
+                cancelText="取消"
+                loading={deleting}
+                danger={true}
+            />
         </div>
     );
 };

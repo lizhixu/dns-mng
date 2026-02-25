@@ -3,13 +3,13 @@
 :root {
   /* Dark Mode Colors - Vercel Style */
   --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
+  --bg-secondary: #111111;
   --bg-tertiary: #1a1a1a;
   --bg-hover: #262626;
 
   --text-primary: #ededed;
-  --text-secondary: #888888;
-  --text-tertiary: #666666;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #707070;
 
   --accent-primary: #0070f3;
   --accent-hover: #0761d1;
@@ -19,8 +19,8 @@
   --success: #0070f3;
   --warning: #f5a623;
 
-  --border-color: #333333;
-  --border-hover: #444444;
+  --border-color: #2a2a2a;
+  --border-hover: #3a3a3a;
 
   /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -38,9 +38,9 @@
 /* Light Mode - Vercel Style */
 [data-theme="light"] {
   --bg-primary: #ffffff;
-  --bg-secondary: #fafafa;
-  --bg-tertiary: #f5f5f5;
-  --bg-hover: #e5e5e5;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e5e5e5;
+  --bg-hover: #d4d4d4;
 
   --text-primary: #000000;
   --text-secondary: #666666;
@@ -54,8 +54,8 @@
   --success: #0070f3;
   --warning: #f5a623;
 
-  --border-color: #eaeaea;
-  --border-hover: #d4d4d4;
+  --border-color: #e0e0e0;
+  --border-hover: #d0d0d0;
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
@@ -336,4 +336,56 @@ table th {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
+}/* Menu item hover effect */
+.nav-link {
+    display: block;
+    padding: 8px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.nav-link > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Sidebar nav styles */
+aside nav a {
+    display: block;
+    padding: 8px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+aside nav a > div {
+    display: flex;
+    alignItems: center;
+    gap: 0.5rem;
+}
+
+aside nav a:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+/* Settings dropdown animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-dropdown {
+    animation: slideIn 0.15s ease-out;
 }

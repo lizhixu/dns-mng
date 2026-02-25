@@ -12,10 +12,14 @@ import (
 
 type DNSHandler struct {
 	dnsService *service.DNSService
+	logService *service.LogService
 }
 
-func NewDNSHandler(dnsService *service.DNSService) *DNSHandler {
-	return &DNSHandler{dnsService: dnsService}
+func NewDNSHandler(dnsService *service.DNSService, logService *service.LogService) *DNSHandler {
+	return &DNSHandler{
+		dnsService: dnsService,
+		logService: logService,
+	}
 }
 
 func (h *DNSHandler) ListAllDomains(c *gin.Context) {
@@ -110,6 +114,16 @@ func (h *DNSHandler) CreateRecord(c *gin.Context) {
 		return
 	}
 
+	// Log operation
+	h.logService.CreateLog(userID, "create", "record", record.ID, map[string]interface{}{
+		"domain":      domainID,
+		"node_name":   record.NodeName,
+		"record_type": record.RecordType,
+		"content":     record.Content,
+		"ttl":         record.TTL,
+		"account":     accountID,
+	}, c.ClientIP())
+
 	c.JSON(http.StatusCreated, record)
 }
 
@@ -123,6 +137,16 @@ func (h *DNSHandler) UpdateRecord(c *gin.Context) {
 	domainID := c.Param("domainId")
 	recordID := c.Param("recordId")
 
+	// Get old record for comparison
+	oldRecords, _ := h.dnsService.ListRecords(c.Request.Context(), userID, accountID, domainID)
+	var oldRecord *models.Record
+	for _, r := range oldRecords {
+		if r.ID == recordID {
+			oldRecord = &r
+			break
+		}
+	}
+
 	var req models.UpdateRecordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -134,6 +158,30 @@ func (h *DNSHandler) UpdateRecord(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Log operation with before/after comparison
+	logDetails := map[string]interface{}{
+		"domain":      domainID,
+		"node_name":   record.NodeName,
+		"record_type": record.RecordType,
+		"account":     accountID,
+	}
+	if oldRecord != nil {
+		changes := make(map[string]interface{})
+		if oldRecord.Content != record.Content {
+			changes["content"] = map[string]string{"old": oldRecord.Content, "new": record.Content}
+		}
+		if oldRecord.TTL != record.TTL {
+			changes["ttl"] = map[string]int{"old": oldRecord.TTL, "new": record.TTL}
+		}
+		if oldRecord.State != record.State {
+			changes["state"] = map[string]bool{"old": oldRecord.State, "new": record.State}
+		}
+		if len(changes) > 0 {
+			logDetails["changes"] = changes
+		}
+	}
+	h.logService.CreateLog(userID, "update", "record", recordID, logDetails, c.ClientIP())
 
 	c.JSON(http.StatusOK, record)
 }
@@ -148,10 +196,36 @@ func (h *DNSHandler) DeleteRecord(c *gin.Context) {
 	domainID := c.Param("domainId")
 	recordID := c.Param("recordId")
 
+	// Get record details before deletion
+	records, _ := h.dnsService.ListRecords(c.Request.Context(), userID, accountID, domainID)
+	var recordDetails map[string]interface{}
+	for _, r := range records {
+		if r.ID == recordID {
+			recordDetails = map[string]interface{}{
+				"domain":      domainID,
+				"node_name":   r.NodeName,
+				"record_type": r.RecordType,
+				"content":     r.Content,
+				"ttl":         r.TTL,
+				"account":     accountID,
+			}
+			break
+		}
+	}
+
 	if err := h.dnsService.DeleteRecord(c.Request.Context(), userID, accountID, domainID, recordID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Log operation
+	if recordDetails == nil {
+		recordDetails = map[string]interface{}{
+			"domain":  domainID,
+			"account": accountID,
+		}
+	}
+	h.logService.CreateLog(userID, "delete", "record", recordID, recordDetails, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "record deleted"})
 }

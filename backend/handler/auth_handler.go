@@ -11,10 +11,14 @@ import (
 
 type AuthHandler struct {
 	userService *service.UserService
+	logService  *service.LogService
 }
 
-func NewAuthHandler(userService *service.UserService) *AuthHandler {
-	return &AuthHandler{userService: userService}
+func NewAuthHandler(userService *service.UserService, logService *service.LogService) *AuthHandler {
+	return &AuthHandler{
+		userService: userService,
+		logService:  logService,
+	}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -30,6 +34,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Log registration
+	h.logService.CreateLog(resp.User.ID, "register", "auth", req.Username, map[string]interface{}{
+		"username": req.Username,
+	}, c.ClientIP())
+
 	c.JSON(http.StatusCreated, resp)
 }
 
@@ -42,9 +51,20 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	resp, err := h.userService.Login(&req)
 	if err != nil {
+		// Log failed login attempt
+		h.logService.CreateLog(0, "login_failed", "auth", req.Username, map[string]interface{}{
+			"username": req.Username,
+			"reason":   err.Error(),
+		}, c.ClientIP())
+		
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Log successful login
+	h.logService.CreateLog(resp.User.ID, "login", "auth", req.Username, map[string]interface{}{
+		"username": req.Username,
+	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, resp)
 }
@@ -74,6 +94,12 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Log password change
+	user, _ := h.userService.GetUser(userID)
+	h.logService.CreateLog(userID, "update_password", "auth", user.Username, map[string]interface{}{
+		"username": user.Username,
+	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }

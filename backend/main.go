@@ -31,12 +31,14 @@ func main() {
 	userService := service.NewUserService(cfg)
 	accountService := service.NewAccountService()
 	dnsService := service.NewDNSService(accountService)
+	logService := service.NewLogService()
 
 	// Init handlers
-	authHandler := handler.NewAuthHandler(userService)
-	accountHandler := handler.NewAccountHandler(accountService)
-	dnsHandler := handler.NewDNSHandler(dnsService)
+	authHandler := handler.NewAuthHandler(userService, logService)
+	accountHandler := handler.NewAccountHandler(accountService, logService)
+	dnsHandler := handler.NewDNSHandler(dnsService, logService)
 	providerHandler := handler.NewProviderHandler()
+	logHandler := handler.NewLogHandler(logService)
 
 	// Setup router
 	r := gin.Default()
@@ -60,6 +62,9 @@ func main() {
 		// User profile
 		protected.GET("/user/profile", authHandler.GetProfile)
 		protected.PUT("/user/password", authHandler.UpdatePassword)
+
+		// Operation logs
+		protected.GET("/logs", logHandler.GetLogs)
 
 		// All domains
 		protected.GET("/domains", dnsHandler.ListAllDomains)

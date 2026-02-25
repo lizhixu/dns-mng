@@ -65,6 +65,14 @@ export const api = {
         return handleResponse(response);
     },
 
+    // Operation Logs
+    getLogs: async (limit = 50) => {
+        const response = await fetch(`${API_BASE}/logs?limit=${limit}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Providers
     getProviders: async () => {
         const response = await fetch(`${API_BASE}/providers`, {
