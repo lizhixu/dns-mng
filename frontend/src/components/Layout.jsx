@@ -5,6 +5,8 @@ import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { api } from '../api';
 import { Sun, Moon, Monitor, FileText, Globe, Server, User, Settings, ChevronDown, X } from 'lucide-react';
+import BackToTop from './BackToTop';
+
 
 const Layout = () => {
     const { user, logout } = useAuth();
@@ -422,6 +424,7 @@ const Layout = () => {
                     <Outlet />
                 </div>
             </main>
+            <BackToTop />
         </div>
     );
 };
