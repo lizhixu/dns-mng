@@ -55,6 +55,10 @@ func main() {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(cfg))
 	{
+		// User profile
+		protected.GET("/user/profile", authHandler.GetProfile)
+		protected.PUT("/user/password", authHandler.UpdatePassword)
+
 		// All domains
 		protected.GET("/domains", dnsHandler.ListAllDomains)
 

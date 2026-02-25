@@ -8,6 +8,7 @@ import Accounts from './pages/Accounts';
 import AllDomains from './pages/AllDomains';
 import Domains from './pages/Domains';
 import Records from './pages/Records';
+import Profile from './pages/Profile';
 
 // Placeholder components until we implement them
 const PrivateRoute = ({ children }) => {
@@ -34,6 +35,7 @@ function App() {
                 <Route path="accounts" element={<Accounts />} />
                 <Route path="accounts/:accountId/domains" element={<Domains />} />
                 <Route path="accounts/:accountId/domains/:domainId/records" element={<Records />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
             </Routes>
           </AuthProvider>

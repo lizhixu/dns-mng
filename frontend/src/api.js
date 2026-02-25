@@ -48,6 +48,23 @@ export const api = {
         return handleResponse(response);
     },
 
+    // User Profile
+    getProfile: async () => {
+        const response = await fetch(`${API_BASE}/user/profile`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    updatePassword: async (data) => {
+        const response = await fetch(`${API_BASE}/user/password`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
     // Providers
     getProviders: async () => {
         const response = await fetch(`${API_BASE}/providers`, {

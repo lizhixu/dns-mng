@@ -43,6 +43,7 @@ export const en = {
     title: 'DNS Manager',
     accounts: 'Accounts',
     domains: 'Domains',
+    profile: 'Profile',
     logout: 'Logout',
     themeLight: 'Light Mode',
     themeDark: 'Dark Mode',
@@ -127,6 +128,23 @@ export const en = {
     invalidNodeName: 'Invalid node name. Use only letters, numbers, and hyphens. Cannot start or end with a hyphen.',
     backToAllDomains: 'Back to All Domains',
     rootRecordHint: 'Leave empty or enter @ for root domain record',
+  },
+
+  // Profile
+  profile: {
+    user_profile: 'User Profile',
+    account_info: 'Account Information',
+    username: 'Username',
+    created_at: 'Created At',
+    change_password: 'Change Password',
+    old_password: 'Current Password',
+    new_password: 'New Password',
+    confirm_password: 'Confirm Password',
+    update_password: 'Update Password',
+    updating: 'Updating...',
+    password_updated: 'Password updated successfully',
+    passwords_not_match: 'Passwords do not match',
+    password_min_length: 'Password must be at least 6 characters',
   },
 };
 

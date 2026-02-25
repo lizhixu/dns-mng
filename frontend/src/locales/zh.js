@@ -43,6 +43,7 @@ export const zh = {
     title: 'DNS 管理器',
     accounts: '账户管理',
     domains: '域名列表',
+    profile: '个人设置',
     logout: '退出登录',
     themeLight: '亮色模式',
     themeDark: '暗色模式',
@@ -128,6 +129,23 @@ export const zh = {
     invalidNodeName: '主机名无效。只能使用字母、数字和连字符，不能以连字符开头或结尾。',
     backToAllDomains: '返回所有域名',
     rootRecordHint: '留空或输入 @ 表示根域名记录',
+  },
+
+  // 个人设置
+  profile: {
+    user_profile: '个人设置',
+    account_info: '账户信息',
+    username: '用户名',
+    created_at: '注册时间',
+    change_password: '修改密码',
+    old_password: '当前密码',
+    new_password: '新密码',
+    confirm_password: '确认密码',
+    update_password: '更新密码',
+    updating: '更新中...',
+    password_updated: '密码修改成功',
+    passwords_not_match: '两次输入的密码不一致',
+    password_min_length: '密码至少需要6位',
   },
 };
 

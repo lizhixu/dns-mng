@@ -104,3 +104,49 @@ func (s *UserService) generateToken(userID int64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.cfg.JWTSecret))
 }
+
+func (s *UserService) GetUser(userID int64) (*models.User, error) {
+	var user models.User
+	err := database.DB.QueryRow(
+		"SELECT id, username, created_at FROM users WHERE id = ?",
+		userID,
+	).Scan(&user.ID, &user.Username, &user.CreatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *UserService) UpdatePassword(userID int64, req *models.UpdatePasswordRequest) error {
+	// Get current password hash
+	var currentHash string
+	err := database.DB.QueryRow(
+		"SELECT password_hash FROM users WHERE id = ?",
+		userID,
+	).Scan(&currentHash)
+
+	if err != nil {
+		return err
+	}
+
+	// Verify old password
+	if err := bcrypt.CompareHashAndPassword([]byte(currentHash), []byte(req.OldPassword)); err != nil {
+		return errors.New("old password is incorrect")
+	}
+
+	// Hash new password
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// Update password
+	_, err = database.DB.Exec(
+		"UPDATE users SET password_hash = ? WHERE id = ?",
+		string(newHash), userID,
+	)
+
+	return err
+}

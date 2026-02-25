@@ -104,6 +104,35 @@ const Layout = () => {
                     >
                         {t.layout.accounts}
                     </Link>
+                    <Link 
+                        to="/profile" 
+                        style={{ 
+                            display: 'block', 
+                            padding: '8px', 
+                            marginBottom: '4px', 
+                            borderRadius: 'var(--radius-sm)',
+                            background: isActive('/profile') ? 'var(--bg-tertiary)' : 'transparent',
+                            color: isActive('/profile') ? 'var(--text-primary)' : 'var(--text-secondary)',
+                            fontSize: '14px',
+                            fontWeight: isActive('/profile') ? '500' : '400',
+                            transition: 'var(--transition)',
+                            textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isActive('/profile')) {
+                                e.target.style.background = 'var(--bg-hover)';
+                                e.target.style.color = 'var(--text-primary)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isActive('/profile')) {
+                                e.target.style.background = 'transparent';
+                                e.target.style.color = 'var(--text-secondary)';
+                            }
+                        }}
+                    >
+                        {t.layout.profile}
+                    </Link>
                 </nav>
             </aside>
 
