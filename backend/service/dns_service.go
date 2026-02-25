@@ -4,6 +4,7 @@ import (
 	"context"
 	"dns-mng/models"
 	"dns-mng/provider"
+	"sync"
 )
 
 type DNSService struct {
@@ -20,22 +21,57 @@ func (s *DNSService) ListAllDomains(ctx context.Context, userID int64) ([]models
 		return nil, err
 	}
 
-	var allDomains []models.Domain
-	for _, account := range accounts {
-		p, err := provider.Get(account.ProviderType)
-		if err != nil {
-			continue
-		}
-		domains, err := p.ListDomains(ctx, account.APIKey)
-		if err != nil {
-			continue
-		}
-		for i := range domains {
-			domains[i].AccountID = account.ID
-			domains[i].AccountName = account.Name
-		}
-		allDomains = append(allDomains, domains...)
+	// Use goroutines to fetch domains concurrently
+	type result struct {
+		domains []models.Domain
+		err     error
 	}
+
+	results := make(chan result, len(accounts))
+	var wg sync.WaitGroup
+
+	for _, account := range accounts {
+		wg.Add(1)
+		go func(acc models.Account) {
+			defer wg.Done()
+
+			p, err := provider.Get(acc.ProviderType)
+			if err != nil {
+				results <- result{err: err}
+				return
+			}
+
+			domains, err := p.ListDomains(ctx, acc.APIKey)
+			if err != nil {
+				results <- result{err: err}
+				return
+			}
+
+			// Add account info to domains
+			for i := range domains {
+				domains[i].AccountID = acc.ID
+				domains[i].AccountName = acc.Name
+			}
+
+			results <- result{domains: domains}
+		}(account)
+	}
+
+	// Close results channel when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect all results
+	var allDomains []models.Domain
+	for res := range results {
+		if res.err == nil && res.domains != nil {
+			allDomains = append(allDomains, res.domains...)
+		}
+		// Silently ignore errors from individual accounts
+	}
+
 	return allDomains, nil
 }
 

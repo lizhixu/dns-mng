@@ -79,7 +79,12 @@ const AllDomains = () => {
             {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)' }}>{t.common.error}: {error}</div>}
 
             {loading && !domains.length ? (
-                <div className="spinner" style={{ margin: '4rem auto' }}></div>
+                <div style={{ textAlign: 'center', padding: '4rem' }}>
+                    <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                        正在从所有账户加载域名...
+                    </p>
+                </div>
             ) : (
                 <div style={{ display: 'grid', gap: '1rem' }}>
                     {filteredDomains.map(domain => (
