@@ -49,6 +49,8 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 			Name:        z.Name,
 			UnicodeName: z.Name,
 			State:       status,
+			CreatedOn:   z.CreatedOn,
+			UpdatedOn:   z.ModifiedOn,
 		})
 	}
 	return domains, nil
@@ -75,6 +77,8 @@ func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string
 		Name:        zone.Name,
 		UnicodeName: zone.Name,
 		State:       status,
+		CreatedOn:   zone.CreatedOn,
+		UpdatedOn:   zone.ModifiedOn,
 	}, nil
 }
 
@@ -139,6 +143,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			State:      state,
 			Content:    r.Content,
 			Priority:   priority,
+			UpdatedOn:  r.ModifiedOn,
 		})
 	}
 	return result, nil

@@ -60,21 +60,25 @@ func (c *Client) parseResponse(resp *http.Response) error {
 
 // Zone represents a Cloudflare zone
 type Zone struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	CreatedOn  string `json:"created_on"`
+	ModifiedOn string `json:"modified_on"`
 }
 
 // Record represents a Cloudflare DNS record
 type Record struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Name     string `json:"name"`
-	Content  string `json:"content"`
-	TTL      int    `json:"ttl"`
-	Proxied  bool   `json:"proxied"`
-	ZoneID   string `json:"zone_id"`
-	ZoneName string `json:"zone_name"`
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Content    string `json:"content"`
+	TTL        int    `json:"ttl"`
+	Proxied    bool   `json:"proxied"`
+	ZoneID     string `json:"zone_id"`
+	ZoneName   string `json:"zone_name"`
+	CreatedOn  string `json:"created_on"`
+	ModifiedOn string `json:"modified_on"`
 }
 
 // APIResponse is the standard Cloudflare API response
