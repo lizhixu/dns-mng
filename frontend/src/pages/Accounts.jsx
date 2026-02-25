@@ -335,7 +335,9 @@ const Accounts = () => {
                                 placeholder={
                                     formData.provider_type === 'tencentcloud' 
                                         ? 'SecretId,SecretKey' 
-                                        : t.accounts.apiKeyPlaceholder
+                                        : formData.provider_type === 'cloudflare'
+                                            ? 'API Token'
+                                            : t.accounts.apiKeyPlaceholder
                                 }
                                 value={formData.api_key}
                                 onChange={e => setFormData({ ...formData, api_key: e.target.value })}
@@ -370,6 +372,11 @@ const Accounts = () => {
                         {formData.provider_type === 'tencentcloud' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
                                 格式：SecretId,SecretKey（用英文逗号分隔）
+                            </p>
+                        )}
+                        {formData.provider_type === 'cloudflare' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）
                             </p>
                         )}
                     </div>
