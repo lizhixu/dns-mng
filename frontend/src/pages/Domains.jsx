@@ -86,7 +86,7 @@ const Domains = () => {
                                         <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
                                         {domain.updated_on && (
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                更新于 {new Date(domain.updated_on).toLocaleString('zh-CN', { 
+                                                {t.domains.updatedAt} {new Date(domain.updated_on).toLocaleString('zh-CN', { 
                                                     year: 'numeric', 
                                                     month: '2-digit', 
                                                     day: '2-digit',

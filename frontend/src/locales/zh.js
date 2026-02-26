@@ -16,6 +16,16 @@ export const zh = {
     inactive: '禁用',
     all: '全部',
     seconds: '秒',
+    top: '顶部',
+    backToTop: '回到顶部',
+    hide: '隐藏',
+    show: '显示',
+    copy: '复制',
+    format: '格式',
+    enabled: '启用',
+    disabled: '禁用',
+    changes: '变更内容',
+    reason: '原因',
   },
 
   // 登录页面
@@ -26,6 +36,12 @@ export const zh = {
     loginBtn: '登录',
     noAccount: '还没有账号？',
     registerLink: '立即注册',
+    usernameRequired: '请输入用户名',
+    usernameTooShort: '用户名至少需要3个字符',
+    usernameTooLong: '用户名不能超过50个字符',
+    usernameInvalid: '用户名只能包含字母、数字、下划线和连字符',
+    passwordRequired: '请输入密码',
+    passwordTooShort: '密码至少需要6个字符',
   },
 
   // 注册页面
@@ -43,11 +59,21 @@ export const zh = {
     title: 'DNS 管理器',
     accounts: '账户管理',
     domains: '域名列表',
+    logs: '操作日志',
     profile: '个人设置',
     logout: '退出登录',
     themeLight: '亮色模式',
     themeDark: '暗色模式',
     themeSystem: '跟随系统',
+    settings: '个人设置',
+    currentPassword: '当前密码',
+    newPassword: '新密码',
+    confirmPassword: '确认密码',
+    changePassword: '修改密码',
+    updating: '更新中...',
+    passwordMismatch: '新密码与确认密码不匹配',
+    passwordTooShort: '新密码至少需要6个字符',
+    passwordUpdated: '密码已更新',
   },
 
   // 账户管理
@@ -73,6 +99,11 @@ export const zh = {
     saveChanges: '保存更改',
     noAccounts: '暂无关联账户',
     linkFirst: '关联您的第一个账户',
+    deleteAccountTitle: '确认删除账户',
+    deleteAccountMessage: '确定要删除账户 "{name}" 吗？这将同时删除该账户下的所有域名和记录，且无法撤销。',
+    deleteAccountMessageDefault: '确定要删除此账户吗？此操作无法撤销。',
+    tencentcloudFormat: '格式：SecretId,SecretKey（用英文逗号分隔）',
+    cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
   },
 
   // 所有域名
@@ -82,6 +113,7 @@ export const zh = {
     searchPlaceholder: '搜索域名或账户...',
     noDomains: '暂无域名',
     noSearchResults: '未找到匹配的域名',
+    loadingFromAccounts: '正在从所有账户加载域名...',
   },
 
   // 域名管理
@@ -93,6 +125,7 @@ export const zh = {
     manageRecords: '管理记录',
     noDomains: '此账户暂无域名',
     noSearchResults: '未找到匹配的域名',
+    updatedAt: '更新于',
   },
 
   // DNS 记录管理
@@ -129,6 +162,11 @@ export const zh = {
     invalidNodeName: '主机名无效。只能使用字母、数字和连字符，不能以连字符开头或结尾。',
     backToAllDomains: '返回所有域名',
     rootRecordHint: '留空或输入 @ 表示根域名记录',
+    account: '账户',
+    updatedAt: '更新时间',
+    deleteRecordTitle: '确认删除',
+    deleteRecordMessage: '确定要删除 DNS 记录 "{name}" ({type}) 吗？此操作无法撤销。',
+    deleteRecordMessageDefault: '确定要删除此记录吗？此操作无法撤销。',
   },
 
   // 个人设置
@@ -146,6 +184,36 @@ export const zh = {
     password_updated: '密码修改成功',
     passwords_not_match: '两次输入的密码不一致',
     password_min_length: '密码至少需要6位',
+  },
+
+  // 操作日志
+  logs: {
+    title: '操作日志',
+    subtitle: '查看最近的操作记录，点击展开查看详细信息',
+    noLogs: '暂无操作记录',
+    actions: {
+      create: '创建',
+      update: '更新',
+      delete: '删除',
+      login: '登录',
+      login_failed: '登录失败',
+      register: '注册',
+      update_password: '修改密码',
+    },
+    resources: {
+      account: '账户',
+      record: 'DNS记录',
+      auth: '认证',
+    },
+    details: {
+      reason: '原因',
+      provider: '服务商',
+      domain: '域名',
+      value: '值',
+      ttl: 'TTL',
+      changes: '变更内容',
+      user: '用户',
+    },
   },
 };
 

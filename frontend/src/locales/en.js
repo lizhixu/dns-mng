@@ -16,6 +16,16 @@ export const en = {
     inactive: 'Inactive',
     all: 'All',
     seconds: 'seconds',
+    top: 'Top',
+    backToTop: 'Back to Top',
+    hide: 'Hide',
+    show: 'Show',
+    copy: 'Copy',
+    format: 'Format',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    changes: 'Changes',
+    reason: 'Reason',
   },
 
   // Login page
@@ -26,6 +36,12 @@ export const en = {
     loginBtn: 'Login',
     noAccount: "Don't have an account?",
     registerLink: 'Register',
+    usernameRequired: 'Please enter username',
+    usernameTooShort: 'Username must be at least 3 characters',
+    usernameTooLong: 'Username cannot exceed 50 characters',
+    usernameInvalid: 'Username can only contain letters, numbers, underscores and hyphens',
+    passwordRequired: 'Please enter password',
+    passwordTooShort: 'Password must be at least 6 characters',
   },
 
   // Register page
@@ -43,11 +59,21 @@ export const en = {
     title: 'DNS Manager',
     accounts: 'Accounts',
     domains: 'Domains',
+    logs: 'Operation Logs',
     profile: 'Profile',
     logout: 'Logout',
     themeLight: 'Light Mode',
     themeDark: 'Dark Mode',
     themeSystem: 'System Theme',
+    settings: 'Settings',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm Password',
+    changePassword: 'Change Password',
+    updating: 'Updating...',
+    passwordMismatch: 'New password and confirm password do not match',
+    passwordTooShort: 'New password must be at least 6 characters',
+    passwordUpdated: 'Password updated',
   },
 
   // Accounts
@@ -73,6 +99,11 @@ export const en = {
     saveChanges: 'Save Changes',
     noAccounts: 'No accounts linked yet',
     linkFirst: 'Link your first account',
+    deleteAccountTitle: 'Confirm Delete Account',
+    deleteAccountMessage: 'Are you sure you want to delete account "{name}"? This will also delete all domains and records under this account and cannot be undone.',
+    deleteAccountMessageDefault: 'Are you sure you want to delete this account? This action cannot be undone.',
+    tencentcloudFormat: 'Format: SecretId,SecretKey (separated by comma)',
+    cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
   },
 
   // All Domains
@@ -82,6 +113,7 @@ export const en = {
     searchPlaceholder: 'Search domains or accounts...',
     noDomains: 'No domains found',
     noSearchResults: 'No domains match your search',
+    loadingFromAccounts: 'Loading domains from all accounts...',
   },
 
   // Domains
@@ -93,6 +125,7 @@ export const en = {
     manageRecords: 'Manage Records',
     noDomains: 'No domains found for this account',
     noSearchResults: 'No domains match your search',
+    updatedAt: 'Updated at',
   },
 
   // DNS Records
@@ -128,6 +161,11 @@ export const en = {
     invalidNodeName: 'Invalid node name. Use only letters, numbers, and hyphens. Cannot start or end with a hyphen.',
     backToAllDomains: 'Back to All Domains',
     rootRecordHint: 'Leave empty or enter @ for root domain record',
+    account: 'Account',
+    updatedAt: 'Updated At',
+    deleteRecordTitle: 'Confirm Delete',
+    deleteRecordMessage: 'Are you sure you want to delete DNS record "{name}" ({type})? This action cannot be undone.',
+    deleteRecordMessageDefault: 'Are you sure you want to delete this record? This action cannot be undone.',
   },
 
   // Profile
@@ -145,6 +183,36 @@ export const en = {
     password_updated: 'Password updated successfully',
     passwords_not_match: 'Passwords do not match',
     password_min_length: 'Password must be at least 6 characters',
+  },
+
+  // Logs
+  logs: {
+    title: 'Operation Logs',
+    subtitle: 'View recent operation records, click to expand for details',
+    noLogs: 'No operation records',
+    actions: {
+      create: 'Create',
+      update: 'Update',
+      delete: 'Delete',
+      login: 'Login',
+      login_failed: 'Login Failed',
+      register: 'Register',
+      update_password: 'Update Password',
+    },
+    resources: {
+      account: 'Account',
+      record: 'DNS Record',
+      auth: 'Authentication',
+    },
+    details: {
+      reason: 'Reason',
+      provider: 'Provider',
+      domain: 'Domain',
+      value: 'Value',
+      ttl: 'TTL',
+      changes: 'Changes',
+      user: 'User',
+    },
   },
 };
 

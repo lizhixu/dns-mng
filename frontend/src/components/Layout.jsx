@@ -58,12 +58,12 @@ const Layout = () => {
         setSuccess('');
 
         if (passwordForm.new_password !== passwordForm.confirm_password) {
-            setError('新密码与确认密码不匹配');
+            setError(t.layout.passwordMismatch);
             return;
         }
 
         if (passwordForm.new_password.length < 6) {
-            setError('新密码至少需要6个字符');
+            setError(t.layout.passwordTooShort);
             return;
         }
 
@@ -73,7 +73,7 @@ const Layout = () => {
                 old_password: passwordForm.old_password,
                 new_password: passwordForm.new_password
             });
-            setSuccess('密码已更新');
+            setSuccess(t.layout.passwordUpdated);
             setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
             setTimeout(() => setShowSettings(false), 1500);
         } catch (err) {
@@ -128,7 +128,7 @@ const Layout = () => {
                     <Link to="/logs" style={menuItemStyle('/logs')}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <FileText size={14} />
-                            操作日志
+                            {t.layout.logs}
                         </div>
                     </Link>
                 </nav>
@@ -292,7 +292,7 @@ const Layout = () => {
                                             justifyContent: 'space-between',
                                             alignItems: 'center'
                                         }}>
-                                            <span style={{ fontWeight: '500', fontSize: '14px' }}>个人设置</span>
+                                            <span style={{ fontWeight: '500', fontSize: '14px' }}>{t.layout.settings}</span>
                                             <button 
                                                 onClick={closeSettings}
                                                 style={{
@@ -337,7 +337,7 @@ const Layout = () => {
 
                                             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>当前密码</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.currentPassword}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.old_password}
@@ -349,7 +349,7 @@ const Layout = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>新密码</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.newPassword}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.new_password}
@@ -362,7 +362,7 @@ const Layout = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>确认密码</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.confirmPassword}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.confirm_password}
@@ -380,7 +380,7 @@ const Layout = () => {
                                                     className="btn btn-primary"
                                                     style={{ marginTop: '0.5rem', height: '36px' }}
                                                 >
-                                                    {updating ? '更新中...' : '修改密码'}
+                                                    {updating ? t.layout.updating : t.layout.changePassword}
                                                 </button>
                                             </form>
                                         </div>

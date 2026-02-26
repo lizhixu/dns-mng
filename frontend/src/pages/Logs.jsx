@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { Clock, Activity, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 export default function Logs() {
+    const { t } = useLanguage();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedLogs, setExpandedLogs] = useState(new Set());
@@ -34,16 +36,7 @@ export default function Logs() {
     };
 
     const getActionText = (action) => {
-        const actions = {
-            create: '创建',
-            update: '更新',
-            delete: '删除',
-            login: '登录',
-            login_failed: '登录失败',
-            register: '注册',
-            update_password: '修改密码'
-        };
-        return actions[action] || action;
+        return t.logs.actions[action] || action;
     };
 
     const getActionColor = (action) => {
@@ -60,12 +53,7 @@ export default function Logs() {
     };
 
     const getResourceText = (resource) => {
-        const resources = {
-            account: '账户',
-            record: 'DNS记录',
-            auth: '认证'
-        };
-        return resources[resource] || resource;
+        return t.logs.resources[resource] || resource;
     };
 
     const renderDetails = (log) => {
@@ -117,47 +105,47 @@ export default function Logs() {
                         }}>
                             {details.reason && (
                                 <div style={{ marginBottom: '0.5rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>原因：</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{t.logs.details.reason}：</span>
                                     <span style={{ color: '#ef4444', marginLeft: '0.5rem' }}>{details.reason}</span>
                                 </div>
                             )}
                             {details.provider && (
                                 <div style={{ marginBottom: '0.5rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>服务商：</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{t.logs.details.provider}：</span>
                                     <span style={{ color: 'var(--text-primary)', marginLeft: '0.5rem' }}>{details.provider}</span>
                                 </div>
                             )}
                             {details.domain && (
                                 <div style={{ marginBottom: '0.5rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>域名：</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{t.logs.details.domain}：</span>
                                     <span style={{ color: 'var(--text-primary)', marginLeft: '0.5rem' }}>{details.domain}</span>
                                 </div>
                             )}
                             {details.content && (
                                 <div style={{ marginBottom: '0.5rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>值：</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{t.logs.details.value}：</span>
                                     <span style={{ color: 'var(--text-primary)', marginLeft: '0.5rem', fontFamily: 'monospace' }}>{details.content}</span>
                                 </div>
                             )}
                             {details.ttl && (
                                 <div style={{ marginBottom: '0.5rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>TTL：</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{t.logs.details.ttl}：</span>
                                     <span style={{ color: 'var(--text-primary)', marginLeft: '0.5rem' }}>{details.ttl}</span>
                                 </div>
                             )}
                             {hasChanges && (
                                 <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: '500' }}>变更内容：</div>
+                                    <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: '500' }}>{t.logs.details.changes}：</div>
                                     {Object.entries(details.changes).map(([key, change]) => (
                                         <div key={key} style={{ marginBottom: '0.5rem', paddingLeft: '0.5rem' }}>
                                             <div style={{ color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>{key}:</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem' }}>
                                                 <span style={{ color: '#ef4444', fontFamily: 'monospace' }}>
-                                                    {typeof change.old === 'boolean' ? (change.old ? '启用' : '禁用') : change.old}
+                                                    {typeof change.old === 'boolean' ? (change.old ? t.common.enabled : t.common.disabled) : change.old}
                                                 </span>
                                                 <span style={{ color: 'var(--text-tertiary)' }}>→</span>
                                                 <span style={{ color: '#10b981', fontFamily: 'monospace' }}>
-                                                    {typeof change.new === 'boolean' ? (change.new ? '启用' : '禁用') : change.new}
+                                                    {typeof change.new === 'boolean' ? (change.new ? t.common.enabled : t.common.disabled) : change.new}
                                                 </span>
                                             </div>
                                         </div>
@@ -178,12 +166,12 @@ export default function Logs() {
             <div style={{ marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>操作日志</h2>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.logs.title}</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                            查看最近的操作记录，点击展开查看详细信息
+                            {t.logs.subtitle}
                         </p>
                     </div>
-                    <button onClick={loadLogs} className="btn btn-secondary" title="刷新">
+                    <button onClick={loadLogs} className="btn btn-secondary" title={t.common.refresh}>
                         <RefreshCw size={18} className={loading ? "spin" : ""} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                     </button>
                 </div>
@@ -258,7 +246,7 @@ export default function Logs() {
                                         {log.username && (
                                             <>
                                                 <span>•</span>
-                                                <span>用户: {log.username}</span>
+                                                <span>{t.logs.details.user}: {log.username}</span>
                                             </>
                                         )}
                                     </div>
@@ -269,7 +257,7 @@ export default function Logs() {
 
                     {logs.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                            暂无操作记录
+                            {t.logs.noLogs}
                         </div>
                     )}
                 </div>

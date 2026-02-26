@@ -14,15 +14,65 @@ const Login = () => {
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [touched, setTouched] = useState({ username: false, password: false });
+
+    // 实时验证
+    const validateUsername = (value) => {
+        if (!value) return t.login.usernameRequired || '请输入用户名';
+        if (value.length < 3) return t.login.usernameTooShort || '用户名至少需要3个字符';
+        if (value.length > 50) return t.login.usernameTooLong || '用户名不能超过50个字符';
+        if (!/^[a-zA-Z0-9_-]+$/.test(value)) return t.login.usernameInvalid || '用户名只能包含字母、数字、下划线和连字符';
+        return '';
+    };
+
+    const validatePassword = (value) => {
+        if (!value) return t.login.passwordRequired || '请输入密码';
+        if (value.length < 6) return t.login.passwordTooShort || '密码至少需要6个字符';
+        return '';
+    };
+
+    const usernameError = touched.username ? validateUsername(username) : '';
+    const passwordError = touched.password ? validatePassword(password) : '';
+    const isFormValid = username && password && !validateUsername(username) && !validatePassword(password);
+
+    const handleUsernameChange = (e) => {
+        setUsername(e.target.value);
+        setError(''); // 清除服务器错误
+    };
+
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        setError(''); // 清除服务器错误
+    };
+
+    const handleUsernameBlur = () => {
+        setTouched({ ...touched, username: true });
+    };
+
+    const handlePasswordBlur = () => {
+        setTouched({ ...touched, password: true });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // 标记所有字段为已触摸
+        setTouched({ username: true, password: true });
+        
+        // 验证表单
+        const usernameErr = validateUsername(username);
+        const passwordErr = validatePassword(password);
+        
+        if (usernameErr || passwordErr) {
+            return;
+        }
+
         setLoading(true);
         setError('');
         
         try {
-            await login(username, password);
-            navigate('/domains'); // 登录后跳转到域名列表
+            await login(username.trim(), password);
+            navigate('/domains');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -229,11 +279,23 @@ const Login = () => {
                             type="text"
                             className="form-input"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={handleUsernameChange}
+                            onBlur={handleUsernameBlur}
                             autoComplete="username"
                             autoFocus
-                            required
+                            style={{
+                                borderColor: usernameError ? 'var(--danger)' : undefined
+                            }}
                         />
+                        {usernameError && (
+                            <div style={{ 
+                                color: 'var(--danger)', 
+                                fontSize: '12px', 
+                                marginTop: '4px' 
+                            }}>
+                                {usernameError}
+                            </div>
+                        )}
                     </div>
                     <div className="form-group">
                         <label className="form-label">{t.login.password}</label>
@@ -241,16 +303,28 @@ const Login = () => {
                             type="password"
                             className="form-input"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={handlePasswordChange}
+                            onBlur={handlePasswordBlur}
                             autoComplete="current-password"
-                            required
+                            style={{
+                                borderColor: passwordError ? 'var(--danger)' : undefined
+                            }}
                         />
+                        {passwordError && (
+                            <div style={{ 
+                                color: 'var(--danger)', 
+                                fontSize: '12px', 
+                                marginTop: '4px' 
+                            }}>
+                                {passwordError}
+                            </div>
+                        )}
                     </div>
                     <button 
                         type="submit" 
                         className="btn btn-primary" 
                         style={{ width: '100%', marginTop: '8px' }}
-                        disabled={loading}
+                        disabled={loading || !isFormValid}
                     >
                         {loading ? <div className="spinner"></div> : t.login.loginBtn}
                     </button>

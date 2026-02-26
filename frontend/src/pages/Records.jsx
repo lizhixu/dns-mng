@@ -336,7 +336,7 @@ const Records = () => {
                         {account && (
                             <div style={{ minWidth: '150px' }}>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                                    账户
+                                    {t.records.account}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                                     <Server size={14} style={{ color: 'var(--text-secondary)' }} />
@@ -386,7 +386,7 @@ const Records = () => {
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>更新时间</th>
+                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.updatedAt}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
                             </tr>
                         </thead>
@@ -564,14 +564,16 @@ const Records = () => {
                 isOpen={showDeleteConfirm}
                 onClose={cancelDelete}
                 onConfirm={confirmDelete}
-                title="确认删除"
+                title={t.records.deleteRecordTitle}
                 message={
                     deletingRecord 
-                        ? `确定要删除 DNS 记录 "${deletingRecord.node_name || '@'}" (${deletingRecord.record_type}) 吗？此操作无法撤销。`
-                        : '确定要删除此记录吗？此操作无法撤销。'
+                        ? t.records.deleteRecordMessage
+                            .replace('{name}', deletingRecord.node_name || '@')
+                            .replace('{type}', deletingRecord.record_type)
+                        : t.records.deleteRecordMessageDefault
                 }
-                confirmText="删除"
-                cancelText="取消"
+                confirmText={t.common.delete}
+                cancelText={t.common.cancel}
                 loading={deleting}
                 danger={true}
             />

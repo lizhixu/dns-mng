@@ -225,7 +225,7 @@ const Accounts = () => {
                                     onClick={() => toggleKeyVisibility(account.id)}
                                     className="btn btn-ghost"
                                     style={{ padding: '3px', minWidth: 'auto', height: 'auto' }}
-                                    title={visibleKeys[account.id] ? "Hide" : "Show"}
+                                    title={visibleKeys[account.id] ? t.common.hide : t.common.show}
                                 >
                                     {visibleKeys[account.id] ? <EyeOff size={13} /> : <Eye size={13} />}
                                 </button>
@@ -233,7 +233,7 @@ const Accounts = () => {
                                     onClick={() => navigator.clipboard.writeText(account.api_key)}
                                     className="btn btn-ghost"
                                     style={{ padding: '3px', minWidth: 'auto', height: 'auto' }}
-                                    title="Copy"
+                                    title={t.common.copy}
                                 >
                                     <Copy size={13} />
                                 </button>
@@ -371,12 +371,12 @@ const Accounts = () => {
                         )}
                         {formData.provider_type === 'tencentcloud' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                格式：SecretId,SecretKey（用英文逗号分隔）
+                                {t.accounts.tencentcloudFormat}
                             </p>
                         )}
                         {formData.provider_type === 'cloudflare' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）
+                                {t.accounts.cloudflareFormat}
                             </p>
                         )}
                     </div>
@@ -401,14 +401,14 @@ const Accounts = () => {
                 isOpen={showDeleteConfirm}
                 onClose={cancelDelete}
                 onConfirm={confirmDelete}
-                title="确认删除账户"
+                title={t.accounts.deleteAccountTitle}
                 message={
                     deletingAccount 
-                        ? `确定要删除账户 "${deletingAccount.name}" 吗？这将同时删除该账户下的所有域名和记录，且无法撤销。`
-                        : '确定要删除此账户吗？此操作无法撤销。'
+                        ? t.accounts.deleteAccountMessage.replace('{name}', deletingAccount.name)
+                        : t.accounts.deleteAccountMessageDefault
                 }
-                confirmText="删除"
-                cancelText="取消"
+                confirmText={t.common.delete}
+                cancelText={t.common.cancel}
                 loading={deleting}
                 danger={true}
             />

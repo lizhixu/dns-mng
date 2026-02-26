@@ -82,7 +82,7 @@ const AllDomains = () => {
                 <div style={{ textAlign: 'center', padding: '4rem' }}>
                     <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        正在从所有账户加载域名...
+                        {t.allDomains.loadingFromAccounts}
                     </p>
                 </div>
             ) : (

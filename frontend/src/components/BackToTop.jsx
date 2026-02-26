@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const BackToTop = () => {
     const [isVisible, setIsVisible] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         // Wait for DOM to be ready
@@ -89,10 +91,10 @@ const BackToTop = () => {
                 e.currentTarget.style.color = 'var(--text-primary)';
             }}
             aria-label="Back to top"
-            title="回到顶部"
+            title={t.common.backToTop}
         >
             <ArrowUp size={16} strokeWidth={2.5} />
-            <span>顶部</span>
+            <span>{t.common.top}</span>
         </button>
     );
 };
