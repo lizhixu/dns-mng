@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
-import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server, CheckCircle } from 'lucide-react';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
@@ -31,6 +31,11 @@ const Records = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deletingRecord, setDeletingRecord] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    // DNS Check state
+    const [checkingRecord, setCheckingRecord] = useState(null);
+    const [checkResult, setCheckResult] = useState(null);
+    const [showCheckResult, setShowCheckResult] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -265,6 +270,39 @@ const Records = () => {
         setDeletingRecord(null);
     };
 
+    // DNS Check functions
+    const handleCheckDNS = async (record) => {
+        setCheckingRecord(record.id);
+        setCheckResult(null);
+        
+        try {
+            // Build full domain name
+            const fullDomain = record.node_name 
+                ? `${record.node_name}.${domain.name}`
+                : domain.name;
+            
+            const result = await api.checkDNS({
+                domain: fullDomain,
+                record_type: record.record_type,
+                expected: record.content
+            });
+            
+            setCheckResult(result);
+            setShowCheckResult(true);
+        } catch (err) {
+            setCheckResult({
+                domain: record.node_name ? `${record.node_name}.${domain.name}` : domain.name,
+                record_type: record.record_type,
+                values: [],
+                matched: false,
+                message: err.message
+            });
+            setShowCheckResult(true);
+        } finally {
+            setCheckingRecord(null);
+        }
+    };
+
     const getContentLabel = (type) => {
         return t.records.contentLabels[type] || t.records.contentLabels.default;
     };
@@ -436,6 +474,18 @@ const Records = () => {
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                            <button 
+                                                onClick={() => handleCheckDNS(record)} 
+                                                className="btn btn-ghost" 
+                                                title="检查解析"
+                                                disabled={checkingRecord === record.id}
+                                            >
+                                                {checkingRecord === record.id ? (
+                                                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></div>
+                                                ) : (
+                                                    <CheckCircle size={16} />
+                                                )}
+                                            </button>
                                             <button onClick={() => openEditModal(record)} className="btn btn-ghost" title={t.common.edit}>
                                                 <Edit2 size={16} />
                                             </button>
@@ -577,6 +627,159 @@ const Records = () => {
                 loading={deleting}
                 danger={true}
             />
+
+            {/* DNS Check Result Modal */}
+            <Modal
+                isOpen={showCheckResult}
+                onClose={() => setShowCheckResult(false)}
+                title="DNS 解析检查结果"
+            >
+                {checkResult && (
+                    <div>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <div style={{ 
+                                padding: '1rem', 
+                                borderRadius: 'var(--radius-md)',
+                                background: checkResult.matched ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                border: `1px solid ${checkResult.matched ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem'
+                            }}>
+                                <CheckCircle 
+                                    size={24} 
+                                    style={{ 
+                                        color: checkResult.matched ? '#10b981' : '#ef4444',
+                                        flexShrink: 0
+                                    }} 
+                                />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ 
+                                        fontWeight: '600', 
+                                        marginBottom: '0.25rem',
+                                        color: checkResult.matched ? '#10b981' : '#ef4444'
+                                    }}>
+                                        {checkResult.matched ? '✓ 解析正常' : '✗ 解析异常'}
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                        {checkResult.message}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                                    域名
+                                </label>
+                                <div style={{ 
+                                    padding: '0.75rem', 
+                                    background: 'var(--bg-secondary)', 
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    {checkResult.domain}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                                    记录类型
+                                </label>
+                                <div style={{ 
+                                    padding: '0.75rem', 
+                                    background: 'var(--bg-secondary)', 
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    {checkResult.record_type}
+                                </div>
+                            </div>
+
+                            {checkResult.expected && (
+                                <div>
+                                    <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                                        期望值
+                                    </label>
+                                    <div style={{ 
+                                        padding: '0.75rem', 
+                                        background: 'var(--bg-secondary)', 
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.875rem',
+                                        wordBreak: 'break-all'
+                                    }}>
+                                        {checkResult.expected}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                                    实际解析值
+                                </label>
+                                <div style={{ 
+                                    padding: '0.75rem', 
+                                    background: 'var(--bg-secondary)', 
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    {checkResult.values && checkResult.values.length > 0 ? (
+                                        <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                                            {checkResult.values.map((value, index) => (
+                                                <li key={index} style={{ marginBottom: '0.25rem', wordBreak: 'break-all' }}>
+                                                    {value}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <span style={{ color: 'var(--text-tertiary)' }}>无解析记录</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', display: 'block', marginBottom: '0.5rem' }}>
+                                    检查时间
+                                </label>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                    {checkResult.timestamp ? new Date(checkResult.timestamp).toLocaleString() : '-'}
+                                </div>
+                            </div>
+
+                            {checkResult.dns_server && (
+                                <div>
+                                    <label style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', display: 'block', marginBottom: '0.5rem' }}>
+                                        DNS 服务器
+                                    </label>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
+                                        {checkResult.dns_server}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ 
+                            marginTop: '1.5rem', 
+                            paddingTop: '1rem', 
+                            borderTop: '1px solid var(--border-color)',
+                            display: 'flex',
+                            justifyContent: 'flex-end'
+                        }}>
+                            <button 
+                                onClick={() => setShowCheckResult(false)} 
+                                className="btn btn-primary"
+                            >
+                                关闭
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

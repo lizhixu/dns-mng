@@ -171,4 +171,14 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // DNS Check
+    checkDNS: async (data) => {
+        const response = await fetch(`${API_BASE}/dns/check`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
 };

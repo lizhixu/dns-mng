@@ -41,6 +41,7 @@ func main() {
 	dnsHandler := handler.NewDNSHandler(dnsService, logService)
 	providerHandler := handler.NewProviderHandler()
 	logHandler := handler.NewLogHandler(logService)
+	dnsCheckHandler := handler.NewDNSCheckHandler()
 
 	// Setup router
 	r := gin.Default()
@@ -84,6 +85,9 @@ func main() {
 		protected.POST("/accounts/:id/domains/:domainId/records", dnsHandler.CreateRecord)
 		protected.PUT("/accounts/:id/domains/:domainId/records/:recordId", dnsHandler.UpdateRecord)
 		protected.DELETE("/accounts/:id/domains/:domainId/records/:recordId", dnsHandler.DeleteRecord)
+
+		// DNS Check
+		protected.POST("/dns/check", dnsCheckHandler.CheckDNS)
 	}
 
 	log.Printf("Server starting on :%s", cfg.ServerPort)
