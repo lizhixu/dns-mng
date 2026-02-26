@@ -477,7 +477,7 @@ const Records = () => {
                                             <button 
                                                 onClick={() => handleCheckDNS(record)} 
                                                 className="btn btn-ghost" 
-                                                title="检查解析"
+                                                title={t.records.checkDns}
                                                 disabled={checkingRecord === record.id}
                                             >
                                                 {checkingRecord === record.id ? (
@@ -632,7 +632,7 @@ const Records = () => {
             <Modal
                 isOpen={showCheckResult}
                 onClose={() => setShowCheckResult(false)}
-                title="DNS 解析检查结果"
+                title={t.records.checkDnsTitle}
             >
                 {checkResult && (
                     <div>
@@ -659,10 +659,15 @@ const Records = () => {
                                         marginBottom: '0.25rem',
                                         color: checkResult.matched ? '#10b981' : '#ef4444'
                                     }}>
-                                        {checkResult.matched ? '✓ 解析正常' : '✗ 解析异常'}
+                                        {checkResult.matched ? `✓ ${t.records.checkDnsNormal}` : `✗ ${t.records.checkDnsAbnormal}`}
                                     </div>
                                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                        {checkResult.message}
+                                        {checkResult.message === 'DNS record matches expected value' ? t.records.checkDnsMatched :
+                                         checkResult.message === 'DNS record does not match expected value' ? t.records.checkDnsNotMatched :
+                                         checkResult.message === 'DNS query failed' ? t.records.checkDnsFailed :
+                                         checkResult.message === 'No DNS records found' ? t.records.checkDnsNoRecords :
+                                         checkResult.message === 'DNS record found' ? t.records.checkDnsFound :
+                                         checkResult.message}
                                     </div>
                                 </div>
                             </div>
@@ -671,7 +676,7 @@ const Records = () => {
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                                    域名
+                                    {t.records.domain}
                                 </label>
                                 <div style={{ 
                                     padding: '0.75rem', 
@@ -686,7 +691,7 @@ const Records = () => {
 
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                                    记录类型
+                                    {t.records.recordType}
                                 </label>
                                 <div style={{ 
                                     padding: '0.75rem', 
@@ -702,7 +707,7 @@ const Records = () => {
                             {checkResult.expected && (
                                 <div>
                                     <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                                        期望值
+                                        {t.records.expectedValue}
                                     </label>
                                     <div style={{ 
                                         padding: '0.75rem', 
@@ -719,7 +724,7 @@ const Records = () => {
 
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                                    实际解析值
+                                    {t.records.actualValue}
                                 </label>
                                 <div style={{ 
                                     padding: '0.75rem', 
@@ -737,14 +742,14 @@ const Records = () => {
                                             ))}
                                         </ul>
                                     ) : (
-                                        <span style={{ color: 'var(--text-tertiary)' }}>无解析记录</span>
+                                        <span style={{ color: 'var(--text-tertiary)' }}>{t.records.noRecordsFound}</span>
                                     )}
                                 </div>
                             </div>
 
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', display: 'block', marginBottom: '0.5rem' }}>
-                                    检查时间
+                                    {t.records.checkTime}
                                 </label>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
                                     {checkResult.timestamp ? new Date(checkResult.timestamp).toLocaleString() : '-'}
@@ -754,7 +759,7 @@ const Records = () => {
                             {checkResult.dns_server && (
                                 <div>
                                     <label style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', display: 'block', marginBottom: '0.5rem' }}>
-                                        DNS 服务器
+                                        {t.records.dnsServer}
                                     </label>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
                                         {checkResult.dns_server}
@@ -774,7 +779,7 @@ const Records = () => {
                                 onClick={() => setShowCheckResult(false)} 
                                 className="btn btn-primary"
                             >
-                                关闭
+                                {t.records.close}
                             </button>
                         </div>
                     </div>
