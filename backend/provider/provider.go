@@ -15,6 +15,9 @@ type DNSProvider interface {
 	// DisplayName returns human-readable provider name
 	DisplayName() string
 
+	// WebsiteURL returns the provider's website URL
+	WebsiteURL() string
+
 	// ListDomains returns all domains for the given API key
 	ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error)
 
@@ -38,4 +41,5 @@ type DNSProvider interface {
 type ProviderInfo struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
+	WebsiteURL  string `json:"website_url"`
 }

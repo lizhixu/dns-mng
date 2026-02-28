@@ -246,12 +246,30 @@ const Accounts = () => {
                             style={{ 
                                 fontSize: '13px',
                                 width: '100%',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                marginBottom: providers.find(p => p.name === account.provider_type)?.website_url ? '8px' : '0'
                             }}
                         >
                             {t.accounts.viewDomains}
                             <ExternalLink size={13} />
                         </Link>
+
+                        {providers.find(p => p.name === account.provider_type)?.website_url && (
+                            <a
+                                href={providers.find(p => p.name === account.provider_type).website_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-ghost"
+                                style={{
+                                    fontSize: '13px',
+                                    width: '100%',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                {t.accounts.goToProvider}
+                                <ExternalLink size={13} />
+                            </a>
+                        )}
                     </div>
                 ))}
 

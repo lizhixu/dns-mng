@@ -26,6 +26,10 @@ func (p *Provider) DisplayName() string {
 	return "Dynu.com"
 }
 
+func (p *Provider) WebsiteURL() string {
+	return "https://www.dynu.com/ControlPanel"
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	resp, err := p.client.GetDomains(ctx, apiKey)
 	if err != nil {

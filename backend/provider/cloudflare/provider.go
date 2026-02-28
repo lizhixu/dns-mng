@@ -26,6 +26,10 @@ func (p *Provider) DisplayName() string {
 	return "Cloudflare"
 }
 
+func (p *Provider) WebsiteURL() string {
+	return "https://dash.cloudflare.com"
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	apiToken, err := p.client.parseAPIKey(apiKey)
 	if err != nil {

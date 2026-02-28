@@ -27,6 +27,10 @@ func (p *Provider) DisplayName() string {
 	return "腾讯云 DNSPod"
 }
 
+func (p *Provider) WebsiteURL() string {
+	return "https://console.dnspod.cn"
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	domainList, err := p.client.ListDomains(ctx, apiKey)
 	if err != nil {

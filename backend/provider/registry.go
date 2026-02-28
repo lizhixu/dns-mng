@@ -42,6 +42,7 @@ func List() []ProviderInfo {
 		infos = append(infos, ProviderInfo{
 			Name:        p.Name(),
 			DisplayName: p.DisplayName(),
+			WebsiteURL:  p.WebsiteURL(),
 		})
 	}
 	return infos
