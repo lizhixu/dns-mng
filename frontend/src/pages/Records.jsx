@@ -634,9 +634,17 @@ const Records = () => {
                 onClose={() => setShowCheckResult(false)}
                 title={t.records.checkDnsTitle}
                 size="large"
+                footer={
+                    <button 
+                        onClick={() => setShowCheckResult(false)} 
+                        className="btn btn-primary"
+                    >
+                        {t.records.close}
+                    </button>
+                }
             >
                 {checkResult && (
-                    <div>
+                    <>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <div style={{ 
                                 padding: '1rem', 
@@ -781,22 +789,7 @@ const Records = () => {
                                 </div>
                             )}
                         </div>
-
-                        <div style={{ 
-                            marginTop: '1.5rem', 
-                            paddingTop: '1rem', 
-                            borderTop: '1px solid var(--border-color)',
-                            display: 'flex',
-                            justifyContent: 'flex-end'
-                        }}>
-                            <button 
-                                onClick={() => setShowCheckResult(false)} 
-                                className="btn btn-primary"
-                            >
-                                {t.records.close}
-                            </button>
-                        </div>
-                    </div>
+                    </>
                 )}
             </Modal>
         </div>
