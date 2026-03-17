@@ -633,6 +633,7 @@ const Records = () => {
                 isOpen={showCheckResult}
                 onClose={() => setShowCheckResult(false)}
                 title={t.records.checkDnsTitle}
+                size="large"
             >
                 {checkResult && (
                     <div>
@@ -673,7 +674,11 @@ const Records = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div style={{ 
+                            display: 'grid', 
+                            gap: '1rem',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))'
+                        }}>
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                     {t.records.domain}
@@ -683,7 +688,8 @@ const Records = () => {
                                     background: 'var(--bg-secondary)', 
                                     borderRadius: 'var(--radius-sm)',
                                     fontFamily: 'monospace',
-                                    fontSize: '0.875rem'
+                                    fontSize: '0.875rem',
+                                    wordBreak: 'break-all'
                                 }}>
                                     {checkResult.domain}
                                 </div>
@@ -705,7 +711,7 @@ const Records = () => {
                             </div>
 
                             {checkResult.expected && (
-                                <div>
+                                <div style={{ gridColumn: '1 / -1' }}>
                                     <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                         {t.records.expectedValue}
                                     </label>
@@ -715,14 +721,15 @@ const Records = () => {
                                         borderRadius: 'var(--radius-sm)',
                                         fontFamily: 'monospace',
                                         fontSize: '0.875rem',
-                                        wordBreak: 'break-all'
+                                        wordBreak: 'break-all',
+                                        whiteSpace: 'pre-wrap'
                                     }}>
                                         {checkResult.expected}
                                     </div>
                                 </div>
                             )}
 
-                            <div>
+                            <div style={{ gridColumn: '1 / -1' }}>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                     {t.records.actualValue}
                                 </label>
@@ -731,16 +738,23 @@ const Records = () => {
                                     background: 'var(--bg-secondary)', 
                                     borderRadius: 'var(--radius-sm)',
                                     fontFamily: 'monospace',
-                                    fontSize: '0.875rem'
+                                    fontSize: '0.875rem',
+                                    minHeight: '2.5rem'
                                 }}>
                                     {checkResult.values && checkResult.values.length > 0 ? (
-                                        <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             {checkResult.values.map((value, index) => (
-                                                <li key={index} style={{ marginBottom: '0.25rem', wordBreak: 'break-all' }}>
+                                                <div key={index} style={{ 
+                                                    padding: '0.5rem',
+                                                    background: 'var(--bg-tertiary)',
+                                                    borderRadius: 'var(--radius-sm)',
+                                                    wordBreak: 'break-all',
+                                                    whiteSpace: 'pre-wrap'
+                                                }}>
                                                     {value}
-                                                </li>
+                                                </div>
                                             ))}
-                                        </ul>
+                                        </div>
                                     ) : (
                                         <span style={{ color: 'var(--text-tertiary)' }}>{t.records.noRecordsFound}</span>
                                     )}

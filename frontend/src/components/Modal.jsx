@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'default' }) => {
     const modalRef = useRef(null);
 
     useEffect(() => {
@@ -30,7 +30,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
     return (
         <div className="modal-overlay" onClick={handleBackdropClick}>
-            <div className="modal-container" ref={modalRef}>
+            <div className={`modal-container ${size === 'large' ? 'modal-container-large' : ''}`} ref={modalRef}>
                 <div style={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 

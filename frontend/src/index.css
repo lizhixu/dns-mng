@@ -279,8 +279,35 @@ textarea.form-input {
   padding: 24px;
   width: 100%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
   animation: scaleIn 0.15s ease-out;
+  margin: 20px;
+}
+
+.modal-container-large {
+  max-width: 800px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .modal-container {
+    max-width: 95vw;
+    margin: 10px;
+    padding: 20px;
+  }
+  
+  .modal-container-large {
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-container {
+    margin: 5px;
+    padding: 16px;
+  }
 }
 
 @keyframes fadeIn {
