@@ -106,7 +106,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 	result := make([]models.Record, 0, len(records))
 	for _, r := range records {
 		// Skip certain record types that are not typically editable
-		if r.Type == "SOA" {
+		if r.Type == "SOA" || r.Type == "NS" {
 			continue
 		}
 
@@ -119,14 +119,16 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 		// Get priority for MX/SRV records
 		priority := 0
 		if r.Type == "MX" || r.Type == "SRV" {
-			// Cloudflare API doesn't return priority in list response
-			// We'll need to fetch the record individually if needed
+			// Fetch individual record to get priority
+			detailRecord, err := p.client.GetRecordByID(ctx, apiToken, domainID, r.ID)
+			if err == nil && detailRecord.Priority != nil {
+				priority = *detailRecord.Priority
+			}
 		}
 
 		// Determine if record is active (not paused)
 		state := true
 		// Cloudflare doesn't have a direct "disabled" state for DNS records
-		// The closest is pausing the entire zone
 
 		// Get node name (remove zone name suffix)
 		nodeName := strings.TrimSuffix(r.Name, "."+zone.Name)
@@ -135,6 +137,12 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 		}
 		if nodeName == "" {
 			nodeName = "@"
+		}
+
+		// Store Cloudflare-specific data in Raw field
+		raw := map[string]interface{}{
+			"proxied": r.Proxied,
+			"zone_id": r.ZoneID,
 		}
 
 		result = append(result, models.Record{
@@ -148,6 +156,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			Content:    r.Content,
 			Priority:   priority,
 			UpdatedOn:  r.ModifiedOn,
+			Raw:        raw,
 		})
 	}
 	return result, nil

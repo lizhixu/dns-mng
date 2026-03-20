@@ -69,16 +69,17 @@ type Zone struct {
 
 // Record represents a Cloudflare DNS record
 type Record struct {
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	Content    string `json:"content"`
-	TTL        int    `json:"ttl"`
-	Proxied    bool   `json:"proxied"`
-	ZoneID     string `json:"zone_id"`
-	ZoneName   string `json:"zone_name"`
-	CreatedOn  string `json:"created_on"`
-	ModifiedOn string `json:"modified_on"`
+	ID         string  `json:"id"`
+	Type       string  `json:"type"`
+	Name       string  `json:"name"`
+	Content    string  `json:"content"`
+	TTL        int     `json:"ttl"`
+	Proxied    bool    `json:"proxied"`
+	Priority   *int    `json:"priority,omitempty"`
+	ZoneID     string  `json:"zone_id"`
+	ZoneName   string  `json:"zone_name"`
+	CreatedOn  string  `json:"created_on"`
+	ModifiedOn string  `json:"modified_on"`
 }
 
 // APIResponse is the standard Cloudflare API response
@@ -180,15 +181,31 @@ func (c *Client) ListRecords(ctx context.Context, apiToken, zoneID string) ([]Re
 func (c *Client) CreateRecord(ctx context.Context, apiToken, zoneID string, recordType, name, content string, ttl int, priority int) (*Record, error) {
 	path := "/zones/" + zoneID + "/dns_records"
 
-	data := fmt.Sprintf(`{
-		"type": "%s",
-		"name": "%s",
-		"content": "%s",
-		"ttl": %d,
-		"priority": %d
-	}`, recordType, name, content, ttl, priority)
+	// Build request body
+	reqBody := map[string]interface{}{
+		"type":    recordType,
+		"name":    name,
+		"content": content,
+		"ttl":     ttl,
+	}
 
-	resp, err := c.doRequest(ctx, apiToken, "POST", path, strings.NewReader(data))
+	// Add priority for MX and SRV records
+	if recordType == "MX" || recordType == "SRV" {
+		reqBody["priority"] = priority
+	}
+
+	// Set proxied to false by default (gray cloud)
+	// Only A, AAAA, and CNAME records can be proxied
+	if recordType == "A" || recordType == "AAAA" || recordType == "CNAME" {
+		reqBody["proxied"] = false
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "POST", path, strings.NewReader(string(data)))
 	if err != nil {
 		return nil, err
 	}
@@ -217,15 +234,31 @@ func (c *Client) CreateRecord(ctx context.Context, apiToken, zoneID string, reco
 func (c *Client) UpdateRecord(ctx context.Context, apiToken, zoneID, recordID string, recordType, name, content string, ttl int, priority int) (*Record, error) {
 	path := "/zones/" + zoneID + "/dns_records/" + recordID
 
-	data := fmt.Sprintf(`{
-		"type": "%s",
-		"name": "%s",
-		"content": "%s",
-		"ttl": %d,
-		"priority": %d
-	}`, recordType, name, content, ttl, priority)
+	// Build request body
+	reqBody := map[string]interface{}{
+		"type":    recordType,
+		"name":    name,
+		"content": content,
+		"ttl":     ttl,
+	}
 
-	resp, err := c.doRequest(ctx, apiToken, "PUT", path, strings.NewReader(data))
+	// Add priority for MX and SRV records
+	if recordType == "MX" || recordType == "SRV" {
+		reqBody["priority"] = priority
+	}
+
+	// Set proxied to false by default (gray cloud)
+	// Only A, AAAA, and CNAME records can be proxied
+	if recordType == "A" || recordType == "AAAA" || recordType == "CNAME" {
+		reqBody["proxied"] = false
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "PUT", path, strings.NewReader(string(data)))
 	if err != nil {
 		return nil, err
 	}
