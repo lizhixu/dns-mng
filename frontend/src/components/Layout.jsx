@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { api } from '../api';
-import { Sun, Moon, Monitor, FileText, Globe, Server, User, Settings, ChevronDown, X } from 'lucide-react';
+import { Sun, Moon, Monitor, FileText, Globe, Server, User, Settings, ChevronDown, X, Github } from 'lucide-react';
 import BackToTop from './BackToTop';
 
 
@@ -226,6 +226,36 @@ const Layout = () => {
                                 <option key={code} value={code}>{lang.name}</option>
                             ))}
                         </select>
+
+                        {/* GitHub Link */}
+                        <a
+                            href="https://github.com/lizhixu/dns-mng"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="GitHub"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '6px',
+                                background: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-sm)',
+                                color: 'var(--text-secondary)',
+                                transition: 'var(--transition)',
+                                textDecoration: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.color = 'var(--text-primary)';
+                                e.currentTarget.style.borderColor = 'var(--text-tertiary)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.color = 'var(--text-secondary)';
+                                e.currentTarget.style.borderColor = 'var(--border-color)';
+                            }}
+                        >
+                            <Github size={16} />
+                        </a>
 
                         <div style={{ 
                             height: '20px', 
