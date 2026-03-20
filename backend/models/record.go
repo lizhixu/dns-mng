@@ -17,7 +17,7 @@ type Record struct {
 }
 
 type CreateRecordRequest struct {
-	NodeName   string `json:"node_name" binding:"required"`
+	NodeName   string `json:"node_name"`
 	RecordType string `json:"record_type" binding:"required"`
 	TTL        int    `json:"ttl"`
 	State      *bool  `json:"state"`

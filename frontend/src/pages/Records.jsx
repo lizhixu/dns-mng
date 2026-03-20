@@ -164,16 +164,16 @@ const Records = () => {
         // Remove trailing dots
         sanitized = sanitized.replace(/\.$/, '');
 
-        // Replace underscores and spaces with hyphens (DNS doesn't allow these in hostnames)
-        sanitized = sanitized.replace(/[_\s]+/g, '-');
+        // Replace spaces with hyphens, but keep underscores (needed for _acme-challenge, _dmarc, etc.)
+        sanitized = sanitized.replace(/\s+/g, '-');
 
-        // Remove any characters that are not alphanumeric, hyphen, or dot
-        sanitized = sanitized.replace(/[^a-z0-9\-\.]/g, '');
+        // Remove any characters that are not alphanumeric, hyphen, dot, or underscore
+        sanitized = sanitized.replace(/[^a-z0-9\-\._]/g, '');
 
         // Remove consecutive hyphens
         sanitized = sanitized.replace(/-+/g, '-');
 
-        // Remove leading/trailing hyphens
+        // Remove leading/trailing hyphens (but keep underscores)
         sanitized = sanitized.replace(/^-+|-+$/g, '');
 
         return sanitized;
@@ -190,8 +190,9 @@ const Records = () => {
             if (label.length > 63) {
                 return false;
             }
-            // Must start and end with alphanumeric
-            if (!/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/.test(label) && !/^[a-z0-9]$/.test(label)) {
+            // Allow underscores (for _acme-challenge, _dmarc, etc.)
+            // Must start with alphanumeric or underscore, end with alphanumeric
+            if (!/^[a-z0-9_][a-z0-9\-_]*[a-z0-9]$/.test(label) && !/^[a-z0-9_]$/.test(label)) {
                 return false;
             }
         }

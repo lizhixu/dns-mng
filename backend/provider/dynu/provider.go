@@ -202,11 +202,16 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 		"group":               currentDomain.Group,
 		"ipv4Address":         currentDomain.IPv4Address,
 		"ipv6Address":         currentDomain.IPv6Address,
-		"ttl":                 currentDomain.TTL,
+		"ttl":                 record.TTL, // Use the TTL from the record
 		"ipv4":                currentDomain.IPv4,
 		"ipv6":                currentDomain.IPv6,
 		"ipv4WildcardAlias":   currentDomain.IPv4WildcardAlias,
 		"ipv6WildcardAlias":   currentDomain.IPv6WildcardAlias,
+	}
+
+	// If TTL is 0, use domain's default TTL
+	if record.TTL == 0 {
+		body["ttl"] = currentDomain.TTL
 	}
 
 	// Determine record type from ID if not provided
@@ -255,13 +260,19 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 		content = domain.IPv6Address
 	}
 
+	// Get the actual TTL
+	ttl := domain.TTL
+	if record.TTL > 0 {
+		ttl = record.TTL
+	}
+
 	return &models.Record{
 		ID:         recordID,
 		DomainID:   fmt.Sprintf("%d", domain.ID),
 		DomainName: domain.Name,
 		NodeName:   "",
 		RecordType: recordType,
-		TTL:        domain.TTL,
+		TTL:        ttl,
 		State:      domain.State == "Active",
 		Content:    content,
 		UpdatedOn:  domain.UpdatedOn,
@@ -307,8 +318,14 @@ func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) buildRecordBody(record *models.Record) map[string]interface{} {
+	// Handle empty node name - use "@" for root domain
+	nodeName := record.NodeName
+	if nodeName == "" {
+		nodeName = "@"
+	}
+	
 	body := map[string]interface{}{
-		"nodeName":   record.NodeName,
+		"nodeName":   nodeName,
 		"recordType": record.RecordType,
 		"ttl":        record.TTL,
 		"state":      record.State,
