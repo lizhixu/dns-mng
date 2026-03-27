@@ -3,11 +3,12 @@ import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
     const { t, language, changeLanguage, languages } = useLanguage();
     const { themeMode, changeTheme } = useTheme();
@@ -299,17 +300,39 @@ const Login = () => {
                     </div>
                     <div className="form-group">
                         <label className="form-label">{t.login.password}</label>
-                        <input
-                            type="password"
-                            className="form-input"
-                            value={password}
-                            onChange={handlePasswordChange}
-                            onBlur={handlePasswordBlur}
-                            autoComplete="current-password"
-                            style={{
-                                borderColor: passwordError ? 'var(--danger)' : undefined
-                            }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className="form-input"
+                                value={password}
+                                onChange={handlePasswordChange}
+                                onBlur={handlePasswordBlur}
+                                autoComplete="current-password"
+                                style={{
+                                    borderColor: passwordError ? 'var(--danger)' : undefined,
+                                    paddingRight: '40px'
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-tertiary)',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                         {passwordError && (
                             <div style={{ 
                                 color: 'var(--danger)', 
