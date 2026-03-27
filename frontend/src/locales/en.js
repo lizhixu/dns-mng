@@ -105,6 +105,7 @@ export const en = {
     tencentcloudFormat: 'Format: SecretId,SecretKey (separated by comma)',
     cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
     ndjpFormat: 'Format: Bearer Token (from NDJP NET Dashboard)',
+    desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',
     goToProvider: 'Go to Provider Console',
   },
 

@@ -105,6 +105,7 @@ export const zh = {
     tencentcloudFormat: '格式：SecretId,SecretKey（用英文逗号分隔）',
     cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
     ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
+    desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',
     goToProvider: '前往服务商控制台',
   },
 

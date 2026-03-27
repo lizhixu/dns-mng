@@ -353,7 +353,7 @@ const Accounts = () => {
                                 placeholder={
                                     formData.provider_type === 'tencentcloud' 
                                         ? 'SecretId,SecretKey' 
-                                        : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp'
+                                        : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec'
                                             ? 'API Token'
                                             : t.accounts.apiKeyPlaceholder
                                 }
@@ -400,6 +400,11 @@ const Accounts = () => {
                         {formData.provider_type === 'ndjp' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
                                 {t.accounts.ndjpFormat || 'Bearer Token from NDJP NET dashboard'}
+                            </p>
+                        )}
+                        {formData.provider_type === 'desec' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.desecFormat || 'Token from deSEC dashboard'}
                             </p>
                         )}
                     </div>
