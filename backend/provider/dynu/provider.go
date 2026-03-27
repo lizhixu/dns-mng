@@ -97,7 +97,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			NodeName:   "",
 			RecordType: "A",
 			TTL:        domain.TTL,
-			State:      domain.State == "Active",
+			State:      domain.IPv4, // Use IPv4 flag to determine if A record is enabled
 			Content:    domain.IPv4Address,
 			UpdatedOn:  domain.UpdatedOn,
 		})
@@ -112,7 +112,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 			NodeName:   "",
 			RecordType: "AAAA",
 			TTL:        domain.TTL,
-			State:      domain.State == "Active",
+			State:      domain.IPv6, // Use IPv6 flag to determine if AAAA record is enabled
 			Content:    domain.IPv6Address,
 			UpdatedOn:  domain.UpdatedOn,
 		})
@@ -266,6 +266,12 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 		ttl = record.TTL
 	}
 
+	// Get the state based on record type
+	state := domain.IPv4
+	if recordType == "AAAA" {
+		state = domain.IPv6
+	}
+
 	return &models.Record{
 		ID:         recordID,
 		DomainID:   fmt.Sprintf("%d", domain.ID),
@@ -273,7 +279,7 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 		NodeName:   "",
 		RecordType: recordType,
 		TTL:        ttl,
-		State:      domain.State == "Active",
+		State:      state,
 		Content:    content,
 		UpdatedOn:  domain.UpdatedOn,
 	}, nil

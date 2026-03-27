@@ -200,7 +200,7 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 		NodeName:   record.NodeName,
 		RecordType: record.RecordType,
 		TTL:        record.TTL,
-		State:      record.State,
+		State:      true, // Cloudflare doesn't support disabling records
 		Content:    record.Content,
 		Priority:   record.Priority,
 	}, nil
@@ -237,6 +237,8 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 		return nil, err
 	}
 
+	// Return record with state always true for Cloudflare
+	record.State = true
 	return record, nil
 }
 
