@@ -22,7 +22,9 @@ export const LanguageProvider = ({ children }) => {
     useEffect(() => {
         // 设置 HTML lang 属性
         document.documentElement.lang = language;
-    }, [language]);
+        // 更新页面 title
+        document.title = t.layout.title || 'DNS Manager';
+    }, [language, t.layout.title]);
 
     return (
         <LanguageContext.Provider value={{ language, t, changeLanguage, languages }}>
