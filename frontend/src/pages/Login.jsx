@@ -3,7 +3,7 @@ import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, Eye, EyeOff } from 'lucide-react';
+import { Sun, Moon, Monitor, Eye, EyeOff, Github } from 'lucide-react';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -130,6 +130,37 @@ const Login = () => {
                 alignItems: 'center',
                 zIndex: 10
             }}>
+                {/* GitHub Link */}
+                <a 
+                    href="https://github.com/lizhixu/dns-mng" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title={t.login.viewOnGitHub}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--text-secondary)',
+                        transition: 'var(--transition)',
+                        backdropFilter: 'blur(10px)',
+                        textDecoration: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                        e.currentTarget.style.borderColor = 'var(--text-tertiary)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                    }}
+                >
+                    <Github size={16} />
+                </a>
+
                 {/* Theme Switcher */}
                 <div style={{ 
                     display: 'flex', 

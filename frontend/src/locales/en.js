@@ -42,6 +42,7 @@ export const en = {
     usernameInvalid: 'Username can only contain letters, numbers, underscores and hyphens',
     passwordRequired: 'Please enter password',
     passwordTooShort: 'Password must be at least 6 characters',
+    viewOnGitHub: 'View on GitHub',
   },
 
   // Register page

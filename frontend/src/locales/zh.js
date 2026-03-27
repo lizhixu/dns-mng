@@ -42,6 +42,7 @@ export const zh = {
     usernameInvalid: '用户名只能包含字母、数字、下划线和连字符',
     passwordRequired: '请输入密码',
     passwordTooShort: '密码至少需要6个字符',
+    viewOnGitHub: '在 GitHub 上查看',
   },
 
   // 注册页面
