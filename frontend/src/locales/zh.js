@@ -104,6 +104,7 @@ export const zh = {
     deleteAccountMessageDefault: '确定要删除此账户吗？此操作无法撤销。',
     tencentcloudFormat: '格式：SecretId,SecretKey（用英文逗号分隔）',
     cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
+    ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
     goToProvider: '前往服务商控制台',
   },
 

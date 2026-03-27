@@ -1,0 +1,1072 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NDJP NET",
+    "version": "0.0.1",
+    "description": "NDJP NET DDNS API は、**サブドメイン管理・DNSレコード操作・DDNS更新** を行うための API です。\n\n---\n\n## 主な機能\n\n- サブドメイン一覧取得\n- DNS レコードの追加 / 更新 / 削除\n- DDNS（動的 IP）更新\n- クライアント IP 確認\n\n---\n\n## 認証について\n\n本 API は **Bearer Token 認証** を使用します。\n\n```\nAuthorization: Bearer {API_TOKEN}\n```\n\n※ `Health check` のみ認証不要です。\n\n---\n\n## DDNS 更新の基本的な使い方\n\n```\nGET /api/ddns/update?hostname=foo.ndjp.net&myip=203.0.113.10\n```\n\n- `hostname` : 更新対象の FQDN\n- `myip` : 設定する IP（省略時はリクエスト元 IP）\n\n### 成功時レスポンス\n\n```\nGood 203.0.113.10\n```\n\n\n---\n\n## レコード操作の考え方\n\n- **Add** : 既存レコードに追加（merge）\n- **Update** : レコードを置換（replace）\n- **Delete** : 単体削除 or RRSet 全削除\n\n---\n\n## エラーレスポンス\n\n```json\n{\n    \"status\": \"error\",\n    \"message\": \"Validation failed\",\n    \"data\": {\n        \"type\": [\n            \"タイプは必須項目です。\"\n        ],\n        \"name\": [\n            \"名前は必須項目です。\"\n        ],\n        \"content\": [\n            \"コンテンツは必須項目です。\"\n        ]\n    }\n}\n```\n\n- status : 常に error\n- message : エラー概要\n- data : フィールド別エラー詳細\n\n## レートリミットについて\n\n本 API は **全エンドポイント共通でレートリミット** を設定しています。\n\n- **制限**：1分間に最大 **10リクエスト**\n- **適用範囲**：全 API 共通（DDNS / DNS 操作すべて）\n- **識別キー**：\n    - 認証済みリクエスト：ユーザーID\n    - 未認証リクエスト：送信元IPアドレス\n\n### 制限超過時の挙動\n\n制限を超えた場合、以下のレスポンスが返されます。\n\n**HTTP ステータス**\n\n```\n429 Too Many Requests\n```\n\n\n**レスポンスボディ**\n```json\n{\n  \"message\": \"Too Many Attempts.\"\n}\n```\n\n制限解除まで待ってから再試行してください。\n"
+  },
+  "servers": [
+    {
+      "url": "https://manage.ndjp.net/api"
+    }
+  ],
+  "security": [
+    {
+      "http": []
+    }
+  ],
+  "paths": {
+    "/ping": {
+      "get": {
+        "operationId": "apiPing",
+        "description": "API が稼働しているか確認するための疎通確認用エンドポイント。",
+        "summary": "Health check",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/check-ip": {
+      "get": {
+        "operationId": "apiCheckIp",
+        "description": "リクエスト元の IP アドレスを text/plain で返します。\nDDNS クライアントの疎通確認などに使用します。",
+        "summary": "Client IP check",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ddns/update": {
+      "get": {
+        "operationId": "apiDdnsUpdate",
+        "description": "DDNS 更新 API。\nhostname をキーに A / AAAA レコードを更新します。",
+        "summary": "DDNS update endpoint",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "parameters": [
+          {
+            "name": "hostname",
+            "in": "query",
+            "description": "更新対象のホスト名（FQDN）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "Error: Invalid IP address"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "Error: Invalid domain"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "Error: Hostname required"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Error: Domain not found or forbidden"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Error: DNS Update Failed"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/domains": {
+      "get": {
+        "operationId": "apiListDomains",
+        "description": "所有しているサブドメイン一覧を返します。",
+        "summary": "List owned subdomains",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Domains fetched"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/domains/{subdomain}/records": {
+      "get": {
+        "operationId": "apiListRecords",
+        "description": "指定したサブドメインに対応する Zone の レコードセット を返します。",
+        "summary": "List DNS records for a subdomain",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "parameters": [
+          {
+            "name": "subdomain",
+            "in": "path",
+            "required": true,
+            "description": "サブドメイン名（例: \"alice\"）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Records fetched"
+                      ]
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 0,
+                          "maxItems": 0,
+                          "additionalItems": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Domain not found or permission denied"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "apiAddRecord",
+        "description": "指定したサブドメインの Zone に DNS レコードを追加します。\n\n- name: \"@\" または \"www\" 等\n- content: カンマ区切りで複数指定可能",
+        "summary": "Add a DNS record",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "parameters": [
+          {
+            "name": "subdomain",
+            "in": "path",
+            "required": true,
+            "description": "サブドメイン名",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "A",
+                      "AAAA",
+                      "CNAME",
+                      "MX",
+                      "TXT",
+                      "ALIAS"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 60
+                  }
+                },
+                "required": [
+                  "type",
+                  "name",
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Record added"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Permission denied"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Validation failed"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "apiUpdateRecord",
+        "description": "指定した DNS レコードを更新します。",
+        "summary": "Update a DNS record",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "parameters": [
+          {
+            "name": "subdomain",
+            "in": "path",
+            "required": true,
+            "description": "サブドメイン名",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "A",
+                      "AAAA",
+                      "CNAME",
+                      "MX",
+                      "TXT",
+                      "ALIAS"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 60
+                  }
+                },
+                "required": [
+                  "type",
+                  "name",
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Record updated"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Permission denied"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Validation failed"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "apiDeleteRecord",
+        "description": "指定した DNS レコードを削除します。\ncontent を指定しない場合は RRSet 全体を削除します。",
+        "summary": "Delete a DNS record",
+        "tags": [
+          "DDNS",
+          " DNS",
+          "Api"
+        ],
+        "parameters": [
+          {
+            "name": "subdomain",
+            "in": "path",
+            "required": true,
+            "description": "サブドメイン名",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Record deleted"
+                      ]
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Permission denied"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Validation failed"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/migration/domain": {
+      "post": {
+        "operationId": "internalMigration.migrateDomain",
+        "tags": [
+          "InternalMigration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "subdomain": {
+                    "type": "string",
+                    "description": "メールアドレス必須",
+                    "pattern": "^[a-z0-9]([a-z0-9\\-]{1,61})[a-z0-9]$",
+                    "minLength": 3,
+                    "maxLength": 63
+                  }
+                },
+                "required": [
+                  "email",
+                  "subdomain"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "enum": [
+                        "Domain migrated successfully"
+                      ]
+                    },
+                    "subdomain": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "MIGRATION_LINKED"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "subdomain",
+                    "email",
+                    "action"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/MessageBag"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "Email not verified"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "User not found"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "Subdomain already exists in new system"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "http": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "MessageBag": {
+        "type": "array",
+        "items": {},
+        "title": "MessageBag"
+      }
+    }
+  }
+}

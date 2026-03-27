@@ -10,6 +10,7 @@ import (
 	"dns-mng/provider"
 	"dns-mng/provider/cloudflare"
 	"dns-mng/provider/dynu"
+	"dns-mng/provider/ndjp"
 	"dns-mng/provider/tencentcloud"
 	"dns-mng/service"
 
@@ -28,6 +29,7 @@ func main() {
 	provider.Register(dynu.New())
 	provider.Register(tencentcloud.New())
 	provider.Register(cloudflare.New())
+	provider.Register(ndjp.New())
 
 	// Init services
 	userService := service.NewUserService(cfg)

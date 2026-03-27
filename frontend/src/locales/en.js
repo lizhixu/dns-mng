@@ -104,6 +104,7 @@ export const en = {
     deleteAccountMessageDefault: 'Are you sure you want to delete this account? This action cannot be undone.',
     tencentcloudFormat: 'Format: SecretId,SecretKey (separated by comma)',
     cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
+    ndjpFormat: 'Format: Bearer Token (from NDJP NET Dashboard)',
     goToProvider: 'Go to Provider Console',
   },
 
