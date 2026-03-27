@@ -83,7 +83,7 @@ func (c *Client) ListRecords(ctx context.Context, apiKey string, domain string) 
 	return response.Response.RecordList, nil
 }
 
-func (c *Client) CreateRecord(ctx context.Context, apiKey string, domain string, recordType string, name string, value string, ttl uint64, mx uint64) (*dnspod.CreateRecordResponse, error) {
+func (c *Client) CreateRecord(ctx context.Context, apiKey string, domain string, recordType string, name string, value string, ttl uint64, mx uint64, status string) (*dnspod.CreateRecordResponse, error) {
 	client, err := c.newDNSPodClient(apiKey)
 	if err != nil {
 		return nil, err
@@ -95,6 +95,7 @@ func (c *Client) CreateRecord(ctx context.Context, apiKey string, domain string,
 	request.RecordLine = common.StringPtr("默认")
 	request.Value = common.StringPtr(value)
 	request.TTL = common.Uint64Ptr(ttl)
+	request.Status = common.StringPtr(status) // "ENABLE" or "DISABLE"
 	
 	if name != "" && name != "@" {
 		request.SubDomain = common.StringPtr(name)
@@ -114,7 +115,7 @@ func (c *Client) CreateRecord(ctx context.Context, apiKey string, domain string,
 	return response, nil
 }
 
-func (c *Client) UpdateRecord(ctx context.Context, apiKey string, domain string, recordID uint64, recordType string, name string, value string, ttl uint64, mx uint64) error {
+func (c *Client) UpdateRecord(ctx context.Context, apiKey string, domain string, recordID uint64, recordType string, name string, value string, ttl uint64, mx uint64, status string) error {
 	client, err := c.newDNSPodClient(apiKey)
 	if err != nil {
 		return err
@@ -127,6 +128,7 @@ func (c *Client) UpdateRecord(ctx context.Context, apiKey string, domain string,
 	request.RecordLine = common.StringPtr("默认")
 	request.Value = common.StringPtr(value)
 	request.TTL = common.Uint64Ptr(ttl)
+	request.Status = common.StringPtr(status) // "ENABLE" or "DISABLE"
 	
 	if name != "" && name != "@" {
 		request.SubDomain = common.StringPtr(name)

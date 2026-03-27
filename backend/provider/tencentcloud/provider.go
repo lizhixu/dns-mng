@@ -142,7 +142,13 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 
 	mx := uint64(record.Priority)
 	
-	resp, err := p.client.CreateRecord(ctx, apiKey, domainID, record.RecordType, record.NodeName, record.Content, ttl, mx)
+	// Convert state to status string
+	status := "ENABLE"
+	if !record.State {
+		status = "DISABLE"
+	}
+	
+	resp, err := p.client.CreateRecord(ctx, apiKey, domainID, record.RecordType, record.NodeName, record.Content, ttl, mx, status)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +183,13 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 
 	mx := uint64(record.Priority)
 
-	err = p.client.UpdateRecord(ctx, apiKey, domainID, recordID, record.RecordType, record.NodeName, record.Content, ttl, mx)
+	// Convert state to status string
+	status := "ENABLE"
+	if !record.State {
+		status = "DISABLE"
+	}
+
+	err = p.client.UpdateRecord(ctx, apiKey, domainID, recordID, record.RecordType, record.NodeName, record.Content, ttl, mx, status)
 	if err != nil {
 		return nil, err
 	}

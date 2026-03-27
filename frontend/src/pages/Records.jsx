@@ -425,6 +425,7 @@ const Records = () => {
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
+                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.state}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.updatedAt}</th>
                                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
                             </tr>
@@ -463,6 +464,11 @@ const Records = () => {
                                                 ({t.records.priority}: {record.priority})
                                             </span>
                                         )}
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>
+                                        <span className={`badge ${record.state ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: '0.75rem' }}>
+                                            {record.state ? t.common.active : t.common.inactive}
+                                        </span>
                                     </td>
                                     <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                         {record.updated_on ? new Date(record.updated_on).toLocaleString('zh-CN', { 
