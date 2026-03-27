@@ -11,6 +11,7 @@ const Accounts = () => {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [domainCounts, setDomainCounts] = useState({}); // Store domain counts per account
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);

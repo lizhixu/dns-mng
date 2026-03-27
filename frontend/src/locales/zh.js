@@ -117,6 +117,7 @@ export const zh = {
     noDomains: '暂无域名',
     noSearchResults: '未找到匹配的域名',
     loadingFromAccounts: '正在从所有账户加载域名...',
+    totalDomains: '共',
   },
 
   // 域名管理

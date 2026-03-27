@@ -117,6 +117,7 @@ export const en = {
     noDomains: 'No domains found',
     noSearchResults: 'No domains match your search',
     loadingFromAccounts: 'Loading domains from all accounts...',
+    totalDomains: 'Total',
   },
 
   // Domains

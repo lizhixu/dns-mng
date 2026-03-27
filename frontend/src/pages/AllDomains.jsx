@@ -55,7 +55,14 @@ const AllDomains = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.allDomains.title}</h2>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t.allDomains.subtitle}</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                            {t.allDomains.subtitle}
+                            {!loading && domains.length > 0 && (
+                                <span style={{ marginLeft: '0.5rem' }}>
+                                    • {t.allDomains.totalDomains || 'Total'}: {domains.length}
+                                </span>
+                            )}
+                        </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <div style={{ position: 'relative' }}>
