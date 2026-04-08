@@ -324,14 +324,8 @@ func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) buildRecordBody(record *models.Record) map[string]interface{} {
-	// Handle empty node name - use "@" for root domain
-	nodeName := record.NodeName
-	if nodeName == "" {
-		nodeName = "@"
-	}
-	
 	body := map[string]interface{}{
-		"nodeName":   nodeName,
+		"nodeName":   record.NodeName,
 		"recordType": record.RecordType,
 		"ttl":        record.TTL,
 		"state":      record.State,
@@ -349,6 +343,9 @@ func (p *Provider) buildRecordBody(record *models.Record) map[string]interface{}
 	case "MX":
 		body["host"] = record.Content
 		body["priority"] = record.Priority
+		if body["priority"] == 0 {
+			body["priority"] = 10 // Default MX priority
+		}
 	case "TXT", "SPF":
 		body["textData"] = record.Content
 	case "SRV":
