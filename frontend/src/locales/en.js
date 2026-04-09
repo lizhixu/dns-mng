@@ -107,6 +107,7 @@ export const en = {
     cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
     ndjpFormat: 'Format: Bearer Token (from NDJP NET Dashboard)',
     desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',
+    dnsheFormat: 'Format: API Key,API Secret (comma separated, from DNSHE Dashboard → API Management)',
     goToProvider: 'Go to Provider Console',
   },
 

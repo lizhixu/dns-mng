@@ -107,6 +107,7 @@ export const zh = {
     cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
     ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
     desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',
+    dnsheFormat: '格式：API Key,API Secret（用英文逗号分隔，从 DNSHE 控制台 → API 管理获取）',
     goToProvider: '前往服务商控制台',
   },
 

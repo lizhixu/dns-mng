@@ -354,9 +354,11 @@ const Accounts = () => {
                                 placeholder={
                                     formData.provider_type === 'tencentcloud' 
                                         ? 'SecretId,SecretKey' 
-                                        : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec'
-                                            ? 'API Token'
-                                            : t.accounts.apiKeyPlaceholder
+                                        : formData.provider_type === 'dnshe'
+                                            ? 'API Key,API Secret'
+                                            : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec'
+                                                ? 'API Token'
+                                                : t.accounts.apiKeyPlaceholder
                                 }
                                 value={formData.api_key}
                                 onChange={e => setFormData({ ...formData, api_key: e.target.value })}
@@ -406,6 +408,11 @@ const Accounts = () => {
                         {formData.provider_type === 'desec' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
                                 {t.accounts.desecFormat || 'Token from deSEC dashboard'}
+                            </p>
+                        )}
+                        {formData.provider_type === 'dnshe' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.dnsheFormat || 'Format: API Key,API Secret (comma separated)'}
                             </p>
                         )}
                     </div>

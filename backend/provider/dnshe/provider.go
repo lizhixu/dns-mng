@@ -1,0 +1,250 @@
+package dnshe
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"dns-mng/models"
+)
+
+type Provider struct {
+	client *Client
+}
+
+func NewProvider() *Provider {
+	return &Provider{
+		client: NewClient(),
+	}
+}
+
+// New is an alias for NewProvider
+func New() *Provider {
+	return NewProvider()
+}
+
+func (p *Provider) Name() string {
+	return "dnshe"
+}
+
+func (p *Provider) DisplayName() string {
+	return "DNSHE"
+}
+
+func (p *Provider) WebsiteURL() string {
+	return "https://www.dnshe.com"
+}
+
+// parseAPIKey splits the API key format "apikey,apisecret"
+func parseAPIKey(apiKey string) (string, string, error) {
+	parts := strings.Split(apiKey, ",")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid API key format, expected: apikey,apisecret")
+	}
+	return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), nil
+}
+
+func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
+	key, secret, err := parseAPIKey(apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := p.client.ListSubdomains(ctx, key, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	domains := make([]models.Domain, 0, len(resp.Subdomains))
+	for _, sub := range resp.Subdomains {
+		domains = append(domains, models.Domain{
+			ID:          strconv.Itoa(sub.ID),
+			Name:        sub.FullDomain,
+			UnicodeName: sub.FullDomain,
+			State:       sub.Status,
+			CreatedOn:   sub.CreatedAt,
+			UpdatedOn:   sub.UpdatedAt,
+		})
+	}
+
+	return domains, nil
+}
+
+func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string) (*models.Domain, error) {
+	// For DNSHE, we can get domain info from the list
+	domains, err := p.ListDomains(ctx, apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, domain := range domains {
+		if domain.ID == domainID {
+			return &domain, nil
+		}
+	}
+
+	return nil, fmt.Errorf("domain not found: %s", domainID)
+}
+
+func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID string) ([]models.Record, error) {
+	key, secret, err := parseAPIKey(apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := strconv.Atoi(domainID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid domain ID: %w", err)
+	}
+
+	// Get domain info
+	domain, err := p.GetDomain(ctx, apiKey, domainID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get DNS records
+	resp, err := p.client.ListDNSRecords(ctx, key, secret, id)
+	if err != nil {
+		return nil, err
+	}
+
+	records := make([]models.Record, 0, len(resp.Records))
+	for _, r := range resp.Records {
+		// Extract node name from full record name
+		nodeName := strings.TrimSuffix(r.Name, "."+domain.Name)
+		nodeName = strings.TrimSuffix(nodeName, ".")
+		if nodeName == domain.Name || nodeName == strings.TrimSuffix(domain.Name, ".") {
+			nodeName = ""
+		}
+
+		priority := 0
+		if r.Priority != nil {
+			priority = *r.Priority
+		}
+
+		records = append(records, models.Record{
+			ID:         strconv.Itoa(r.ID),
+			DomainID:   domainID,
+			DomainName: domain.Name,
+			NodeName:   nodeName,
+			RecordType: r.Type,
+			TTL:        r.TTL,
+			State:      r.Status == "active",
+			Content:    r.Content,
+			Priority:   priority,
+			UpdatedOn:  r.CreatedAt,
+		})
+	}
+
+	return records, nil
+}
+
+func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
+	key, secret, err := parseAPIKey(apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := strconv.Atoi(domainID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid domain ID: %w", err)
+	}
+
+	ttl := record.TTL
+	if ttl == 0 {
+		ttl = 600 // Default TTL
+	}
+
+	var priority *int
+	if record.RecordType == "MX" || record.RecordType == "SRV" {
+		p := record.Priority
+		if p == 0 {
+			p = 10 // Default priority
+		}
+		priority = &p
+	}
+
+	err = p.client.CreateDNSRecord(ctx, key, secret, id, record.NodeName, record.RecordType, record.Content, ttl, priority)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the created record
+	return &models.Record{
+		ID:         "new",
+		DomainID:   domainID,
+		DomainName: record.DomainName,
+		NodeName:   record.NodeName,
+		RecordType: record.RecordType,
+		TTL:        ttl,
+		State:      true,
+		Content:    record.Content,
+		Priority:   record.Priority,
+		UpdatedOn:  time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
+	key, secret, err := parseAPIKey(apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	recordID, err := strconv.Atoi(record.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid record ID: %w", err)
+	}
+
+	ttl := record.TTL
+	if ttl == 0 {
+		ttl = 600
+	}
+
+	var priority *int
+	if record.RecordType == "MX" || record.RecordType == "SRV" {
+		p := record.Priority
+		if p == 0 {
+			p = 10
+		}
+		priority = &p
+	}
+
+	err = p.client.UpdateDNSRecord(ctx, key, secret, recordID, record.Content, ttl, priority)
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}
+
+func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID string, recordID string) error {
+	key, secret, err := parseAPIKey(apiKey)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.Atoi(recordID)
+	if err != nil {
+		return fmt.Errorf("invalid record ID: %w", err)
+	}
+
+	return p.client.DeleteDNSRecord(ctx, key, secret, id)
+}
+
+func (p *Provider) GetRecord(ctx context.Context, apiKey string, domainID string, recordID string) (*models.Record, error) {
+	records, err := p.ListRecords(ctx, apiKey, domainID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range records {
+		if record.ID == recordID {
+			return &record, nil
+		}
+	}
+
+	return nil, fmt.Errorf("record not found: %s", recordID)
+}
