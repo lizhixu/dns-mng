@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"dns-mng/models"
 )
@@ -167,6 +168,7 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 		State:      record.State,
 		Content:    record.Content,
 		Priority:   record.Priority,
+		UpdatedOn:  time.Now().Format(time.RFC3339),
 	}, nil
 }
 

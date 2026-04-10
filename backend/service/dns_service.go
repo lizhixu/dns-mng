@@ -9,8 +9,8 @@ import (
 )
 
 type DNSService struct {
-	accountService      *AccountService
-	domainCacheService  *DomainCacheService
+	accountService     *AccountService
+	domainCacheService *DomainCacheService
 }
 
 func NewDNSService(accountService *AccountService, domainCacheService *DomainCacheService) *DNSService {
@@ -76,8 +76,9 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 
 	// Use goroutines to fetch domains concurrently
 	type result struct {
-		domains []models.Domain
-		err     error
+		domains         []models.Domain
+		domainsToDelete []string
+		err             error
 	}
 
 	results := make(chan result, len(accounts))
@@ -88,25 +89,13 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 		go func(acc models.Account) {
 			defer wg.Done()
 
-			p, err := provider.Get(acc.ProviderType)
+			domains, domainsToDelete, err := s.listDomainsFromProviderForAccount(ctx, userID, acc)
 			if err != nil {
 				results <- result{err: err}
 				return
 			}
 
-			domains, err := p.ListDomains(ctx, acc.APIKey)
-			if err != nil {
-				results <- result{err: err}
-				return
-			}
-
-			// Add account info to domains
-			for i := range domains {
-				domains[i].AccountID = acc.ID
-				domains[i].AccountName = acc.Name
-			}
-
-			results <- result{domains: domains}
+			results <- result{domains: domains, domainsToDelete: domainsToDelete}
 		}(account)
 	}
 
@@ -118,12 +107,18 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 
 	// Collect all results
 	var allDomains []models.Domain
+	var allDomainsToDelete []string
 	for res := range results {
 		if res.err == nil && res.domains != nil {
 			allDomains = append(allDomains, res.domains...)
+			allDomainsToDelete = append(allDomainsToDelete, res.domainsToDelete...)
 		}
 		// Silently ignore errors from individual accounts
 	}
+
+	// Soft delete domains that no longer exist
+	// This will be handled by the handler which has account context
+	_ = allDomainsToDelete
 
 	// Merge domain cache data and update cache
 	if s.domainCacheService != nil {
@@ -149,6 +144,48 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 	return allDomains, nil
 }
 
+// listDomainsFromProviderForAccount is a helper to fetch domains for a single account
+func (s *DNSService) listDomainsFromProviderForAccount(ctx context.Context, userID int64, account models.Account) ([]models.Domain, []string, error) {
+	p, err := provider.Get(account.ProviderType)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	domains, err := p.ListDomains(ctx, account.APIKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Add account info to domains
+	for i := range domains {
+		domains[i].AccountID = account.ID
+		domains[i].AccountName = account.Name
+	}
+
+	// Get current cache to compare
+	var domainsToDelete []string
+	if s.domainCacheService != nil {
+		cacheMap, err := s.domainCacheService.BatchGetCacheByUser(userID)
+		if err == nil {
+			// Build a set of domain IDs from provider
+			providerDomainIDs := make(map[string]bool)
+			for _, domain := range domains {
+				key := cacheKey(account.ID, domain.ID)
+				providerDomainIDs[key] = true
+			}
+
+			// Check which cached domains are not in provider response
+			for key, cache := range cacheMap {
+				if cache.AccountID == account.ID && !providerDomainIDs[key] {
+					domainsToDelete = append(domainsToDelete, cache.DomainID)
+				}
+			}
+		}
+	}
+
+	return domains, domainsToDelete, nil
+}
+
 // cacheKey generates a map key for domain cache lookup
 func cacheKey(accountID int64, domainID string) string {
 	return fmt.Sprintf("%d:%s", accountID, domainID)
@@ -162,13 +199,15 @@ func (s *DNSService) ListDomains(ctx context.Context, userID, accountID int64) (
 // ListDomainsFromCache returns domains from cache for a specific account
 func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID int64) ([]models.Domain, error) {
 	if s.domainCacheService == nil {
-		return s.ListDomainsFromProvider(ctx, userID, accountID)
+		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
+		return domains, err
 	}
 
 	caches, err := s.domainCacheService.GetCacheByUser(userID)
 	if err != nil || len(caches) == 0 {
 		// 如果缓存为空，从服务商获取
-		return s.ListDomainsFromProvider(ctx, userID, accountID)
+		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
+		return domains, err
 	}
 
 	// 过滤出指定账户的域名
@@ -188,33 +227,51 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 
 	if len(domains) == 0 {
 		// 如果该账户没有缓存，从服务商获取
-		return s.ListDomainsFromProvider(ctx, userID, accountID)
+		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
+		return domains, err
 	}
 
 	return domains, nil
 }
 
 // ListDomainsFromProvider fetches domains from DNS provider and updates cache
-func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accountID int64) ([]models.Domain, error) {
+// Returns domains and a list of domain IDs that exist in cache but not in provider (should be soft deleted)
+func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accountID int64) ([]models.Domain, []string, error) {
 	account, err := s.accountService.Get(userID, accountID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	p, err := provider.Get(account.ProviderType)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	domains, err := p.ListDomains(ctx, account.APIKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Merge domain cache data and update cache
+	// Get current cache to compare
+	var domainsToDelete []string
 	if s.domainCacheService != nil {
 		cacheMap, err := s.domainCacheService.BatchGetCacheByUser(userID)
 		if err == nil {
+			// Build a set of domain IDs from provider
+			providerDomainIDs := make(map[string]bool)
+			for _, domain := range domains {
+				key := cacheKey(accountID, domain.ID)
+				providerDomainIDs[key] = true
+			}
+
+			// Check which cached domains are not in provider response
+			for key, cache := range cacheMap {
+				if cache.AccountID == accountID && !providerDomainIDs[key] {
+					domainsToDelete = append(domainsToDelete, cache.DomainID)
+				}
+			}
+
+			// Merge domain cache data and update cache
 			for i := range domains {
 				key := cacheKey(domains[i].AccountID, domains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
@@ -232,7 +289,7 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 		}
 	}
 
-	return domains, nil
+	return domains, domainsToDelete, nil
 }
 
 func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, domainID string) (*models.Domain, error) {
@@ -392,4 +449,22 @@ func (s *DNSService) GetCacheStats(ctx context.Context, userID int64) (*models.C
 	}
 
 	return s.domainCacheService.GetCacheStats(userID)
+}
+
+// BatchSoftDeleteDomains soft deletes multiple domains
+func (s *DNSService) BatchSoftDeleteDomains(ctx context.Context, userID int64, items []models.BatchCacheDeleteItem) error {
+	if s.domainCacheService == nil {
+		return fmt.Errorf("domain cache service not available")
+	}
+
+	return s.domainCacheService.BatchDeleteCache(userID, items)
+}
+
+// BatchRestoreDomains restores multiple soft deleted domains
+func (s *DNSService) BatchRestoreDomains(ctx context.Context, userID int64, items []models.BatchCacheDeleteItem) error {
+	if s.domainCacheService == nil {
+		return fmt.Errorf("domain cache service not available")
+	}
+
+	return s.domainCacheService.BatchRestoreCache(userID, items)
 }

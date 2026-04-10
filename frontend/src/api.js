@@ -143,7 +143,8 @@ export const api = {
         const response = await fetch(`${API_BASE}/domains/refresh`, {
             headers: getHeaders(),
         });
-        return handleResponse(response);
+        const data = await handleResponse(response);
+        return data;
     },
 
     // Domains
@@ -159,7 +160,9 @@ export const api = {
         const response = await fetch(`${API_BASE}/accounts/${accountId}/domains/refresh`, {
             headers: getHeaders(),
         });
-        return handleResponse(response);
+        const data = await handleResponse(response);
+        // Return the full response object with domains, domains_to_delete, and cache_timestamp
+        return data;
     },
 
     getDomain: async (accountId, domainId) => {
@@ -305,6 +308,26 @@ export const api = {
         const response = await fetch(`${API_BASE}/scheduler/trigger`, {
             method: 'POST',
             headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Batch soft delete domains
+    batchSoftDeleteDomains: async (items) => {
+        const response = await fetch(`${API_BASE}/domains/batch-soft-delete`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ items }),
+        });
+        return handleResponse(response);
+    },
+
+    // Batch restore domains
+    batchRestoreDomains: async (items) => {
+        const response = await fetch(`${API_BASE}/domains/batch-restore`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ items }),
         });
         return handleResponse(response);
     },

@@ -56,11 +56,11 @@ func (h *DomainCacheHandler) UpdateDomainCache(c *gin.Context) {
 	}
 
 	// Log operation
-	h.logService.CreateLog(userID, "update", "domain_cache", domainID, map[string]interface{}{
+	h.logService.CreateLog(userID, "update", "domain", domainID, map[string]interface{}{
 		"domain":       domainName,
-		"renewal_date":  req.RenewalDate,
-		"renewal_url":   req.RenewalURL,
-		"account":       accountID,
+		"renewal_date": req.RenewalDate,
+		"renewal_url":  req.RenewalURL,
+		"account":      accountID,
 	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, updatedDomain)
@@ -86,9 +86,18 @@ func (h *DomainCacheHandler) BatchUpdateDomainCache(c *gin.Context) {
 		return
 	}
 
+	// Collect domain names for logging
+	domainNames := make([]string, 0, len(req.Items))
+	for _, item := range req.Items {
+		if item.DomainName != "" {
+			domainNames = append(domainNames, item.DomainName)
+		}
+	}
+
 	// Log operation
 	h.logService.CreateLog(userID, "batch_update", "domain_cache", "", map[string]interface{}{
-		"count": len(req.Items),
+		"count":   len(req.Items),
+		"domains": domainNames,
 	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "batch update successful", "count": len(req.Items)})
@@ -114,9 +123,18 @@ func (h *DomainCacheHandler) BatchDeleteDomainCache(c *gin.Context) {
 		return
 	}
 
+	// Collect domain names for logging
+	domainNames := make([]string, 0, len(req.Items))
+	for _, item := range req.Items {
+		if item.DomainName != "" {
+			domainNames = append(domainNames, item.DomainName)
+		}
+	}
+
 	// Log operation
 	h.logService.CreateLog(userID, "batch_delete", "domain_cache", "", map[string]interface{}{
-		"count": len(req.Items),
+		"count":   len(req.Items),
+		"domains": domainNames,
 	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "batch delete successful", "count": len(req.Items)})
@@ -132,4 +150,78 @@ func (h *DomainCacheHandler) GetCacheStats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stats)
+}
+
+func (h *DomainCacheHandler) BatchSoftDeleteDomains(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req models.BatchSoftDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(req.Items) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no items provided"})
+		return
+	}
+
+	err := h.dnsService.BatchSoftDeleteDomains(c.Request.Context(), userID, req.Items)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Collect domain names for logging
+	domainNames := make([]string, 0, len(req.Items))
+	for _, item := range req.Items {
+		if item.DomainName != "" {
+			domainNames = append(domainNames, item.DomainName)
+		}
+	}
+
+	// Log operation
+	h.logService.CreateLog(userID, "soft_delete", "domain", "", map[string]interface{}{
+		"count":   len(req.Items),
+		"domains": domainNames,
+	}, c.ClientIP())
+
+	c.JSON(http.StatusOK, gin.H{"message": "domains soft deleted successfully", "count": len(req.Items)})
+}
+
+func (h *DomainCacheHandler) BatchRestoreDomains(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req models.BatchRestoreRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(req.Items) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no items provided"})
+		return
+	}
+
+	err := h.dnsService.BatchRestoreDomains(c.Request.Context(), userID, req.Items)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Collect domain names for logging
+	domainNames := make([]string, 0, len(req.Items))
+	for _, item := range req.Items {
+		if item.DomainName != "" {
+			domainNames = append(domainNames, item.DomainName)
+		}
+	}
+
+	// Log operation
+	h.logService.CreateLog(userID, "restore", "domain", "", map[string]interface{}{
+		"count":   len(req.Items),
+		"domains": domainNames,
+	}, c.ClientIP())
+
+	c.JSON(http.StatusOK, gin.H{"message": "domains restored successfully", "count": len(req.Items)})
 }

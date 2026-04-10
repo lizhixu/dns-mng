@@ -55,7 +55,8 @@ func (s *EmailService) UpsertEmailConfig(userID int64, req *models.UpdateEmailCo
 	var existingID int64
 	err := database.DB.QueryRow(`SELECT id FROM email_config WHERE user_id = ?`, userID).Scan(&existingID)
 
-	if err == sql.ErrNoRows {
+	switch err {
+	case sql.ErrNoRows:
 		// Insert new config
 		_, err = database.DB.Exec(
 			`INSERT INTO email_config (user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, enabled, created_at, updated_at)
@@ -63,7 +64,7 @@ func (s *EmailService) UpsertEmailConfig(userID int64, req *models.UpdateEmailCo
 			userID, req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword,
 			req.FromEmail, req.FromName, req.ToEmail, enabled, now, now,
 		)
-	} else if err == nil {
+	case nil:
 		// Update existing config
 		if req.SMTPPassword != "" {
 			// Update with new password

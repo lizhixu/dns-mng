@@ -17,30 +17,33 @@ type Domain struct {
 	AccountID   int64  `json:"account_id,omitempty"`
 	AccountName string `json:"account_name,omitempty"`
 	// Cached fields from domain_cache
-	RenewalDate   string `json:"renewal_date,omitempty"`
-	RenewalURL    string `json:"renewal_url,omitempty"`
-	CacheSynced   bool   `json:"cache_synced,omitempty"`
+	RenewalDate string `json:"renewal_date,omitempty"`
+	RenewalURL  string `json:"renewal_url,omitempty"`
+	CacheSynced bool   `json:"cache_synced,omitempty"`
 }
 
 // DomainCache represents cached domain data with renewal info
 type DomainCache struct {
-	ID          int64     `json:"id"`
-	UserID      int64     `json:"user_id"`
-	AccountID   int64     `json:"account_id"`
-	DomainID    string    `json:"domain_id"`
-	DomainName  string    `json:"domain_name"`
-	RenewalDate string    `json:"renewal_date,omitempty"`
-	RenewalURL  string    `json:"renewal_url,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID                int64      `json:"id"`
+	UserID            int64      `json:"user_id"`
+	AccountID         int64      `json:"account_id"`
+	DomainID          string     `json:"domain_id"`
+	DomainName        string     `json:"domain_name"`
+	RenewalDate       string     `json:"renewal_date,omitempty"`
+	RenewalURL        string     `json:"renewal_url,omitempty"`
+	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
+	LastSyncAt        *time.Time `json:"last_sync_at,omitempty"`
+	ProviderUpdatedOn *time.Time `json:"provider_updated_on,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 // UpdateDomainCacheRequest is the request body for updating domain cache
 type UpdateDomainCacheRequest struct {
-	RenewalDate       string `json:"renewal_date"`
-	RenewalURL        string `json:"renewal_url"`
-	NotifyDaysBefore  int    `json:"notify_days_before"`
-	NotifyEnabled     bool   `json:"notify_enabled"`
+	RenewalDate      string `json:"renewal_date"`
+	RenewalURL       string `json:"renewal_url"`
+	NotifyDaysBefore int    `json:"notify_days_before"`
+	NotifyEnabled    bool   `json:"notify_enabled"`
 }
 
 // BatchCacheItem represents a single item in batch cache operations
@@ -59,8 +62,10 @@ type BatchCacheRequest struct {
 
 // BatchCacheDeleteItem represents a single item in batch delete operations
 type BatchCacheDeleteItem struct {
-	AccountID int64  `json:"account_id"`
-	DomainID  string `json:"domain_id"`
+	AccountID   int64  `json:"account_id"`
+	AccountName string `json:"account_name,omitempty"`
+	DomainID    string `json:"domain_id"`
+	DomainName  string `json:"domain_name,omitempty"`
 }
 
 // BatchCacheDeleteRequest is the request body for batch deleting domain cache
@@ -74,4 +79,23 @@ type CacheStats struct {
 	WithRenewalDate int `json:"with_renewal_date"`
 	PermanentFree   int `json:"permanent_free"`
 	WithRenewalURL  int `json:"with_renewal_url"`
+}
+
+// BatchSoftDeleteRequest is the request body for batch soft deleting domains
+type BatchSoftDeleteRequest struct {
+	Items []BatchCacheDeleteItem `json:"items"`
+}
+
+// BatchRestoreRequest is the request body for batch restoring domains
+type BatchRestoreRequest struct {
+	Items []BatchCacheDeleteItem `json:"items"`
+}
+
+// RefreshDomainsResponse represents the response from refresh domains API
+type RefreshDomainsResponse struct {
+	Domains         []Domain               `json:"domains"`
+	DomainsToDelete []BatchCacheDeleteItem `json:"domains_to_delete"`
+	RestoredDomains []string               `json:"restored_domains"`
+	CacheTimestamp  string                 `json:"cache_timestamp"`
+	HasChanges      bool                   `json:"has_changes"`
 }

@@ -122,6 +122,8 @@ func main() {
 		protected.POST("/cache/batch", domainCacheHandler.BatchUpdateDomainCache)
 		protected.DELETE("/cache/batch", domainCacheHandler.BatchDeleteDomainCache)
 		protected.GET("/cache/stats", domainCacheHandler.GetCacheStats)
+		protected.POST("/domains/batch-soft-delete", domainCacheHandler.BatchSoftDeleteDomains)
+		protected.POST("/domains/batch-restore", domainCacheHandler.BatchRestoreDomains)
 
 		// Notification settings
 		protected.GET("/accounts/:id/domains/:domainId/notification", notificationHandler.GetNotificationSetting)

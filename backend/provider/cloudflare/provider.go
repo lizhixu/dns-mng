@@ -3,6 +3,7 @@ package cloudflare
 import (
 	"context"
 	"strings"
+	"time"
 
 	"dns-mng/models"
 )
@@ -203,6 +204,7 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 		State:      true, // Cloudflare doesn't support disabling records
 		Content:    record.Content,
 		Priority:   record.Priority,
+		UpdatedOn:  time.Now().Format(time.RFC3339),
 	}, nil
 }
 

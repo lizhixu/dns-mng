@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
-import { ArrowLeft, Search, RefreshCw, Globe, ExternalLink, Calendar, Link as LinkIcon, Edit2 } from 'lucide-react';
+import { ArrowLeft, Search, RefreshCw, Globe, ExternalLink, Calendar, Link as LinkIcon, Edit2, Clock, AlertTriangle } from 'lucide-react';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
 
 const Domains = () => {
@@ -13,6 +14,14 @@ const Domains = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [cacheTimestamp, setCacheTimestamp] = useState(null);
+
+    // Confirm dialog state for soft delete
+    const [confirmDialog, setConfirmDialog] = useState({ 
+        open: false, 
+        domainsToDelete: [],
+        onConfirm: null 
+    });
 
     // Renewal modal state
     const [renewalModal, setRenewalModal] = useState({ open: false, domain: null });
@@ -29,19 +38,61 @@ const Domains = () => {
     const loadDomains = useCallback(async (forceRefresh = false) => {
         setLoading(true);
         try {
-            // 根据是否强制刷新选择不同的 API
-            const data = forceRefresh 
-                ? await api.refreshDomains(accountId) 
-                : await api.getDomains(accountId);
-            setDomains(data || []);
-            setFilteredDomains(data || []);
+            let data;
+            if (forceRefresh) {
+                // 强制刷新时调用refresh API
+                const refreshData = await api.refreshDomains(accountId);
+                data = refreshData.domains || [];
+                setCacheTimestamp(refreshData.cache_timestamp || null);
+                
+                // 检查是否有需要删除的域名
+                if (refreshData.domains_to_delete && refreshData.domains_to_delete.length > 0) {
+                    // 获取这些域名的详细信息用于显示
+                    const domainsToDeleteDetails = domains.filter(d => 
+                        refreshData.domains_to_delete.includes(d.id)
+                    );
+                    
+                    // 显示确认对话框
+                    setConfirmDialog({
+                        open: true,
+                        domainsToDelete: domainsToDeleteDetails,
+                        onConfirm: async () => {
+                            try {
+                                // 执行软删除
+                                const deleteItems = refreshData.domains_to_delete.map(domainId => ({
+                                    account_id: parseInt(accountId),
+                                    domain_id: domainId
+                                }));
+                                await api.batchDeleteDomainCache(deleteItems);
+                                
+                                // 重新加载域名列表
+                                await loadDomains(false);
+                            } catch (err) {
+                                setError(err.message);
+                            }
+                        }
+                    });
+                    
+                    // 先显示从API获取的域名（不包括待删除的）
+                    const domainIdsToDelete = new Set(refreshData.domains_to_delete);
+                    data = data.filter(d => !domainIdsToDelete.has(d.id));
+                }
+            } else {
+                // 正常加载从缓存
+                data = await api.getDomains(accountId);
+                data = data || [];
+                setCacheTimestamp(null);
+            }
+            
+            setDomains(data);
+            setFilteredDomains(data);
             setError('');
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    }, [accountId]);
+    }, [accountId, domains]);
 
     useEffect(() => {
         loadDomains();
@@ -61,7 +112,7 @@ const Domains = () => {
                     enabled: setting.enabled
                 };
             }
-        } catch (err) {
+        } catch {
             // Use default if not found
         }
         
@@ -186,7 +237,24 @@ const Domains = () => {
                     {t.domains.backToAccounts}
                 </Link>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.domains.title}</h2>
+                    <div>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.domains.title}</h2>
+                        {cacheTimestamp && (
+                            <div style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                color: 'var(--accent-primary)',
+                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: 'var(--radius-md)'
+                            }}>
+                                <Clock size={14} />
+                                <span>{t.common.cacheTime || '缓存时间'}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
+                            </div>
+                        )}
+                    </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <div style={{ position: 'relative' }}>
                             <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
@@ -234,13 +302,18 @@ const Domains = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                             {domain.updated_on && (
                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                    {t.domains.updatedAt} {new Date(domain.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                                    {t.domains.updatedAt || '更新于'} {new Date(domain.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
                                                         year: 'numeric',
                                                         month: '2-digit',
                                                         day: '2-digit',
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
+                                                </span>
+                                            )}
+                                            {!domain.updated_on && domain.cache_synced && (
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                    {t.domains.noUpdateTime || '无更新时间'}
                                                 </span>
                                             )}
                                             {domain.renewal_date === 'permanent' ? (
@@ -418,6 +491,50 @@ const Domains = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Confirm Dialog for Soft Delete */}
+            <ConfirmDialog
+                isOpen={confirmDialog.open}
+                onClose={() => setConfirmDialog({ open: false, domainsToDelete: [], onConfirm: null })}
+                onConfirm={() => {
+                    if (confirmDialog.onConfirm) {
+                        confirmDialog.onConfirm();
+                    }
+                    setConfirmDialog({ open: false, domainsToDelete: [], onConfirm: null });
+                }}
+                title={t.domains.confirmDeleteTitle || '确认删除域名缓存'}
+                message={
+                    <div>
+                        <p style={{ marginBottom: '1rem' }}>
+                            {t.domains.confirmDeleteMessage || '以下域名在DNS服务商中已不存在，是否删除本地缓存？（软删除，如果域名重新出现将自动恢复）'}
+                        </p>
+                        <ul style={{ 
+                            listStyle: 'none', 
+                            padding: 0,
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                        }}>
+                            {confirmDialog.domainsToDelete.map(domain => (
+                                <li key={domain.id} style={{
+                                    padding: '0.5rem',
+                                    marginBottom: '0.5rem',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    <AlertTriangle size={14} style={{ color: 'var(--warning)' }} />
+                                    <span>{domain.name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                }
+                confirmText={t.common.confirm || '确认'}
+                cancelText={t.common.cancel}
+                type="warning"
+            />
         </div>
     );
 };

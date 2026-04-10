@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"dns-mng/middleware"
 	"dns-mng/models"
@@ -39,6 +41,16 @@ func (h *DNSHandler) ListAllDomains(c *gin.Context) {
 func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
+	// Get soft deleted domains before refresh
+	domainCacheService := service.NewDomainCacheService()
+	softDeletedDomains, _ := domainCacheService.GetSoftDeletedDomains(userID)
+	softDeletedMap := make(map[string]bool)
+	for _, d := range softDeletedDomains {
+		key := fmt.Sprintf("%d:%s", d.AccountID, d.DomainID)
+		softDeletedMap[key] = true
+	}
+
+	// Fetch domains from providers
 	domains, err := h.dnsService.ListAllDomainsFromProvider(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -47,7 +59,75 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 	if domains == nil {
 		domains = []models.Domain{}
 	}
-	c.JSON(http.StatusOK, domains)
+
+	// Check for domains to delete and domains to restore
+	providerDomainMap := make(map[string]bool)
+	for _, d := range domains {
+		key := fmt.Sprintf("%d:%s", d.AccountID, d.ID)
+		providerDomainMap[key] = true
+	}
+
+	// Get all cached domains (excluding soft deleted for comparison)
+	allCaches, _ := domainCacheService.GetCacheByUser(userID)
+	
+	// Get account names for display
+	accountService := service.NewAccountService()
+	accounts, _ := accountService.List(userID)
+	accountMap := make(map[int64]string)
+	for _, acc := range accounts {
+		accountMap[acc.ID] = acc.Name
+	}
+	
+	var domainsToDelete []models.BatchCacheDeleteItem
+	for _, cache := range allCaches {
+		key := fmt.Sprintf("%d:%s", cache.AccountID, cache.DomainID)
+		if !providerDomainMap[key] {
+			domainsToDelete = append(domainsToDelete, models.BatchCacheDeleteItem{
+				AccountID:   cache.AccountID,
+				AccountName: accountMap[cache.AccountID],
+				DomainID:    cache.DomainID,
+				DomainName:  cache.DomainName,
+			})
+		}
+	}
+
+	// Check for restored domains (soft deleted but now exist in provider)
+	var restoredDomains []string
+	for _, d := range domains {
+		key := fmt.Sprintf("%d:%s", d.AccountID, d.ID)
+		if softDeletedMap[key] {
+			// Auto restore
+			domainCacheService.BatchRestoreCache(userID, []models.BatchCacheDeleteItem{
+				{AccountID: d.AccountID, DomainID: d.ID},
+			})
+			restoredDomains = append(restoredDomains, d.Name)
+		}
+	}
+
+	// Update last sync time for all domains
+	for _, d := range domains {
+		var updatedOn *time.Time
+		if d.UpdatedOn != "" {
+			if t, err := time.Parse(time.RFC3339, d.UpdatedOn); err == nil {
+				updatedOn = &t
+			} else if t, err := time.Parse("2006-01-02T15:04:05Z", d.UpdatedOn); err == nil {
+				updatedOn = &t
+			} else if t, err := time.Parse("2006-01-02", d.UpdatedOn); err == nil {
+				updatedOn = &t
+			}
+		}
+		domainCacheService.UpdateLastSyncTime(userID, d.AccountID, d.ID, updatedOn)
+	}
+
+	response := models.RefreshDomainsResponse{
+		Domains:         domains,
+		DomainsToDelete: domainsToDelete,
+		RestoredDomains: restoredDomains,
+		CacheTimestamp:  time.Now().Format(time.RFC3339),
+		HasChanges:      len(domainsToDelete) > 0 || len(restoredDomains) > 0,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *DNSHandler) ListDomains(c *gin.Context) {
@@ -77,7 +157,7 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		return
 	}
 
-	domains, err := h.dnsService.ListDomainsFromProvider(c.Request.Context(), userID, accountID)
+	domains, domainsToDelete, err := h.dnsService.ListDomainsFromProvider(c.Request.Context(), userID, accountID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -85,7 +165,14 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 	if domains == nil {
 		domains = []models.Domain{}
 	}
-	c.JSON(http.StatusOK, domains)
+
+	// Return domains and domains that should be deleted
+	response := gin.H{
+		"domains":           domains,
+		"domains_to_delete": domainsToDelete,
+		"cache_timestamp":   time.Now().Format(time.RFC3339),
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *DNSHandler) GetDomain(c *gin.Context) {
@@ -147,14 +234,26 @@ func (h *DNSHandler) CreateRecord(c *gin.Context) {
 		return
 	}
 
+	// Get domain name for logging - prefer from record, fallback to GetDomain
+	domainName := record.DomainName
+	if domainName == "" {
+		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
+		if domain != nil {
+			domainName = domain.Name
+			if domain.UnicodeName != "" {
+				domainName = domain.UnicodeName
+			}
+		} else {
+			domainName = domainID
+		}
+	}
+
 	// Log operation
 	h.logService.CreateLog(userID, "create", "record", record.ID, map[string]interface{}{
-		"domain":      domainID,
-		"node_name":   record.NodeName,
-		"record_type": record.RecordType,
-		"content":     record.Content,
-		"ttl":         record.TTL,
-		"account":     accountID,
+		"domain":    domainName,
+		"type":      record.RecordType,
+		"node_name": record.NodeName,
+		"content":   record.Content,
 	}, c.ClientIP())
 
 	c.JSON(http.StatusCreated, record)
@@ -192,12 +291,25 @@ func (h *DNSHandler) UpdateRecord(c *gin.Context) {
 		return
 	}
 
-	// Log operation with before/after comparison
+	// Get domain name for logging - prefer from record, fallback to GetDomain
+	domainName := record.DomainName
+	if domainName == "" {
+		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
+		if domain != nil {
+			domainName = domain.Name
+			if domain.UnicodeName != "" {
+				domainName = domain.UnicodeName
+			}
+		} else {
+			domainName = domainID
+		}
+	}
+
+	// Log operation with changes
 	logDetails := map[string]interface{}{
-		"domain":      domainID,
-		"node_name":   record.NodeName,
-		"record_type": record.RecordType,
-		"account":     accountID,
+		"domain":    domainName,
+		"type":      record.RecordType,
+		"node_name": record.NodeName,
 	}
 	if oldRecord != nil {
 		changes := make(map[string]interface{})
@@ -232,17 +344,30 @@ func (h *DNSHandler) DeleteRecord(c *gin.Context) {
 	// Get record details before deletion
 	records, _ := h.dnsService.ListRecords(c.Request.Context(), userID, accountID, domainID)
 	var recordDetails map[string]interface{}
+	var domainName string
 	for _, r := range records {
 		if r.ID == recordID {
 			recordDetails = map[string]interface{}{
-				"domain":      domainID,
-				"node_name":   r.NodeName,
-				"record_type": r.RecordType,
-				"content":     r.Content,
-				"ttl":         r.TTL,
-				"account":     accountID,
+				"type":      r.RecordType,
+				"node_name": r.NodeName,
+				"content":   r.Content,
 			}
+			// Get domain name from record
+			domainName = r.DomainName
 			break
+		}
+	}
+
+	// Fallback to GetDomain if domain name not found in record
+	if domainName == "" {
+		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
+		if domain != nil {
+			domainName = domain.Name
+			if domain.UnicodeName != "" {
+				domainName = domain.UnicodeName
+			}
+		} else {
+			domainName = domainID
 		}
 	}
 
@@ -253,11 +378,9 @@ func (h *DNSHandler) DeleteRecord(c *gin.Context) {
 
 	// Log operation
 	if recordDetails == nil {
-		recordDetails = map[string]interface{}{
-			"domain":  domainID,
-			"account": accountID,
-		}
+		recordDetails = map[string]interface{}{}
 	}
+	recordDetails["domain"] = domainName
 	h.logService.CreateLog(userID, "delete", "record", recordID, recordDetails, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "record deleted"})

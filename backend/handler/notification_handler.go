@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"dns-mng/database"
 	"dns-mng/middleware"
 	"dns-mng/models"
 	"dns-mng/service"
@@ -74,11 +75,23 @@ func (h *NotificationHandler) UpdateNotificationSetting(c *gin.Context) {
 		return
 	}
 
+	// Get domain name from cache for logging
+	domainName := domainID
+	var cachedDomain models.DomainCache
+	database.DB.QueryRow(`
+		SELECT domain_name 
+		FROM domain_cache 
+		WHERE user_id = ? AND account_id = ? AND domain_id = ?
+	`, userID, accountID, domainID).Scan(&cachedDomain.DomainName)
+	if cachedDomain.DomainName != "" {
+		domainName = cachedDomain.DomainName
+	}
+
 	// Log operation
 	h.logService.CreateLog(userID, "update", "notification_setting", domainID, map[string]interface{}{
+		"domain":      domainName,
 		"days_before": req.DaysBefore,
 		"enabled":     req.Enabled,
-		"account":     accountID,
 	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, setting)

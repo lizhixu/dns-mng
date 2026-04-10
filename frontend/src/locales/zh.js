@@ -244,6 +244,32 @@ export const zh = {
     notifyDaysBefore: '提前通知天数',
     notifyHint: '在域名到期前 {days} 天发送邮件提醒',
   },
+
+  logs: {
+    actions: {
+      create: '创建',
+      update: '更新',
+      delete: '删除',
+      soft_delete: '软删除',
+      restore: '恢复',
+      login: '登录',
+      logout: '登出',
+      test: '测试',
+      refresh: '刷新',
+      batch_update: '批量更新',
+      batch_delete: '批量删除'
+    },
+    resources: {
+      account: '账户',
+      domain: '域名',
+      domain_cache: '域名缓存',
+      record: 'DNS记录',
+      email_config: '邮件配置',
+      notification_setting: '通知设置',
+      user: '用户',
+      password: '密码'
+    }
+  },
 };
 
 export default zh;

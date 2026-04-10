@@ -118,7 +118,7 @@ func (s *NotificationService) UpdateLastNotifiedAt(userID, accountID int64, doma
 	return err
 }
 
-// GetExpiringDomains gets domains that need notification
+// GetExpiringDomains gets domains that need notification (excluding soft deleted)
 func (s *NotificationService) GetExpiringDomains() ([]models.ExpiringDomain, error) {
 	rows, err := database.DB.Query(`
 		SELECT 
@@ -141,6 +141,7 @@ func (s *NotificationService) GetExpiringDomains() ([]models.ExpiringDomain, err
 			AND ec.enabled = 1
 			AND dc.renewal_date != '' 
 			AND dc.renewal_date != 'permanent'
+			AND dc.deleted_at IS NULL
 	`)
 	if err != nil {
 		return nil, err

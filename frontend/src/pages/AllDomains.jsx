@@ -12,6 +12,10 @@ const AllDomains = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [cacheTimestamp, setCacheTimestamp] = useState('');
+    const [domainsToDelete, setDomainsToDelete] = useState([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [restoredDomains, setRestoredDomains] = useState([]);
     const fetchedRef = useRef(false);
 
     // Renewal modal state
@@ -29,12 +33,37 @@ const AllDomains = () => {
     const loadDomains = useCallback(async (forceRefresh = false) => {
         setLoading(true);
         try {
-            // 根据是否强制刷新选择不同的 API
-            const data = forceRefresh 
-                ? await api.refreshAllDomains() 
-                : await api.getAllDomains();
-            setDomains(data || []);
-            setFilteredDomains(data || []);
+            let data;
+            let deletedItems = [];
+            let restored = [];
+            
+            if (forceRefresh) {
+                // 强制刷新时调用refresh API
+                const refreshData = await api.refreshAllDomains();
+                data = refreshData.domains || [];
+                deletedItems = refreshData.domains_to_delete || [];
+                restored = refreshData.restored_domains || [];
+                setCacheTimestamp(refreshData.cache_timestamp || new Date().toISOString());
+                
+                // 如果有需要删除的域名，显示确认对话框
+                if (deletedItems.length > 0) {
+                    setDomainsToDelete(deletedItems);
+                    setShowDeleteConfirm(true);
+                }
+                
+                // 如果有恢复的域名，显示提示
+                if (restored.length > 0) {
+                    setRestoredDomains(restored);
+                    setTimeout(() => setRestoredDomains([]), 5000);
+                }
+            } else {
+                // 正常加载从缓存
+                data = await api.getAllDomains();
+                data = data || [];
+                setCacheTimestamp(new Date().toISOString());
+            }
+            setDomains(data);
+            setFilteredDomains(data);
             setError('');
         } catch (err) {
             setError(err.message);
@@ -141,6 +170,23 @@ const AllDomains = () => {
         setRenewalError('');
     };
 
+    const handleConfirmDelete = async () => {
+        try {
+            await api.batchSoftDeleteDomains(domainsToDelete);
+            setShowDeleteConfirm(false);
+            setDomainsToDelete([]);
+            // 重新加载域名列表
+            await loadDomains(false);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setDomainsToDelete([]);
+    };
+
     // Calculate days until expiry
     const getDaysUntilExpiry = (renewalDate) => {
         if (!renewalDate || renewalDate === 'permanent') return null;
@@ -209,6 +255,16 @@ const AllDomains = () => {
                                     • {t.allDomains.totalDomains || 'Total'}: {domains.length}
                                 </span>
                             )}
+                            {cacheTimestamp && (
+                                <span style={{ marginLeft: '0.5rem' }}>
+                                    • 缓存时间: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            )}
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -231,6 +287,22 @@ const AllDomains = () => {
             </div>
 
             {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)' }}>{t.common.error}: {error}</div>}
+
+            {restoredDomains.length > 0 && (
+                <div style={{ 
+                    color: 'var(--success)', 
+                    marginBottom: '1rem', 
+                    padding: '1rem', 
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>✓ 以下域名已重新激活：</div>
+                    <div style={{ fontSize: '0.875rem' }}>
+                        {restoredDomains.join(', ')}
+                    </div>
+                </div>
+            )}
 
             {loading && !domains.length ? (
                 <div style={{ textAlign: 'center', padding: '4rem' }}>
@@ -265,20 +337,6 @@ const AllDomains = () => {
                                                 <Server size={12} />
                                                 {domain.account_name}
                                             </span>
-                                            {domain.updated_on && (
-                                                <>
-                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                        {new Date(domain.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', { 
-                                                            year: 'numeric', 
-                                                            month: '2-digit', 
-                                                            day: '2-digit',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </span>
-                                                </>
-                                            )}
                                             {domain.renewal_date === 'permanent' ? (
                                                 <>
                                                     <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
@@ -458,6 +516,71 @@ const AllDomains = () => {
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteConfirm}
+                onClose={handleCancelDelete}
+                title="确认删除域名"
+            >
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                        发现以下域名在服务商中已不存在，是否将这些域名标记为已删除？
+                    </p>
+                    <div style={{ 
+                        maxHeight: '200px', 
+                        overflowY: 'auto',
+                        padding: '1rem',
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)'
+                    }}>
+                        {domainsToDelete.map((item, index) => (
+                            <div key={index} style={{ 
+                                padding: '0.75rem',
+                                marginBottom: '0.5rem',
+                                backgroundColor: 'var(--bg-primary)',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '0.875rem',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                gap: '1rem'
+                            }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ 
+                                        fontWeight: '500', 
+                                        color: 'var(--text-primary)',
+                                        marginBottom: '0.25rem',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {item.domain_name || item.domain_id}
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: '0.75rem', 
+                                        color: 'var(--text-tertiary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem'
+                                    }}>
+                                        <Server size={12} />
+                                        {item.account_name || `账户 ${item.account_id}`}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
+                        注意：这是软删除操作，如果域名重新出现，将自动恢复。
+                    </p>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                    <button onClick={handleCancelDelete} className="btn btn-ghost">取消</button>
+                    <button onClick={handleConfirmDelete} className="btn btn-primary">确认删除</button>
+                </div>
             </Modal>
         </div>
     );

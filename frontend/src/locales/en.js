@@ -244,6 +244,32 @@ export const en = {
     notifyDaysBefore: 'Notify days before',
     notifyHint: 'Send reminder {days} days before expiry',
   },
+
+  logs: {
+    actions: {
+      create: 'Create',
+      update: 'Update',
+      delete: 'Delete',
+      soft_delete: 'Soft Delete',
+      restore: 'Restore',
+      login: 'Login',
+      logout: 'Logout',
+      test: 'Test',
+      refresh: 'Refresh',
+      batch_update: 'Batch Update',
+      batch_delete: 'Batch Delete'
+    },
+    resources: {
+      account: 'Account',
+      domain: 'Domain',
+      domain_cache: 'Domain Cache',
+      record: 'DNS Record',
+      email_config: 'Email Config',
+      notification_setting: 'Notification Setting',
+      user: 'User',
+      password: 'Password'
+    }
+  },
 };
 
 export default en;

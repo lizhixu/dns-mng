@@ -126,10 +126,290 @@ const LogsManagement = () => {
             create: '#10b981',
             update: '#3b82f6',
             delete: '#ef4444',
-            login: '#8b5cf6',
-            test: '#f59e0b'
+            soft_delete: '#f97316',
+            restore: '#8b5cf6',
+            login: '#06b6d4',
+            logout: '#64748b',
+            test: '#f59e0b',
+            refresh: '#14b8a6',
+            batch_update: '#3b82f6',
+            batch_delete: '#ef4444'
         };
         return colors[action] || '#6b7280';
+    };
+
+    const renderLogDetails = (log) => {
+        if (!log.details || typeof log.details !== 'object' || Object.keys(log.details).length === 0) {
+            return null;
+        }
+
+        const details = log.details;
+        const action = log.action;
+        const resource = log.resource;
+
+        // 特殊处理不同类型的日志
+        const renderSpecialDetails = () => {
+            // 登录日志
+            if (action === 'login' && resource === 'user') {
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                        {details.username && (
+                            <span>
+                                <User size={14} style={{ display: 'inline', marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                                {details.username}
+                            </span>
+                        )}
+                        {details.success !== undefined && (
+                            <span style={{ 
+                                color: details.success ? '#10b981' : '#ef4444',
+                                fontWeight: '500'
+                            }}>
+                                {details.success ? '✓ 成功' : '✗ 失败'}
+                            </span>
+                        )}
+                        {details.reason && (
+                            <span style={{ color: '#ef4444' }}>
+                                原因: {details.reason}
+                            </span>
+                        )}
+                    </div>
+                );
+            }
+
+            // 批量操作
+            if (action.startsWith('batch_')) {
+                return (
+                    <div>
+                        {details.count !== undefined && (
+                            <span style={{ fontWeight: '500' }}>
+                                📦 数量: {details.count}
+                            </span>
+                        )}
+                        {details.domains && Array.isArray(details.domains) && (
+                            <div style={{ marginTop: '0.5rem' }}>
+                                {details.domains.map((domain, idx) => (
+                                    <span key={idx} style={{ 
+                                        display: 'inline-block',
+                                        marginRight: '0.5rem',
+                                        marginBottom: '0.25rem',
+                                        padding: '0.125rem 0.5rem',
+                                        backgroundColor: 'var(--bg-tertiary)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.75rem'
+                                    }}>
+                                        {domain}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // DNS 记录操作
+            if (resource === 'record') {
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {details.type && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>类型:</span>
+                                <span style={{ 
+                                    fontWeight: '500',
+                                    padding: '0.125rem 0.5rem',
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontSize: '0.75rem'
+                                }}>{details.type}</span>
+                            </div>
+                        )}
+                        {details.node_name !== undefined && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>主机名:</span>
+                                <span style={{ fontFamily: 'monospace' }}>{details.node_name || '@'}</span>
+                            </div>
+                        )}
+                        {details.name && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>记录名:</span>
+                                <span style={{ fontFamily: 'monospace' }}>{details.name}</span>
+                            </div>
+                        )}
+                        {details.value && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>记录值:</span>
+                                <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{details.value}</span>
+                            </div>
+                        )}
+                        {details.content && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>内容:</span>
+                                <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{details.content}</span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // 账户操作
+            if (resource === 'account') {
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {details.name && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>账户名:</span>
+                                <span style={{ fontWeight: '500' }}>{details.name}</span>
+                            </div>
+                        )}
+                        {details.provider && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>服务商:</span>
+                                <span style={{ 
+                                    padding: '0.125rem 0.5rem',
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontSize: '0.75rem'
+                                }}>{details.provider}</span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // 域名缓存操作
+            if (resource === 'domain_cache' || resource === 'domain') {
+                // 只有在有其他信息时才显示详情区域
+                const hasOtherInfo = details.renewal_date || details.renewal_url || details.count !== undefined;
+                
+                if (!hasOtherInfo) {
+                    return null; // 域名已在标题显示，无其他信息则不显示详情
+                }
+                
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {details.renewal_date && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>续费日期:</span>
+                                <span>{details.renewal_date}</span>
+                            </div>
+                        )}
+                        {details.renewal_url && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>续费地址:</span>
+                                <span style={{ wordBreak: 'break-all' }}>{details.renewal_url}</span>
+                            </div>
+                        )}
+                        {details.count !== undefined && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>数量:</span>
+                                <span style={{ fontWeight: '500' }}>{details.count}</span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // 邮件配置
+            if (resource === 'email_config') {
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {details.smtp_host && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>SMTP服务器:</span>
+                                <span style={{ fontFamily: 'monospace' }}>{details.smtp_host}:{details.smtp_port || 587}</span>
+                            </div>
+                        )}
+                        {details.enabled !== undefined && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>状态:</span>
+                                <span style={{ color: details.enabled ? '#10b981' : '#ef4444' }}>
+                                    {details.enabled ? '✓ 已启用' : '✗ 已禁用'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // 通知设置
+            if (resource === 'notification_setting') {
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {details.days_before !== undefined && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>提前天数:</span>
+                                <span style={{ fontWeight: '500' }}>{details.days_before} 天</span>
+                            </div>
+                        )}
+                        {details.enabled !== undefined && (
+                            <div>
+                                <span style={{ color: 'var(--text-tertiary)', marginRight: '0.5rem' }}>状态:</span>
+                                <span style={{ color: details.enabled ? '#10b981' : '#ef4444' }}>
+                                    {details.enabled ? '✓ 已启用' : '✗ 已禁用'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            return null;
+        };
+
+        const specialContent = renderSpecialDetails();
+        if (specialContent) {
+            return (
+                <div style={{ 
+                    fontSize: '0.8125rem', 
+                    color: 'var(--text-secondary)',
+                    marginTop: '0.5rem',
+                    padding: '0.75rem',
+                    backgroundColor: 'var(--bg-secondary)',
+                    borderRadius: 'var(--radius-sm)',
+                    borderLeft: '3px solid ' + getActionColor(action)
+                }}>
+                    {specialContent}
+                </div>
+            );
+        }
+
+        // 默认显示所有字段
+        return (
+            <div style={{ 
+                fontSize: '0.8125rem', 
+                color: 'var(--text-secondary)',
+                marginTop: '0.5rem',
+                padding: '0.75rem',
+                backgroundColor: 'var(--bg-secondary)',
+                borderRadius: 'var(--radius-sm)',
+                borderLeft: '3px solid var(--border-color)'
+            }}>
+                {Object.entries(details).map(([key, value]) => (
+                    <div key={key} style={{ 
+                        display: 'flex', 
+                        gap: '0.5rem',
+                        marginBottom: '0.375rem',
+                        alignItems: 'flex-start'
+                    }}>
+                        <span style={{ 
+                            color: 'var(--text-tertiary)', 
+                            fontWeight: '500',
+                            minWidth: '100px',
+                            flexShrink: 0
+                        }}>
+                            {key}:
+                        </span>
+                        <span style={{ 
+                            color: 'var(--text-primary)',
+                            wordBreak: 'break-word',
+                            fontFamily: typeof value === 'string' && value.length > 50 ? 'monospace' : 'inherit',
+                            fontSize: typeof value === 'string' && value.length > 50 ? '0.75rem' : 'inherit'
+                        }}>
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     const getStatusColor = (status) => {
@@ -279,57 +559,77 @@ const LogsManagement = () => {
                     {activeTab === 'operation' && (
                         <>
                             <div style={{ display: 'grid', gap: '0.75rem' }}>
-                                {operationLogs.map(log => (
+                                {operationLogs.map(log => {
+                                    const hasDetails = log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0;
+                                    const domainName = log.details?.domain || log.details?.name || null;
+                                    const showDomainInTitle = domainName && (log.resource === 'domain' || log.resource === 'domain_cache' || log.resource === 'record');
+                                    
+                                    return (
                                     <div key={log.id} className="glass-panel" style={{ padding: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <Activity size={18} style={{ color: getActionColor(log.action), flexShrink: 0 }} />
+                                        <div style={{ display: 'flex', alignItems: hasDetails ? 'flex-start' : 'center', gap: '1rem' }}>
+                                            <Activity size={20} style={{ color: getActionColor(log.action), flexShrink: 0, marginTop: hasDetails ? '0.125rem' : '0' }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: hasDetails ? '0.5rem' : '0' }}>
                                                     <span style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '0.875rem', 
                                                         fontWeight: '600',
                                                         color: getActionColor(log.action),
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '0.05em'
+                                                        padding: '0.25rem 0.625rem',
+                                                        backgroundColor: `${getActionColor(log.action)}15`,
+                                                        borderRadius: 'var(--radius-sm)'
                                                     }}>
-                                                        {log.action}
+                                                        {t.logs?.actions?.[log.action] || log.action}
                                                     </span>
-                                                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                                        {log.resource}
+                                                    <span style={{ fontSize: '0.9375rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                        {t.logs?.resources?.[log.resource] || log.resource}
                                                     </span>
-                                                    {log.resource_id && (
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                    {showDomainInTitle && (
+                                                        <span style={{ 
+                                                            fontSize: '0.875rem', 
+                                                            color: 'var(--text-secondary)',
+                                                            fontFamily: 'monospace',
+                                                            fontWeight: '500'
+                                                        }}>
+                                                            {domainName}
+                                                        </span>
+                                                    )}
+                                                    {log.resource_id && !showDomainInTitle && (
+                                                        <span style={{ 
+                                                            fontSize: '0.75rem', 
+                                                            color: 'var(--text-tertiary)',
+                                                            fontFamily: 'monospace',
+                                                            backgroundColor: 'var(--bg-secondary)',
+                                                            padding: '0.125rem 0.5rem',
+                                                            borderRadius: 'var(--radius-sm)'
+                                                        }}>
                                                             #{log.resource_id}
                                                         </span>
                                                     )}
                                                 </div>
-                                                {log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0 && (
-                                                    <div style={{ 
-                                                        fontSize: '0.75rem', 
-                                                        color: 'var(--text-tertiary)',
-                                                        marginTop: '0.5rem',
-                                                        padding: '0.5rem',
-                                                        backgroundColor: 'var(--bg-secondary)',
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        fontFamily: 'monospace'
-                                                    }}>
-                                                        {JSON.stringify(log.details, null, 2)}
-                                                    </div>
-                                                )}
+                                                {renderLogDetails(log)}
                                             </div>
-                                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.375rem' }}>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                                                    <Clock size={12} style={{ display: 'inline', marginRight: '0.25rem', verticalAlign: 'middle' }} />
                                                     {formatDate(log.created_at)}
                                                 </div>
                                                 {log.ip_address && (
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                    <div style={{ 
+                                                        fontSize: '0.6875rem', 
+                                                        color: 'var(--text-tertiary)',
+                                                        fontFamily: 'monospace',
+                                                        backgroundColor: 'var(--bg-secondary)',
+                                                        padding: '0.125rem 0.375rem',
+                                                        borderRadius: 'var(--radius-sm)'
+                                                    }}>
                                                         {log.ip_address}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                                 {operationLogs.length === 0 && (
                                     <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                                         {t.logsManagement.noOperationLogs}

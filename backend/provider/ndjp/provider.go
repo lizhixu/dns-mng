@@ -139,11 +139,17 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 		return nil, err
 	}
 
+	// Get domain info for domain name
+	domain, err := p.GetDomain(ctx, apiKey, domainID)
+	if err != nil {
+		return nil, err
+	}
+
 	recordID := fmt.Sprintf("%s-%s-%s-new", record.RecordType, record.NodeName, record.Content)
 	return &models.Record{
 		ID:         recordID,
 		DomainID:   domainID,
-		DomainName: record.DomainName,
+		DomainName: domain.Name,
 		NodeName:   record.NodeName,
 		RecordType: record.RecordType,
 		TTL:        record.TTL,

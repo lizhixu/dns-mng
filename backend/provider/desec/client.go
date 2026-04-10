@@ -118,17 +118,18 @@ func (c *Client) CreateRRSet(ctx context.Context, token, domain string, rrset RR
 
 // UpdateRRSet updates an existing RRSet
 func (c *Client) UpdateRRSet(ctx context.Context, token, domain string, rrset RRSetRequest) error {
-	path := fmt.Sprintf("/domains/%s/rrsets/%s/%s/",
-		url.PathEscape(domain),
-		url.PathEscape(rrset.Subname),
-		url.PathEscape(rrset.Type))
+	// deSEC PATCH endpoint expects an array of RRSets
+	path := fmt.Sprintf("/domains/%s/rrsets/", url.PathEscape(domain))
 
-	data, err := json.Marshal(rrset)
+	// Wrap the single RRSet in an array
+	rrsets := []RRSetRequest{rrset}
+	
+	data, err := json.Marshal(rrsets)
 	if err != nil {
 		return fmt.Errorf("marshal rrset: %w", err)
 	}
 
-	resp, err := c.doRequest(ctx, token, "PUT", path, bytes.NewReader(data))
+	resp, err := c.doRequest(ctx, token, "PATCH", path, bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -148,10 +149,22 @@ func (c *Client) UpdateRRSet(ctx context.Context, token, domain string, rrset RR
 
 // DeleteRRSet deletes an RRSet
 func (c *Client) DeleteRRSet(ctx context.Context, token, domain, subname, recordType string) error {
-	path := fmt.Sprintf("/domains/%s/rrsets/%s/%s/",
-		url.PathEscape(domain),
-		url.PathEscape(subname),
-		url.PathEscape(recordType))
+	// For deSEC API, construct the path properly
+	// Root records have empty subname
+	// The path format is: /domains/{domain}/rrsets/{subname}/{type}/
+	// For root records: /domains/{domain}/rrsets//{type}/ (double slash is intentional)
+	var path string
+	if subname == "" {
+		// For root records, use double slash
+		path = fmt.Sprintf("/domains/%s/rrsets//%s/",
+			url.PathEscape(domain),
+			url.PathEscape(recordType))
+	} else {
+		path = fmt.Sprintf("/domains/%s/rrsets/%s/%s/",
+			url.PathEscape(domain),
+			url.PathEscape(subname),
+			url.PathEscape(recordType))
+	}
 
 	resp, err := c.doRequest(ctx, token, "DELETE", path, nil)
 	if err != nil {

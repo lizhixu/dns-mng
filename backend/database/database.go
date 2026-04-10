@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -68,8 +69,13 @@ func createTables() {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 			UNIQUE(user_id, account_id, domain_id)
 		)`,
+		// 为兼容旧版本，添加列（如果不存在）
+		`ALTER TABLE domain_cache ADD COLUMN deleted_at DATETIME`,
+		`ALTER TABLE domain_cache ADD COLUMN last_sync_at DATETIME`,
+		`ALTER TABLE domain_cache ADD COLUMN provider_updated_on DATETIME`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_user_id ON domain_cache(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_domain_name ON domain_cache(domain_name)`,
+		`CREATE INDEX IF NOT EXISTS idx_domain_cache_deleted_at ON domain_cache(deleted_at)`,
 
 		// Notification settings table
 		`CREATE TABLE IF NOT EXISTS notification_settings (
@@ -124,6 +130,10 @@ func createTables() {
 
 	for _, q := range queries {
 		if _, err := DB.Exec(q); err != nil {
+			// ALTER TABLE ADD COLUMN 在列已存在时会报错，忽略此错误
+			if strings.Contains(q, "ALTER TABLE") && strings.Contains(err.Error(), "duplicate column name") {
+				continue
+			}
 			log.Fatalf("Failed to create table: %v", err)
 		}
 	}
