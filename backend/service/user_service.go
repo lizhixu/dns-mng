@@ -94,6 +94,28 @@ func (s *UserService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 	return &models.AuthResponse{Token: token, User: user}, nil
 }
 
+// VerifyCredentials checks username/password against existing users.
+// Unlike Login, it will NOT auto-register a new user.
+func (s *UserService) VerifyCredentials(username, password string) (*models.User, error) {
+	var user models.User
+	var passwordHash string
+
+	err := database.DB.QueryRow(
+		"SELECT id, username, password_hash, created_at FROM users WHERE username = ?",
+		username,
+	).Scan(&user.ID, &user.Username, &passwordHash, &user.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("invalid credentials")
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password)); err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+	return &user, nil
+}
+
 func (s *UserService) generateToken(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,

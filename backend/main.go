@@ -40,6 +40,7 @@ func main() {
 	accountService := service.NewAccountService()
 	domainCacheService := service.NewDomainCacheService()
 	dnsService := service.NewDNSService(accountService, domainCacheService)
+	acmeService := service.NewAcmeService(dnsService)
 	logService := service.NewLogService()
 	schedulerLogService := service.NewSchedulerLogService()
 	notificationService := service.NewNotificationService()
@@ -60,6 +61,7 @@ func main() {
 	dnsCheckHandler := handler.NewDNSCheckHandler()
 	domainCacheHandler := handler.NewDomainCacheHandler(dnsService, logService)
 	notificationHandler := handler.NewNotificationHandler(notificationService, emailService, logService)
+	acmeHandler := handler.NewAcmeHandler(acmeService)
 
 	// Setup router
 	r := gin.Default()
@@ -74,6 +76,14 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 		}
 		api.GET("/providers", providerHandler.List)
+
+		// External ACME DNS-01 API (HTTP Basic Auth with system user)
+		acme := api.Group("/acme")
+		acme.Use(middleware.BasicAuthMiddleware(userService))
+		{
+			acme.POST("/dns01/present", acmeHandler.Present)
+			acme.POST("/dns01/cleanup", acmeHandler.Cleanup)
+		}
 	}
 
 	// Protected routes

@@ -14,6 +14,7 @@
 - 📊 **统计功能**：域名数量统计
 - 🔍 **搜索过滤**：快速查找域名和记录
 - 📝 **操作日志**：记录所有操作历史
+- 🔒 **ACME DNS-01 API**：提供对外调用接口，便于自动签发证书（HTTP Basic Auth）
 
 ## 技术栈
 
@@ -52,6 +53,47 @@ chmod +x start.sh
 4. 首次登录：
 - 直接输入任意用户名和密码登录
 - 系统会自动创建该账户
+
+## ACME DNS-01 API（对外调用）
+
+用于 ACME DNS-01（TXT 记录）自动验证，例如给 `lego` / 自定义脚本调用。
+
+### 鉴权方式
+
+使用 **HTTP Basic Auth**，用户名/密码就是系统登录账号密码。
+
+> 注意：系统登录接口会在首次登录时自动创建账户；而 ACME API 不会自动创建用户，必须先在系统里登录一次创建该账号。
+
+### 接口
+
+- `POST /api/acme/dns01/present`
+- `POST /api/acme/dns01/cleanup`
+
+请求 JSON：
+
+```json
+{
+  "fqdn": "_acme-challenge.example.com.",
+  "value": "xxxxxx",
+  "ttl": 300
+}
+```
+
+### curl 示例
+
+```bash
+curl -u "your_user:your_pass" \
+  -H "Content-Type: application/json" \
+  -d '{"fqdn":"_acme-challenge.example.com.","value":"txt-value","ttl":300}' \
+  http://localhost:8080/api/acme/dns01/present
+```
+
+```bash
+curl -u "your_user:your_pass" \
+  -H "Content-Type: application/json" \
+  -d '{"fqdn":"_acme-challenge.example.com.","value":"txt-value"}' \
+  http://localhost:8080/api/acme/dns01/cleanup
+```
 
 详细的 Docker 部署说明请查看 [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
 
