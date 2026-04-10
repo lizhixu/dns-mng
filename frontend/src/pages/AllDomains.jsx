@@ -257,7 +257,7 @@ const AllDomains = () => {
                             )}
                             {cacheTimestamp && (
                                 <span style={{ marginLeft: '0.5rem' }}>
-                                    • 缓存时间: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                    • {t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
                                         month: '2-digit',
                                         day: '2-digit',
                                         hour: '2-digit',

@@ -17,6 +17,7 @@ export const zh = {
     previousPage: '上一页',
     nextPage: '下一页',
     totalItems: '共 {count} 条',
+    cacheTime: '缓存时间',
   },
 
   login: {
@@ -109,6 +110,8 @@ export const zh = {
     noDomains: '此账户暂无域名',
     noSearchResults: '未找到匹配的域名',
     updatedAt: '更新于',
+    confirmDeleteTitle: '确认删除域名缓存',
+    confirmDeleteMessage: '以下域名在DNS服务商中已不存在，是否删除本地缓存？（软删除，如果域名重新出现将自动恢复）',
   },
 
   records: {

@@ -17,6 +17,7 @@ export const en = {
     previousPage: 'Previous',
     nextPage: 'Next',
     totalItems: 'Total {count}',
+    cacheTime: 'Cache Time',
   },
 
   login: {
@@ -109,6 +110,8 @@ export const en = {
     noDomains: 'No domains found for this account',
     noSearchResults: 'No domains match your search',
     updatedAt: 'Updated at',
+    confirmDeleteTitle: 'Confirm Delete Domain Cache',
+    confirmDeleteMessage: 'The following domains no longer exist in the DNS provider. Delete local cache? (Soft delete, will auto-restore if domains reappear)',
   },
 
   records: {

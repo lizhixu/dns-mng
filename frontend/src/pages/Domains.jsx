@@ -251,7 +251,7 @@ const Domains = () => {
                                 borderRadius: 'var(--radius-md)'
                             }}>
                                 <Clock size={14} />
-                                <span>{t.common.cacheTime || '缓存时间'}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
+                                <span>{t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
                             </div>
                         )}
                     </div>
@@ -502,11 +502,11 @@ const Domains = () => {
                     }
                     setConfirmDialog({ open: false, domainsToDelete: [], onConfirm: null });
                 }}
-                title={t.domains.confirmDeleteTitle || '确认删除域名缓存'}
+                title={t.domains.confirmDeleteTitle}
                 message={
                     <div>
                         <p style={{ marginBottom: '1rem' }}>
-                            {t.domains.confirmDeleteMessage || '以下域名在DNS服务商中已不存在，是否删除本地缓存？（软删除，如果域名重新出现将自动恢复）'}
+                            {t.domains.confirmDeleteMessage}
                         </p>
                         <ul style={{ 
                             listStyle: 'none', 
