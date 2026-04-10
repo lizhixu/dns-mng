@@ -128,7 +128,13 @@ const Layout = () => {
                     <Link to="/logs" style={menuItemStyle('/logs')}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <FileText size={14} />
-                            {t.layout.logs}
+                            {t.layout.logsManagement || t.layout.logs}
+                        </div>
+                    </Link>
+                    <Link to="/email-settings" style={menuItemStyle('/email-settings')}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Settings size={14} />
+                            {t.layout.emailNotifications}
                         </div>
                     </Link>
                 </nav>

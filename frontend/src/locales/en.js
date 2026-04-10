@@ -1,41 +1,29 @@
 export const en = {
-  // Common
   common: {
-    loading: 'Loading...',
     error: 'Error',
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
-    add: 'Add',
-    search: 'Search',
     refresh: 'Refresh',
     actions: 'Actions',
-    confirm: 'Confirm',
     active: 'Active',
     inactive: 'Inactive',
-    all: 'All',
-    seconds: 'seconds',
     top: 'Top',
     backToTop: 'Back to Top',
     hide: 'Hide',
     show: 'Show',
     copy: 'Copy',
-    format: 'Format',
-    enabled: 'Enabled',
-    disabled: 'Disabled',
-    changes: 'Changes',
-    reason: 'Reason',
+    previousPage: 'Previous',
+    nextPage: 'Next',
+    totalItems: 'Total {count}',
   },
 
-  // Login page
   login: {
     title: 'Login',
     username: 'Username',
     password: 'Password',
     loginBtn: 'Login',
-    noAccount: "Don't have an account?",
-    registerLink: 'Register',
     usernameRequired: 'Please enter username',
     usernameTooShort: 'Username must be at least 3 characters',
     usernameTooLong: 'Username cannot exceed 50 characters',
@@ -45,23 +33,11 @@ export const en = {
     viewOnGitHub: 'View on GitHub',
   },
 
-  // Register page
-  register: {
-    title: 'Register',
-    username: 'Username',
-    password: 'Password',
-    registerBtn: 'Register',
-    hasAccount: 'Already have an account?',
-    loginLink: 'Login',
-  },
-
-  // Layout
   layout: {
     title: 'DNS Manager',
     accounts: 'Accounts',
     domains: 'Domains',
     logs: 'Operation Logs',
-    profile: 'Profile',
     logout: 'Logout',
     themeLight: 'Light Mode',
     themeDark: 'Dark Mode',
@@ -75,9 +51,10 @@ export const en = {
     passwordMismatch: 'New password and confirm password do not match',
     passwordTooShort: 'New password must be at least 6 characters',
     passwordUpdated: 'Password updated',
+    logsManagement: 'Logs',
+    emailNotifications: 'Email Notifications',
   },
 
-  // Accounts
   accounts: {
     title: 'Accounts',
     subtitle: 'Manage your DNS provider accounts',
@@ -94,7 +71,6 @@ export const en = {
     viewDomains: 'View Domains',
     editAccount: 'Edit Account',
     deleteAccount: 'Delete Account',
-    deleteConfirm: 'Are you sure you want to delete this account?',
     linkNewAccount: 'Link New Account',
     linkAccount: 'Link Account',
     saveChanges: 'Save Changes',
@@ -111,7 +87,6 @@ export const en = {
     goToProvider: 'Go to Provider Console',
   },
 
-  // All Domains
   allDomains: {
     title: 'All Domains',
     subtitle: 'View domains across all accounts',
@@ -120,21 +95,22 @@ export const en = {
     noSearchResults: 'No domains match your search',
     loadingFromAccounts: 'Loading domains from all accounts...',
     totalDomains: 'Total',
+    renewalUrl: 'Renewal URL',
+    renewalModalTitle: 'Edit Renewal Info',
+    editRenewal: 'Edit Renewal Info',
+    permanentFree: 'Permanent Free',
   },
 
-  // Domains
   domains: {
     title: 'Domains',
     backToAccounts: 'Back to Accounts',
     searchPlaceholder: 'Search domains...',
-    ttl: 'TTL',
     manageRecords: 'Manage Records',
     noDomains: 'No domains found for this account',
     noSearchResults: 'No domains match your search',
     updatedAt: 'Updated at',
   },
 
-  // DNS Records
   records: {
     title: 'DNS Records',
     backToDomains: 'Back to Domains',
@@ -142,13 +118,11 @@ export const en = {
     type: 'Type',
     nodeName: 'Node Name',
     content: 'Content',
-    ttl: 'TTL',
     state: 'State',
     domainName: 'Domain Name',
     searchPlaceholder: 'Search records...',
     allTypes: 'All Types',
     noRecords: 'No records found',
-    deleteConfirm: 'Are you sure you want to delete this record?',
     addDnsRecord: 'Add DNS Record',
     editDnsRecord: 'Edit DNS Record',
     nodeNamePlaceholder: 'e.g. www (or leave empty for root)',
@@ -172,7 +146,6 @@ export const en = {
     deleteRecordTitle: 'Confirm Delete',
     deleteRecordMessage: 'Are you sure you want to delete DNS record "{name}" ({type})? This action cannot be undone.',
     deleteRecordMessageDefault: 'Are you sure you want to delete this record? This action cannot be undone.',
-    // DNS Check
     checkDns: 'Check DNS',
     checkDnsTitle: 'DNS Resolution Check Result',
     checkDnsNormal: 'Resolution Normal',
@@ -192,12 +165,7 @@ export const en = {
     close: 'Close',
   },
 
-  // Profile
   profile: {
-    user_profile: 'User Profile',
-    account_info: 'Account Information',
-    username: 'Username',
-    created_at: 'Created At',
     change_password: 'Change Password',
     old_password: 'Current Password',
     new_password: 'New Password',
@@ -209,34 +177,72 @@ export const en = {
     password_min_length: 'Password must be at least 6 characters',
   },
 
-  // Logs
-  logs: {
-    title: 'Operation Logs',
-    subtitle: 'View recent operation records, click to expand for details',
-    noLogs: 'No operation records',
-    actions: {
-      create: 'Create',
-      update: 'Update',
-      delete: 'Delete',
-      login: 'Login',
-      login_failed: 'Login Failed',
-      register: 'Register',
-      update_password: 'Update Password',
+  logsManagement: {
+    title: 'Logs',
+    subtitle: 'View operation logs and scheduler execution records',
+    refresh: 'Refresh',
+    triggerCheck: 'Run Check',
+    operationTab: 'Operation Logs',
+    schedulerTab: 'Scheduler Logs',
+    noOperationLogs: 'No operation logs',
+    noSchedulerLogs: 'No scheduler logs',
+    page: 'Page',
+    pages: 'pages',
+    taskNames: {
+      domain_expiry_notification: 'Domain Expiry Notification',
     },
-    resources: {
-      account: 'Account',
-      record: 'DNS Record',
-      auth: 'Authentication',
-    },
-    details: {
-      reason: 'Reason',
-      provider: 'Provider',
-      domain: 'Domain',
-      value: 'Value',
-      ttl: 'TTL',
-      changes: 'Changes',
+    schedulerDetails: {
+      totalDomains: 'Total',
+      success: 'Success',
+      failed: 'Failed',
       user: 'User',
+      domainsUnit: 'domains',
     },
+  },
+
+  emailSettings: {
+    title: 'Email Notifications',
+    subtitle: 'Configure SMTP email service for domain expiry reminders',
+    enabled: 'Enable email notifications',
+    smtpServer: 'SMTP Server',
+    port: 'Port',
+    username: 'SMTP Username',
+    password: 'SMTP Password',
+    passwordKeepBlank: 'Leave blank to keep current password',
+    fromEmail: 'From Email',
+    fromName: 'From Name (optional)',
+    toEmail: 'Recipient Email',
+    toEmailHint: 'Where expiry reminders will be sent',
+    commonSmtp: 'Common SMTP settings:',
+    saveConfig: 'Save',
+    configSaved: 'Email configuration saved',
+    testTitle: 'Test email configuration',
+    testDesc: 'Send a test email to {email} to verify settings',
+    sendTest: 'Send test email',
+    testSent: 'Test email sent to {email}, please check inbox',
+    providers: {
+      gmail: 'Gmail: smtp.gmail.com:587 (requires app password)',
+      outlook: 'Outlook: smtp-mail.outlook.com:587',
+      qq: 'QQ Mail: smtp.qq.com:587 (requires authorization code)',
+      mail163: '163 Mail: smtp.163.com:465',
+    },
+  },
+
+  confirmDialog: {
+    deleteTitle: 'Confirm Delete',
+    deleteMessage: 'Are you sure you want to delete this item? This action cannot be undone.',
+    delete: 'Delete',
+    cancel: 'Cancel',
+  },
+
+  expiry: {
+    expiredDaysAgo: 'Expired {days} days ago',
+    expiresToday: 'Expires today',
+    expiresTomorrow: 'Expires tomorrow',
+    expiresInDays: 'Expires in {days} days',
+    notifyEnabled: 'Enable expiry reminders',
+    notifyDaysBefore: 'Notify days before',
+    notifyHint: 'Send reminder {days} days before expiry',
   },
 };
 

@@ -1,41 +1,29 @@
 export const zh = {
-  // 通用
   common: {
-    loading: '加载中...',
     error: '错误',
     cancel: '取消',
     save: '保存',
     delete: '删除',
     edit: '编辑',
-    add: '添加',
-    search: '搜索',
     refresh: '刷新',
     actions: '操作',
-    confirm: '确认',
     active: '启用',
     inactive: '禁用',
-    all: '全部',
-    seconds: '秒',
     top: '顶部',
     backToTop: '回到顶部',
     hide: '隐藏',
     show: '显示',
     copy: '复制',
-    format: '格式',
-    enabled: '启用',
-    disabled: '禁用',
-    changes: '变更内容',
-    reason: '原因',
+    previousPage: '上一页',
+    nextPage: '下一页',
+    totalItems: '共 {count} 条',
   },
 
-  // 登录页面
   login: {
     title: '登录',
     username: '用户名',
     password: '密码',
     loginBtn: '登录',
-    noAccount: '还没有账号？',
-    registerLink: '立即注册',
     usernameRequired: '请输入用户名',
     usernameTooShort: '用户名至少需要3个字符',
     usernameTooLong: '用户名不能超过50个字符',
@@ -45,23 +33,11 @@ export const zh = {
     viewOnGitHub: '在 GitHub 上查看',
   },
 
-  // 注册页面
-  register: {
-    title: '注册',
-    username: '用户名',
-    password: '密码',
-    registerBtn: '注册',
-    hasAccount: '已有账号？',
-    loginLink: '立即登录',
-  },
-
-  // 布局
   layout: {
     title: 'DNS 管理器',
     accounts: '账户管理',
     domains: '域名列表',
     logs: '操作日志',
-    profile: '个人设置',
     logout: '退出登录',
     themeLight: '亮色模式',
     themeDark: '暗色模式',
@@ -75,9 +51,10 @@ export const zh = {
     passwordMismatch: '新密码与确认密码不匹配',
     passwordTooShort: '新密码至少需要6个字符',
     passwordUpdated: '密码已更新',
+    logsManagement: '日志管理',
+    emailNotifications: '邮件通知',
   },
 
-  // 账户管理
   accounts: {
     title: '账户管理',
     subtitle: '管理您的 DNS 服务商账户',
@@ -94,7 +71,6 @@ export const zh = {
     viewDomains: '查看域名',
     editAccount: '编辑账户',
     deleteAccount: '删除账户',
-    deleteConfirm: '确定要删除此账户吗？',
     linkNewAccount: '关联新账户',
     linkAccount: '关联账户',
     saveChanges: '保存更改',
@@ -111,7 +87,6 @@ export const zh = {
     goToProvider: '前往服务商控制台',
   },
 
-  // 所有域名
   allDomains: {
     title: '所有域名',
     subtitle: '查看所有账户下的域名',
@@ -120,21 +95,22 @@ export const zh = {
     noSearchResults: '未找到匹配的域名',
     loadingFromAccounts: '正在从所有账户加载域名...',
     totalDomains: '共',
+    renewalUrl: '续费地址',
+    renewalModalTitle: '编辑续费信息',
+    editRenewal: '编辑续费信息',
+    permanentFree: '永久免费',
   },
 
-  // 域名管理
   domains: {
     title: '域名管理',
     backToAccounts: '返回账户列表',
     searchPlaceholder: '搜索域名...',
-    ttl: 'TTL',
     manageRecords: '管理记录',
     noDomains: '此账户暂无域名',
     noSearchResults: '未找到匹配的域名',
     updatedAt: '更新于',
   },
 
-  // DNS 记录管理
   records: {
     title: 'DNS 记录',
     backToDomains: '返回域名列表',
@@ -142,19 +118,16 @@ export const zh = {
     type: '类型',
     nodeName: '主机名',
     content: '记录值',
-    ttl: 'TTL',
     state: '状态',
     domainName: '域名',
     searchPlaceholder: '搜索记录...',
     allTypes: '全部类型',
     noRecords: '暂无记录',
-    deleteConfirm: '确定要删除此记录吗？',
     addDnsRecord: '添加 DNS 记录',
     editDnsRecord: '编辑 DNS 记录',
     nodeNamePlaceholder: '例如：www（留空则为主机记录）',
     ttlSeconds: 'TTL（秒）',
     priority: '优先级',
-    // 记录类型说明
     contentLabels: {
       A: 'IPv4 地址',
       AAAA: 'IPv6 地址',
@@ -173,7 +146,6 @@ export const zh = {
     deleteRecordTitle: '确认删除',
     deleteRecordMessage: '确定要删除 DNS 记录 "{name}" ({type}) 吗？此操作无法撤销。',
     deleteRecordMessageDefault: '确定要删除此记录吗？此操作无法撤销。',
-    // DNS 检查
     checkDns: '检查解析',
     checkDnsTitle: 'DNS 解析检查结果',
     checkDnsNormal: '解析正常',
@@ -193,12 +165,7 @@ export const zh = {
     close: '关闭',
   },
 
-  // 个人设置
   profile: {
-    user_profile: '个人设置',
-    account_info: '账户信息',
-    username: '用户名',
-    created_at: '注册时间',
     change_password: '修改密码',
     old_password: '当前密码',
     new_password: '新密码',
@@ -210,34 +177,72 @@ export const zh = {
     password_min_length: '密码至少需要6位',
   },
 
-  // 操作日志
-  logs: {
-    title: '操作日志',
-    subtitle: '查看最近的操作记录，点击展开查看详细信息',
-    noLogs: '暂无操作记录',
-    actions: {
-      create: '创建',
-      update: '更新',
-      delete: '删除',
-      login: '登录',
-      login_failed: '登录失败',
-      register: '注册',
-      update_password: '修改密码',
+  logsManagement: {
+    title: '日志管理',
+    subtitle: '查看操作日志和定时任务执行记录',
+    refresh: '刷新',
+    triggerCheck: '手动执行检查',
+    operationTab: '操作日志',
+    schedulerTab: '定时任务日志',
+    noOperationLogs: '暂无操作日志',
+    noSchedulerLogs: '暂无定时任务日志',
+    page: '第',
+    pages: '页',
+    taskNames: {
+      domain_expiry_notification: '域名到期通知',
     },
-    resources: {
-      account: '账户',
-      record: 'DNS记录',
-      auth: '认证',
-    },
-    details: {
-      reason: '原因',
-      provider: '服务商',
-      domain: '域名',
-      value: '值',
-      ttl: 'TTL',
-      changes: '变更内容',
+    schedulerDetails: {
+      totalDomains: '总计',
+      success: '成功',
+      failed: '失败',
       user: '用户',
+      domainsUnit: '个域名',
     },
+  },
+
+  emailSettings: {
+    title: '邮件通知设置',
+    subtitle: '配置 SMTP 邮件服务，用于发送域名到期提醒通知',
+    enabled: '启用邮件通知',
+    smtpServer: 'SMTP 服务器',
+    port: '端口',
+    username: 'SMTP 用户名',
+    password: 'SMTP 密码',
+    passwordKeepBlank: '留空则保持当前密码不变',
+    fromEmail: '发件人邮箱',
+    fromName: '发件人名称（可选）',
+    toEmail: '收件人邮箱',
+    toEmailHint: '接收域名到期提醒通知的邮箱地址',
+    commonSmtp: '常用 SMTP 配置：',
+    saveConfig: '保存配置',
+    configSaved: '邮件配置已保存',
+    testTitle: '测试邮件配置',
+    testDesc: '发送测试邮件到 {email} 以验证配置是否正确',
+    sendTest: '发送测试邮件',
+    testSent: '测试邮件已发送到 {email}，请检查收件箱',
+    providers: {
+      gmail: 'Gmail: smtp.gmail.com:587 (需要应用专用密码)',
+      outlook: 'Outlook: smtp-mail.outlook.com:587',
+      qq: 'QQ邮箱: smtp.qq.com:587 (需要授权码)',
+      mail163: '163邮箱: smtp.163.com:465',
+    },
+  },
+
+  confirmDialog: {
+    deleteTitle: '确认删除',
+    deleteMessage: '确定要删除此项吗？此操作无法撤销。',
+    delete: '删除',
+    cancel: '取消',
+  },
+
+  expiry: {
+    expiredDaysAgo: '已过期 {days} 天',
+    expiresToday: '今天到期',
+    expiresTomorrow: '明天到期',
+    expiresInDays: '还有 {days} 天到期',
+    notifyEnabled: '启用到期提醒',
+    notifyDaysBefore: '提前通知天数',
+    notifyHint: '在域名到期前 {days} 天发送邮件提醒',
   },
 };
 

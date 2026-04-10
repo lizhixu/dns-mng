@@ -36,6 +36,20 @@ func (h *DNSHandler) ListAllDomains(c *gin.Context) {
 	c.JSON(http.StatusOK, domains)
 }
 
+func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	domains, err := h.dnsService.ListAllDomainsFromProvider(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if domains == nil {
+		domains = []models.Domain{}
+	}
+	c.JSON(http.StatusOK, domains)
+}
+
 func (h *DNSHandler) ListDomains(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	accountID, err := middleware.GetAccountID(c)
@@ -45,6 +59,25 @@ func (h *DNSHandler) ListDomains(c *gin.Context) {
 	}
 
 	domains, err := h.dnsService.ListDomains(c.Request.Context(), userID, accountID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if domains == nil {
+		domains = []models.Domain{}
+	}
+	c.JSON(http.StatusOK, domains)
+}
+
+func (h *DNSHandler) RefreshDomains(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	accountID, err := middleware.GetAccountID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account id"})
+		return
+	}
+
+	domains, err := h.dnsService.ListDomainsFromProvider(c.Request.Context(), userID, accountID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

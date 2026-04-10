@@ -9,7 +9,7 @@ import { useLanguage } from '../LanguageContext';
 const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SPF', 'SRV'];
 
 const Records = () => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { accountId, domainId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -471,7 +471,7 @@ const Records = () => {
                                         </span>
                                     </td>
                                     <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                        {record.updated_on ? new Date(record.updated_on).toLocaleString('zh-CN', { 
+                                        {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', { 
                                             year: 'numeric', 
                                             month: '2-digit', 
                                             day: '2-digit',

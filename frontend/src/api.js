@@ -66,8 +66,23 @@ export const api = {
     },
 
     // Operation Logs
-    getLogs: async (limit = 50) => {
-        const response = await fetch(`${API_BASE}/logs?limit=${limit}`, {
+    getLogs: async (page = 1, pageSize = 20) => {
+        const response = await fetch(`${API_BASE}/logs?page=${page}&page_size=${pageSize}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Scheduler Logs
+    getSchedulerLogs: async (page = 1, pageSize = 20) => {
+        const response = await fetch(`${API_BASE}/scheduler-logs?page=${page}&page_size=${pageSize}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    getSchedulerLogsByTask: async (taskName, page = 1, pageSize = 20) => {
+        const response = await fetch(`${API_BASE}/scheduler-logs/${taskName}?page=${page}&page_size=${pageSize}`, {
             headers: getHeaders(),
         });
         return handleResponse(response);
@@ -123,9 +138,25 @@ export const api = {
         return handleResponse(response);
     },
 
+    // Refresh all domains from providers
+    refreshAllDomains: async () => {
+        const response = await fetch(`${API_BASE}/domains/refresh`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Domains
     getDomains: async (accountId) => {
         const response = await fetch(`${API_BASE}/accounts/${accountId}/domains`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Refresh domains from provider
+    refreshDomains: async (accountId) => {
+        const response = await fetch(`${API_BASE}/accounts/${accountId}/domains/refresh`, {
             headers: getHeaders(),
         });
         return handleResponse(response);
@@ -178,6 +209,102 @@ export const api = {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Domain Cache (renewal info)
+    updateDomainCache: async (accountId, domainId, data) => {
+        const response = await fetch(`${API_BASE}/accounts/${accountId}/domains/${domainId}/cache`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    // Batch update domain cache
+    batchUpdateDomainCache: async (items) => {
+        const response = await fetch(`${API_BASE}/cache/batch`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ items }),
+        });
+        return handleResponse(response);
+    },
+
+    // Batch delete domain cache
+    batchDeleteDomainCache: async (items) => {
+        const response = await fetch(`${API_BASE}/cache/batch`, {
+            method: 'DELETE',
+            headers: getHeaders(),
+            body: JSON.stringify({ items }),
+        });
+        return handleResponse(response);
+    },
+
+    // Get cache statistics
+    getCacheStats: async () => {
+        const response = await fetch(`${API_BASE}/cache/stats`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Notification settings
+    getNotificationSetting: async (accountId, domainId) => {
+        const response = await fetch(`${API_BASE}/accounts/${accountId}/domains/${domainId}/notification`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    updateNotificationSetting: async (accountId, domainId, data) => {
+        const response = await fetch(`${API_BASE}/accounts/${accountId}/domains/${domainId}/notification`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    getAllNotificationSettings: async () => {
+        const response = await fetch(`${API_BASE}/notifications`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Email configuration
+    getEmailConfig: async () => {
+        const response = await fetch(`${API_BASE}/email/config`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    updateEmailConfig: async (data) => {
+        const response = await fetch(`${API_BASE}/email/config`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    testEmailConfig: async () => {
+        const response = await fetch(`${API_BASE}/email/test`, {
+            method: 'POST',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Trigger manual scheduler check
+    triggerSchedulerCheck: async () => {
+        const response = await fetch(`${API_BASE}/scheduler/trigger`, {
+            method: 'POST',
+            headers: getHeaders(),
         });
         return handleResponse(response);
     },

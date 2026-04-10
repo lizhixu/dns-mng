@@ -15,7 +15,7 @@ func NewLogService() *LogService {
 // CreateLog creates a new operation log
 func (s *LogService) CreateLog(userID int64, action, resource, resourceID string, details interface{}, ipAddress string) error {
 	detailsJSON, _ := json.Marshal(details)
-	
+
 	_, err := database.DB.Exec(
 		`INSERT INTO operation_logs (user_id, action, resource, resource_id, details, ip_address) 
 		 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -24,12 +24,27 @@ func (s *LogService) CreateLog(userID int64, action, resource, resourceID string
 	return err
 }
 
-// GetLogs retrieves operation logs for a user
-func (s *LogService) GetLogs(userID int64, limit int) ([]models.OperationLog, error) {
-	if limit <= 0 {
-		limit = 50
+// GetLogs retrieves operation logs for a user with pagination
+func (s *LogService) GetLogs(userID int64, page, pageSize int) (*models.LogListResponse, error) {
+	if page <= 0 {
+		page = 1
 	}
-	
+	if pageSize <= 0 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	offset := (page - 1) * pageSize
+
+	// Get total count
+	var total int
+	err := database.DB.QueryRow(
+		`SELECT COUNT(*) FROM operation_logs WHERE user_id = ?`,
+		userID,
+	).Scan(&total)
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := database.DB.Query(
 		`SELECT l.id, l.user_id, u.username, l.action, l.resource, l.resource_id, 
 		        l.details, l.ip_address, l.created_at
@@ -37,8 +52,8 @@ func (s *LogService) GetLogs(userID int64, limit int) ([]models.OperationLog, er
 		 JOIN users u ON l.user_id = u.id
 		 WHERE l.user_id = ?
 		 ORDER BY l.created_at DESC
-		 LIMIT ?`,
-		userID, limit,
+		 LIMIT ? OFFSET ?`,
+		userID, pageSize, offset,
 	)
 	if err != nil {
 		return nil, err
@@ -57,5 +72,12 @@ func (s *LogService) GetLogs(userID int64, limit int) ([]models.OperationLog, er
 		}
 		logs = append(logs, log)
 	}
-	return logs, nil
+
+	return &models.LogListResponse{
+		Logs:       logs,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
+	}, nil
 }

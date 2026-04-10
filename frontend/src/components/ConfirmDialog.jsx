@@ -1,17 +1,23 @@
 import { useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const ConfirmDialog = ({ 
     isOpen, 
     onClose, 
     onConfirm, 
-    title = '确认删除', 
-    message = '确定要删除此项吗？此操作无法撤销。',
-    confirmText = '删除',
-    cancelText = '取消',
+    title,
+    message,
+    confirmText,
+    cancelText,
     loading = false,
     danger = true
 }) => {
+    const { t } = useLanguage();
+    const resolvedTitle = title ?? t.confirmDialog.deleteTitle;
+    const resolvedMessage = message ?? t.confirmDialog.deleteMessage;
+    const resolvedConfirmText = confirmText ?? t.confirmDialog.delete;
+    const resolvedCancelText = cancelText ?? t.confirmDialog.cancel;
     const dialogRef = useRef(null);
 
     useEffect(() => {
@@ -90,7 +96,7 @@ const ConfirmDialog = ({
                             margin: '0 0 8px 0',
                             color: 'var(--text-primary)'
                         }}>
-                            {title}
+                            {resolvedTitle}
                         </h3>
                         <p style={{ 
                             fontSize: '14px', 
@@ -98,7 +104,7 @@ const ConfirmDialog = ({
                             color: 'var(--text-secondary)',
                             lineHeight: 1.5
                         }}>
-                            {message}
+                            {resolvedMessage}
                         </p>
                     </div>
                 </div>
@@ -125,7 +131,7 @@ const ConfirmDialog = ({
                             transition: 'var(--transition)'
                         }}
                     >
-                        {cancelText}
+                        {resolvedCancelText}
                     </button>
                     <button
                         onClick={handleConfirm}
@@ -156,7 +162,7 @@ const ConfirmDialog = ({
                                 animation: 'spin 0.6s linear infinite'
                             }} />
                         )}
-                        {confirmText}
+                        {resolvedConfirmText}
                     </button>
                 </div>
             </div>

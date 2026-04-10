@@ -20,14 +20,17 @@ func NewLogHandler(logService *service.LogService) *LogHandler {
 func (h *LogHandler) GetLogs(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	
-	limitStr := c.DefaultQuery("limit", "50")
-	limit, _ := strconv.Atoi(limitStr)
+	pageStr := c.DefaultQuery("page", "1")
+	page, _ := strconv.Atoi(pageStr)
 	
-	logs, err := h.logService.GetLogs(userID, limit)
+	pageSizeStr := c.DefaultQuery("page_size", "20")
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+	
+	response, err := h.logService.GetLogs(userID, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get logs"})
 		return
 	}
 	
-	c.JSON(http.StatusOK, logs)
+	c.JSON(http.StatusOK, response)
 }
