@@ -126,6 +126,20 @@ func createTables() {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_scheduler_logs_task_name ON scheduler_logs(task_name)`,
 		`CREATE INDEX IF NOT EXISTS idx_scheduler_logs_created_at ON scheduler_logs(created_at DESC)`,
+
+		// DDNS tokens table (one token per user, system-wide)
+		`CREATE TABLE IF NOT EXISTS ddns_tokens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL UNIQUE,
+			token TEXT NOT NULL UNIQUE,
+			enabled INTEGER DEFAULT 1,
+			last_used_at DATETIME,
+			last_ip TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_ddns_tokens_token ON ddns_tokens(token)`,
 	}
 
 	for _, q := range queries {

@@ -51,6 +51,8 @@ func main() {
 	schedulerService.Start()
 	defer schedulerService.Stop()
 
+	ddnsTokenService := service.NewDDNSTokenService()
+
 	// Init handlers
 	authHandler := handler.NewAuthHandler(userService, logService)
 	accountHandler := handler.NewAccountHandler(accountService, logService)
@@ -62,6 +64,8 @@ func main() {
 	domainCacheHandler := handler.NewDomainCacheHandler(dnsService, logService)
 	notificationHandler := handler.NewNotificationHandler(notificationService, emailService, logService)
 	acmeHandler := handler.NewAcmeHandler(acmeService)
+	ddnsHandler := handler.NewDDNSHandler(dnsService, accountService, logService, ddnsTokenService)
+	ddnsTokenHandler := handler.NewDDNSTokenHandler(ddnsTokenService, logService)
 
 	// Setup router
 	r := gin.Default()
@@ -76,6 +80,9 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 		}
 		api.GET("/providers", providerHandler.List)
+
+		// DDNS API (public, token-based authentication)
+		api.GET("/ddns/update", ddnsHandler.UpdateDDNS)
 
 		// External ACME DNS-01 API (HTTP Basic Auth with system user)
 		acme := api.Group("/acme")
@@ -139,6 +146,11 @@ func main() {
 		protected.POST("/accounts/:id/domains/:domainId/records", dnsHandler.CreateRecord)
 		protected.PUT("/accounts/:id/domains/:domainId/records/:recordId", dnsHandler.UpdateRecord)
 		protected.DELETE("/accounts/:id/domains/:domainId/records/:recordId", dnsHandler.DeleteRecord)
+
+		// DDNS Token Management (user-level, one token per user)
+		protected.GET("/ddns-token", ddnsTokenHandler.GetToken)
+		protected.PUT("/ddns-token", ddnsTokenHandler.UpdateToken)
+		protected.DELETE("/ddns-token", ddnsTokenHandler.DeleteToken)
 
 		// DNS Check
 		protected.POST("/dns/check", dnsCheckHandler.CheckDNS)

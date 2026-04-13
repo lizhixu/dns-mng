@@ -331,4 +331,29 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // DDNS Token API (user-level, one token per user)
+    getDDNSToken: async () => {
+        const response = await fetch(`${API_BASE}/ddns-token`, {
+            headers: getHeaders()
+        });
+        return handleResponse(response);
+    },
+
+    updateDDNSToken: async (data) => {
+        const response = await fetch(`${API_BASE}/ddns-token`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+
+    deleteDDNSToken: async () => {
+        const response = await fetch(`${API_BASE}/ddns-token`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+        return handleResponse(response);
+    },
 };

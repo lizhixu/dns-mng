@@ -60,6 +60,7 @@ export const en = {
     title: 'Accounts',
     subtitle: 'Manage your DNS provider accounts',
     addAccount: 'Add Account',
+    manageDDNSToken: 'DDNS Token',
     accountName: 'Account Name',
     accountNamePlaceholder: 'e.g. My Personal DNS',
     provider: 'Provider',
@@ -86,6 +87,25 @@ export const en = {
     desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',
     dnsheFormat: 'Format: API Key,API Secret (comma separated, from DNSHE Dashboard → API Management)',
     goToProvider: 'Go to Provider Console',
+    // DDNS Token
+    ddnsTokenTitle: 'DDNS Token Management',
+    ddnsTokenSubtitle: 'One token for the entire system, can update all domain records',
+    ddnsTokenValue: 'Token Value',
+    ddnsTokenStatus: 'Status',
+    ddnsTokenEnabled: 'Enabled',
+    ddnsTokenDisabled: 'Disabled',
+    ddnsTokenLastUsed: 'Last Used',
+    ddnsTokenLastIP: 'Last IP',
+    ddnsTokenGenerate: 'Create Token',
+    ddnsTokenCustom: 'Custom Token',
+    ddnsTokenCopy: 'Copy Token',
+    ddnsTokenCopyUrl: 'Copy Update URL',
+    ddnsTokenConfirmDelete: 'Confirm Delete Token',
+    ddnsTokenConfirmDeleteMsg: 'Are you sure you want to delete this DDNS Token? Devices using this token will no longer be able to update DNS records.',
+    ddnsTokenNoTokens: 'No DDNS Tokens',
+    ddnsTokenCreateHint: 'Click button to create DDNS token',
+    ddnsTokenUsageExample: 'Usage Example (DuckDNS Compatible)',
+    ddnsTokenName: 'DDNS Token',
   },
 
   allDomains: {
@@ -270,7 +290,9 @@ export const en = {
       email_config: 'Email Config',
       notification_setting: 'Notification Setting',
       user: 'User',
-      password: 'Password'
+      password: 'Password',
+      ddns_token: 'DDNS Token',
+      ddns: 'DDNS'
     }
   },
 };

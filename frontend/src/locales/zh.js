@@ -60,6 +60,7 @@ export const zh = {
     title: '账户管理',
     subtitle: '管理您的 DNS 服务商账户',
     addAccount: '添加账户',
+    manageDDNSToken: 'DDNS Token',
     accountName: '账户名称',
     accountNamePlaceholder: '例如：我的个人 DNS',
     provider: '服务商',
@@ -86,6 +87,25 @@ export const zh = {
     desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',
     dnsheFormat: '格式：API Key,API Secret（用英文逗号分隔，从 DNSHE 控制台 → API 管理获取）',
     goToProvider: '前往服务商控制台',
+    // DDNS Token
+    ddnsTokenTitle: 'DDNS Token 管理',
+    ddnsTokenSubtitle: '整个系统共用一个 Token，可更新所有域名记录',
+    ddnsTokenValue: 'Token 值',
+    ddnsTokenStatus: '状态',
+    ddnsTokenEnabled: '已启用',
+    ddnsTokenDisabled: '已禁用',
+    ddnsTokenLastUsed: '最后使用',
+    ddnsTokenLastIP: '最后 IP',
+    ddnsTokenGenerate: '创建 Token',
+    ddnsTokenCustom: '自定义 Token',
+    ddnsTokenCopy: '复制 Token',
+    ddnsTokenCopyUrl: '复制更新 URL',
+    ddnsTokenConfirmDelete: '确认删除 Token',
+    ddnsTokenConfirmDeleteMsg: '确定要删除此 DDNS Token 吗？删除后使用该 Token 的设备将无法更新 DNS 记录。',
+    ddnsTokenNoTokens: '暂无 DDNS Token',
+    ddnsTokenCreateHint: '点击按钮创建 DDNS Token',
+    ddnsTokenUsageExample: '使用示例 (DuckDNS 兼容)',
+    ddnsTokenName: 'DDNS Token',
   },
 
   allDomains: {
@@ -270,7 +290,9 @@ export const zh = {
       email_config: '邮件配置',
       notification_setting: '通知设置',
       user: '用户',
-      password: '密码'
+      password: '密码',
+      ddns_token: 'DDNS Token',
+      ddns: 'DDNS'
     }
   },
 };
