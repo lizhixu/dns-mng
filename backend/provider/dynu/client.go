@@ -19,12 +19,68 @@ type Client struct {
 func NewClient() *Client {
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 15 * time.Second, // Reduced from 30s to 15s
+			Transport: &http.Transport{
+				MaxIdleConns:        10,
+				MaxIdleConnsPerHost: 5,
+				IdleConnTimeout:     30 * time.Second,
+				DisableKeepAlives:   false,
+			},
 		},
 	}
 }
 
 func (c *Client) doRequest(ctx context.Context, method, path, apiKey string, body interface{}) ([]byte, error) {
+	return c.doRequestWithRetry(ctx, method, path, apiKey, body, 3)
+}
+
+func (c *Client) doRequestWithRetry(ctx context.Context, method, path, apiKey string, body interface{}, maxRetries int) ([]byte, error) {
+	var lastErr error
+	
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			// Exponential backoff: 1s, 2s, 4s
+			backoff := time.Duration(1<<uint(attempt-1)) * time.Second
+			select {
+			case <-time.After(backoff):
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
+
+		respBody, err := c.doSingleRequest(ctx, method, path, apiKey, body)
+		if err == nil {
+			return respBody, nil
+		}
+
+		lastErr = err
+		
+		// Don't retry on client errors (4xx) except 429 (rate limit)
+		if httpErr, ok := err.(*HTTPError); ok {
+			if httpErr.StatusCode >= 400 && httpErr.StatusCode < 500 && httpErr.StatusCode != 429 {
+				return nil, err
+			}
+		}
+		
+		// Don't retry on context errors
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+	}
+	
+	return nil, fmt.Errorf("request failed after %d attempts: %w", maxRetries+1, lastErr)
+}
+
+type HTTPError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("HTTP %d: %s", e.StatusCode, e.Message)
+}
+
+func (c *Client) doSingleRequest(ctx context.Context, method, path, apiKey string, body interface{}) ([]byte, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
@@ -42,6 +98,7 @@ func (c *Client) doRequest(ctx context.Context, method, path, apiKey string, bod
 	req.Header.Set("API-Key", apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "DNS-Manager/1.0")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -55,7 +112,10 @@ func (c *Client) doRequest(ctx context.Context, method, path, apiKey string, bod
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
+		return nil, &HTTPError{
+			StatusCode: resp.StatusCode,
+			Message:    string(respBody),
+		}
 	}
 
 	return respBody, nil
