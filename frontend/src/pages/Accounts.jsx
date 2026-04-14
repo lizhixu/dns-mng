@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { api } from '../api';
+import { api, getBackendBaseURL } from '../api';
 import { Link } from 'react-router-dom';
 import { Plus, Settings, Trash2, ExternalLink, Eye, EyeOff, Copy, Key, RefreshCw } from 'lucide-react';
 import Modal from '../components/Modal';
@@ -475,7 +475,7 @@ const Accounts = () => {
                                         ? 'SecretId,SecretKey' 
                                         : formData.provider_type === 'dnshe'
                                             ? 'API Key,API Secret'
-                                            : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec'
+                                            : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec' || formData.provider_type === 'ipv64'
                                                 ? 'API Token'
                                                 : t.accounts.apiKeyPlaceholder
                                 }
@@ -532,6 +532,11 @@ const Accounts = () => {
                         {formData.provider_type === 'dnshe' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
                                 {t.accounts.dnsheFormat || 'Format: API Key,API Secret (comma separated)'}
+                            </p>
+                        )}
+                        {formData.provider_type === 'ipv64' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.ipv64Format || 'Format: API Token (from IPv64.net Dashboard → API Settings)'}
                             </p>
                         )}
                     </div>
@@ -592,7 +597,7 @@ const Accounts = () => {
                                             {t.accounts.ddnsTokenUsageExample}
                                         </div>
                                         <code style={{ fontSize: '11px', color: '#3b82f6', wordBreak: 'break-all' }}>
-                                            {`${window.location.origin}/api/ddns/update?domains=example.com&token=${ddnsToken.token.token.substring(0, 8)}...`}
+                                            {`${getBackendBaseURL()}/api/ddns/update?domains=example.com&token=${ddnsToken.token.token.substring(0, 8)}...`}
                                         </code>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
@@ -656,7 +661,7 @@ const Accounts = () => {
                                             <Copy size={12} /> {t.accounts.ddnsTokenCopy}
                                         </button>
                                         <button
-                                            onClick={() => copyDdnsToken(`${window.location.origin}/api/ddns/update?domains=<domain>&token=${ddnsToken.token.token}`)}
+                                            onClick={() => copyDdnsToken(`${getBackendBaseURL()}/api/ddns/update?domains=<domain>&token=${ddnsToken.token.token}`)}
                                             className="btn btn-ghost"
                                             style={{ fontSize: '11px', padding: '4px 8px' }}
                                             title={t.accounts.ddnsTokenCopyUrl}

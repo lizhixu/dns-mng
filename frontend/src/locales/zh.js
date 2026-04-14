@@ -86,6 +86,7 @@ export const zh = {
     ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
     desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',
     dnsheFormat: '格式：API Key,API Secret（用英文逗号分隔，从 DNSHE 控制台 → API 管理获取）',
+    ipv64Format: '格式：API Token（从 IPv64.net 控制台 → API 设置获取）',
     goToProvider: '前往服务商控制台',
     // DDNS Token
     ddnsTokenTitle: 'DDNS Token 管理',

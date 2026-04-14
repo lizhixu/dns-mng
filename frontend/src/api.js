@@ -1,6 +1,13 @@
 // API Base URL - 直接访问后端
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+// Get backend base URL (without /api suffix for DDNS)
+export const getBackendBaseURL = () => {
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    // Remove /api suffix if present
+    return apiBase.replace(/\/api$/, '');
+};
+
 const getHeaders = () => {
     const token = localStorage.getItem('token');
     const headers = {

@@ -40,14 +40,19 @@ func (s *DNSService) ListAllDomainsFromCache(ctx context.Context, userID int64) 
 	// 从缓存构建域名列表
 	domains := make([]models.Domain, 0, len(caches))
 	for _, cache := range caches {
-		domains = append(domains, models.Domain{
+		domain := models.Domain{
 			ID:          cache.DomainID,
 			Name:        cache.DomainName,
 			AccountID:   cache.AccountID,
 			RenewalDate: cache.RenewalDate,
 			RenewalURL:  cache.RenewalURL,
 			CacheSynced: true,
-		})
+		}
+		// 将 provider_updated_on 映射到 updated_on
+		if cache.ProviderUpdatedOn != nil {
+			domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
+		}
+		domains = append(domains, domain)
 	}
 
 	// 补充账户名称
@@ -214,14 +219,19 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 	domains := make([]models.Domain, 0)
 	for _, cache := range caches {
 		if cache.AccountID == accountID {
-			domains = append(domains, models.Domain{
+			domain := models.Domain{
 				ID:          cache.DomainID,
 				Name:        cache.DomainName,
 				AccountID:   cache.AccountID,
 				RenewalDate: cache.RenewalDate,
 				RenewalURL:  cache.RenewalURL,
 				CacheSynced: true,
-			})
+			}
+			// 将 provider_updated_on 映射到 updated_on
+			if cache.ProviderUpdatedOn != nil {
+				domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
+			}
+			domains = append(domains, domain)
 		}
 	}
 

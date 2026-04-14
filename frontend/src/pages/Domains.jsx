@@ -48,7 +48,7 @@ const Domains = () => {
                 // 检查是否有需要删除的域名
                 if (refreshData.domains_to_delete && refreshData.domains_to_delete.length > 0) {
                     // 获取这些域名的详细信息用于显示
-                    const domainsToDeleteDetails = domains.filter(d => 
+                    const domainsToDeleteDetails = data.filter(d => 
                         refreshData.domains_to_delete.includes(d.id)
                     );
                     
@@ -92,7 +92,7 @@ const Domains = () => {
         } finally {
             setLoading(false);
         }
-    }, [accountId, domains]);
+    }, [accountId]); // 移除 domains 依赖
 
     useEffect(() => {
         loadDomains();
@@ -300,62 +300,42 @@ const Domains = () => {
                                     <div>
                                         <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                            {domain.updated_on && (
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                    {t.domains.updatedAt || '更新于'} {new Date(domain.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
-                                                        year: 'numeric',
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </span>
-                                            )}
-                                            {!domain.updated_on && domain.cache_synced && (
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                    {t.domains.noUpdateTime || '无更新时间'}
-                                                </span>
-                                            )}
                                             {domain.renewal_date === 'permanent' ? (
-                                                <>
-                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
+                                                <span style={{ 
+                                                    display: 'inline-flex', 
+                                                    alignItems: 'center', 
+                                                    gap: '0.25rem', 
+                                                    fontSize: '0.75rem', 
+                                                    color: 'var(--text-tertiary)',
+                                                    fontWeight: 'normal'
+                                                }}>
+                                                    <Calendar size={12} />
+                                                    {t.allDomains.permanentFree || '永久免费'}
+                                                </span>
+                                            ) : domain.renewal_date && (() => {
+                                                const expiryInfo = getExpiryInfo(domain.renewal_date);
+                                                return (
                                                     <span style={{ 
                                                         display: 'inline-flex', 
                                                         alignItems: 'center', 
                                                         gap: '0.25rem', 
-                                                        fontSize: '0.75rem', 
-                                                        color: 'var(--text-tertiary)',
-                                                        fontWeight: 'normal'
+                                                        fontSize: '0.75rem',
+                                                        color: expiryInfo?.color || 'var(--text-tertiary)',
+                                                        backgroundColor: expiryInfo?.bgColor || 'transparent',
+                                                        padding: expiryInfo?.bgColor !== 'transparent' ? '0.15rem 0.5rem' : '0',
+                                                        borderRadius: 'var(--radius-sm)',
+                                                        fontWeight: expiryInfo?.fontWeight || 'normal'
                                                     }}>
                                                         <Calendar size={12} />
-                                                        {t.allDomains.permanentFree || '永久免费'}
+                                                        {expiryInfo?.text || domain.renewal_date}
                                                     </span>
-                                                </>
-                                            ) : domain.renewal_date && (() => {
-                                                const expiryInfo = getExpiryInfo(domain.renewal_date);
-                                                return (
-                                                    <>
-                                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                        <span style={{ 
-                                                            display: 'inline-flex', 
-                                                            alignItems: 'center', 
-                                                            gap: '0.25rem', 
-                                                            fontSize: '0.75rem',
-                                                            color: expiryInfo?.color || 'var(--text-tertiary)',
-                                                            backgroundColor: expiryInfo?.bgColor || 'transparent',
-                                                            padding: expiryInfo?.bgColor !== 'transparent' ? '0.15rem 0.5rem' : '0',
-                                                            borderRadius: 'var(--radius-sm)',
-                                                            fontWeight: expiryInfo?.fontWeight || 'normal'
-                                                        }}>
-                                                            <Calendar size={12} />
-                                                            {expiryInfo?.text || domain.renewal_date}
-                                                        </span>
-                                                    </>
                                                 );
                                             })()}
                                             {domain.renewal_url && (
                                                 <>
-                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
+                                                    {(domain.renewal_date || domain.renewal_date === 'permanent') && (
+                                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
+                                                    )}
                                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', maxWidth: '200px' }}>
                                                         <LinkIcon size={12} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                                         <a
