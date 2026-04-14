@@ -36,6 +36,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://desec.io"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 3600
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	domains, err := p.client.ListDomains(ctx, apiKey)
 	if err != nil {

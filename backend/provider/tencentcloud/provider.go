@@ -32,6 +32,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://console.dnspod.cn"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 600
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	domainList, err := p.client.ListDomains(ctx, apiKey)
 	if err != nil {
@@ -43,7 +47,7 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 		if d.Name == nil {
 			continue
 		}
-		
+
 		status := "Active"
 		if d.Status != nil && *d.Status != "enable" {
 			status = "Inactive"
@@ -142,13 +146,13 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 	}
 
 	mx := uint64(record.Priority)
-	
+
 	// Convert state to status string
 	status := "ENABLE"
 	if !record.State {
 		status = "DISABLE"
 	}
-	
+
 	resp, err := p.client.CreateRecord(ctx, apiKey, domainID, record.RecordType, record.NodeName, record.Content, ttl, mx, status)
 	if err != nil {
 		return nil, err

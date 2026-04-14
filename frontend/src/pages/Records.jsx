@@ -17,6 +17,7 @@ const Records = () => {
     const [filteredRecords, setFilteredRecords] = useState([]);
     const [domain, setDomain] = useState(null);
     const [account, setAccount] = useState(null);
+    const [providerDefaultTTL, setProviderDefaultTTL] = useState(300);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,21 +53,32 @@ const Records = () => {
     // Load records and domain data
     useEffect(() => {
         let isMounted = true;
-        
+
         const loadData = async () => {
             setLoading(true);
             try {
-                const [recordsData, domainData, accountsData] = await Promise.all([
+                const [recordsData, domainData, accountsData, providersData] = await Promise.all([
                     api.getRecords(accountId, domainId),
                     api.getDomain(accountId, domainId),
-                    api.getAccounts()
+                    api.getAccounts(),
+                    api.getProviders()
                 ]);
-                
+
                 if (isMounted) {
                     setRecords(recordsData || []);
                     setFilteredRecords(recordsData || []);
                     setDomain(domainData);
-                    setAccount(accountsData?.find(a => a.id === parseInt(accountId)));
+
+                    const acc = accountsData?.find(a => a.id === parseInt(accountId));
+                    setAccount(acc);
+
+                    if (acc && providersData) {
+                        const prov = providersData.find(p => p.name === acc.provider_type);
+                        if (prov && typeof prov.default_ttl === 'number') {
+                            setProviderDefaultTTL(prov.default_ttl);
+                        }
+                    }
+
                     setError('');
                 }
             } catch (err) {
@@ -128,7 +140,7 @@ const Records = () => {
             node_name: '',
             record_type: 'A',
             content: '',
-            ttl: 300,
+            ttl: providerDefaultTTL,
             priority: 10,
             state: true
         });
@@ -252,7 +264,7 @@ const Records = () => {
 
     const confirmDelete = async () => {
         if (!deletingRecord) return;
-        
+
         setDeleting(true);
         try {
             await api.deleteRecord(accountId, domainId, deletingRecord.id);
@@ -275,19 +287,19 @@ const Records = () => {
     const handleCheckDNS = async (record) => {
         setCheckingRecord(record.id);
         setCheckResult(null);
-        
+
         try {
             // Build full domain name
-            const fullDomain = record.node_name 
+            const fullDomain = record.node_name
                 ? `${record.node_name}.${domain.name}`
                 : domain.name;
-            
+
             const result = await api.checkDNS({
                 domain: fullDomain,
                 record_type: record.record_type,
                 expected: record.content
             });
-            
+
             setCheckResult(result);
             setShowCheckResult(true);
         } catch (err) {
@@ -471,9 +483,9 @@ const Records = () => {
                                         </span>
                                     </td>
                                     <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                        {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', { 
-                                            year: 'numeric', 
-                                            month: '2-digit', 
+                                        {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                            year: 'numeric',
+                                            month: '2-digit',
                                             day: '2-digit',
                                             hour: '2-digit',
                                             minute: '2-digit'
@@ -481,9 +493,9 @@ const Records = () => {
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                            <button 
-                                                onClick={() => handleCheckDNS(record)} 
-                                                className="btn btn-ghost" 
+                                            <button
+                                                onClick={() => handleCheckDNS(record)}
+                                                className="btn btn-ghost"
                                                 title={t.records.checkDns}
                                                 disabled={checkingRecord === record.id}
                                             >
@@ -576,7 +588,6 @@ const Records = () => {
                                 className="form-input"
                                 value={formData.ttl}
                                 onChange={e => setFormData({ ...formData, ttl: e.target.value })}
-                                min="60"
                                 required
                             />
                         </div>
@@ -623,7 +634,7 @@ const Records = () => {
                 onConfirm={confirmDelete}
                 title={t.records.deleteRecordTitle}
                 message={
-                    deletingRecord 
+                    deletingRecord
                         ? t.records.deleteRecordMessage
                             .replace('{name}', deletingRecord.node_name || '@')
                             .replace('{type}', deletingRecord.record_type)
@@ -642,8 +653,8 @@ const Records = () => {
                 title={t.records.checkDnsTitle}
                 size="large"
                 footer={
-                    <button 
-                        onClick={() => setShowCheckResult(false)} 
+                    <button
+                        onClick={() => setShowCheckResult(false)}
                         className="btn btn-primary"
                     >
                         {t.records.close}
@@ -653,8 +664,8 @@ const Records = () => {
                 {checkResult && (
                     <>
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <div style={{ 
-                                padding: '1rem', 
+                            <div style={{
+                                padding: '1rem',
                                 borderRadius: 'var(--radius-md)',
                                 background: checkResult.matched ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                                 border: `1px solid ${checkResult.matched ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
@@ -662,16 +673,16 @@ const Records = () => {
                                 alignItems: 'center',
                                 gap: '0.75rem'
                             }}>
-                                <CheckCircle 
-                                    size={24} 
-                                    style={{ 
+                                <CheckCircle
+                                    size={24}
+                                    style={{
                                         color: checkResult.matched ? '#10b981' : '#ef4444',
                                         flexShrink: 0
-                                    }} 
+                                    }}
                                 />
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ 
-                                        fontWeight: '600', 
+                                    <div style={{
+                                        fontWeight: '600',
                                         marginBottom: '0.25rem',
                                         color: checkResult.matched ? '#10b981' : '#ef4444'
                                     }}>
@@ -679,18 +690,18 @@ const Records = () => {
                                     </div>
                                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                                         {checkResult.message === 'DNS record matches expected value' ? t.records.checkDnsMatched :
-                                         checkResult.message === 'DNS record does not match expected value' ? t.records.checkDnsNotMatched :
-                                         checkResult.message === 'DNS query failed' ? t.records.checkDnsFailed :
-                                         checkResult.message === 'No DNS records found' ? t.records.checkDnsNoRecords :
-                                         checkResult.message === 'DNS record found' ? t.records.checkDnsFound :
-                                         checkResult.message}
+                                            checkResult.message === 'DNS record does not match expected value' ? t.records.checkDnsNotMatched :
+                                                checkResult.message === 'DNS query failed' ? t.records.checkDnsFailed :
+                                                    checkResult.message === 'No DNS records found' ? t.records.checkDnsNoRecords :
+                                                        checkResult.message === 'DNS record found' ? t.records.checkDnsFound :
+                                                            checkResult.message}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{ 
-                            display: 'grid', 
+                        <div style={{
+                            display: 'grid',
                             gap: '1rem',
                             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))'
                         }}>
@@ -698,9 +709,9 @@ const Records = () => {
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                     {t.records.domain}
                                 </label>
-                                <div style={{ 
-                                    padding: '0.75rem', 
-                                    background: 'var(--bg-secondary)', 
+                                <div style={{
+                                    padding: '0.75rem',
+                                    background: 'var(--bg-secondary)',
                                     borderRadius: 'var(--radius-sm)',
                                     fontFamily: 'monospace',
                                     fontSize: '0.875rem',
@@ -714,9 +725,9 @@ const Records = () => {
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                     {t.records.recordType}
                                 </label>
-                                <div style={{ 
-                                    padding: '0.75rem', 
-                                    background: 'var(--bg-secondary)', 
+                                <div style={{
+                                    padding: '0.75rem',
+                                    background: 'var(--bg-secondary)',
                                     borderRadius: 'var(--radius-sm)',
                                     fontFamily: 'monospace',
                                     fontSize: '0.875rem'
@@ -730,9 +741,9 @@ const Records = () => {
                                     <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                         {t.records.expectedValue}
                                     </label>
-                                    <div style={{ 
-                                        padding: '0.75rem', 
-                                        background: 'var(--bg-secondary)', 
+                                    <div style={{
+                                        padding: '0.75rem',
+                                        background: 'var(--bg-secondary)',
                                         borderRadius: 'var(--radius-sm)',
                                         fontFamily: 'monospace',
                                         fontSize: '0.875rem',
@@ -748,9 +759,9 @@ const Records = () => {
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
                                     {t.records.actualValue}
                                 </label>
-                                <div style={{ 
-                                    padding: '0.75rem', 
-                                    background: 'var(--bg-secondary)', 
+                                <div style={{
+                                    padding: '0.75rem',
+                                    background: 'var(--bg-secondary)',
                                     borderRadius: 'var(--radius-sm)',
                                     fontFamily: 'monospace',
                                     fontSize: '0.875rem',
@@ -759,7 +770,7 @@ const Records = () => {
                                     {checkResult.values && checkResult.values.length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             {checkResult.values.map((value, index) => (
-                                                <div key={index} style={{ 
+                                                <div key={index} style={{
                                                     padding: '0.5rem',
                                                     background: 'var(--bg-tertiary)',
                                                     borderRadius: 'var(--radius-sm)',

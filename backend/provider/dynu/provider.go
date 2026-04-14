@@ -30,6 +30,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://www.dynu.com/ControlPanel"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 120
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	resp, err := p.client.GetDomains(ctx, apiKey)
 	if err != nil {
@@ -198,15 +202,15 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 
 	// Build update body with all required fields
 	body := map[string]interface{}{
-		"name":                currentDomain.Name,
-		"group":               currentDomain.Group,
-		"ipv4Address":         currentDomain.IPv4Address,
-		"ipv6Address":         currentDomain.IPv6Address,
-		"ttl":                 record.TTL, // Use the TTL from the record
-		"ipv4":                currentDomain.IPv4,
-		"ipv6":                currentDomain.IPv6,
-		"ipv4WildcardAlias":   currentDomain.IPv4WildcardAlias,
-		"ipv6WildcardAlias":   currentDomain.IPv6WildcardAlias,
+		"name":              currentDomain.Name,
+		"group":             currentDomain.Group,
+		"ipv4Address":       currentDomain.IPv4Address,
+		"ipv6Address":       currentDomain.IPv6Address,
+		"ttl":               record.TTL, // Use the TTL from the record
+		"ipv4":              currentDomain.IPv4,
+		"ipv6":              currentDomain.IPv6,
+		"ipv4WildcardAlias": currentDomain.IPv4WildcardAlias,
+		"ipv6WildcardAlias": currentDomain.IPv6WildcardAlias,
 	}
 
 	// If TTL is 0, use domain's default TTL
@@ -296,15 +300,15 @@ func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID str
 
 		// Build update body with all required fields
 		body := map[string]interface{}{
-			"name":                currentDomain.Name,
-			"group":               currentDomain.Group,
-			"ipv4Address":         currentDomain.IPv4Address,
-			"ipv6Address":         currentDomain.IPv6Address,
-			"ttl":                 currentDomain.TTL,
-			"ipv4":                currentDomain.IPv4,
-			"ipv6":                currentDomain.IPv6,
-			"ipv4WildcardAlias":   currentDomain.IPv4WildcardAlias,
-			"ipv6WildcardAlias":   currentDomain.IPv6WildcardAlias,
+			"name":              currentDomain.Name,
+			"group":             currentDomain.Group,
+			"ipv4Address":       currentDomain.IPv4Address,
+			"ipv6Address":       currentDomain.IPv6Address,
+			"ttl":               currentDomain.TTL,
+			"ipv4":              currentDomain.IPv4,
+			"ipv6":              currentDomain.IPv6,
+			"ipv4WildcardAlias": currentDomain.IPv4WildcardAlias,
+			"ipv6WildcardAlias": currentDomain.IPv6WildcardAlias,
 		}
 
 		// Clear the specific IP address

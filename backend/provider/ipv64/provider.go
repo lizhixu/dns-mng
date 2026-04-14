@@ -32,6 +32,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://ipv64.net"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 60
+}
+
 // parseTime converts IPv64 time format to RFC3339
 // IPv64 format: "2026-04-13 04:16:29"
 // RFC3339 format: "2006-01-02T15:04:05Z07:00"

@@ -371,7 +371,7 @@ func (s *DNSService) CreateRecord(ctx context.Context, userID, accountID int64, 
 	}
 
 	if record.TTL == 0 {
-		record.TTL = 300
+		record.TTL = p.DefaultTTL()
 	}
 
 	return p.CreateRecord(ctx, account.APIKey, domainID, record)

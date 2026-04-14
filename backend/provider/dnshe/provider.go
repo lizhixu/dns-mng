@@ -37,6 +37,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://www.dnshe.com"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 600
+}
+
 // parseAPIKey splits the API key format "apikey,apisecret"
 func parseAPIKey(apiKey string) (string, string, error) {
 	parts := strings.Split(apiKey, ",")

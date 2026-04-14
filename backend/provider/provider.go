@@ -18,6 +18,9 @@ type DNSProvider interface {
 	// WebsiteURL returns the provider's website URL
 	WebsiteURL() string
 
+	// DefaultTTL returns the provider's default TTL
+	DefaultTTL() int
+
 	// ListDomains returns all domains for the given API key
 	ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error)
 
@@ -42,4 +45,5 @@ type ProviderInfo struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
 	WebsiteURL  string `json:"website_url"`
+	DefaultTTL  int    `json:"default_ttl"`
 }

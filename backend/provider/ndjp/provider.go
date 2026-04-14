@@ -36,6 +36,10 @@ func (p *Provider) WebsiteURL() string {
 	return "https://manage.ndjp.net"
 }
 
+func (p *Provider) DefaultTTL() int {
+	return 300
+}
+
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
 	resp, err := p.client.ListDomains(ctx, apiKey)
 	if err != nil {
@@ -97,7 +101,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 		nodeName := r.Name
 		// Remove trailing dot
 		nodeName = strings.TrimSuffix(nodeName, ".")
-		
+
 		// If it's the domain itself, use empty string (root)
 		if nodeName == domain.Name {
 			nodeName = ""

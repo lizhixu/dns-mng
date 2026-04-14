@@ -43,6 +43,7 @@ func List() []ProviderInfo {
 			Name:        p.Name(),
 			DisplayName: p.DisplayName(),
 			WebsiteURL:  p.WebsiteURL(),
+			DefaultTTL:  p.DefaultTTL(),
 		})
 	}
 	return infos
