@@ -203,6 +203,42 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 		return nil, err
 	}
 
+	// Get the old record to compare
+	oldRecord, err := p.GetRecord(ctx, apiKey, domainID, record.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get old record: %w", err)
+	}
+
+	// Check if the node name has changed
+	if oldRecord.NodeName != record.NodeName || oldRecord.RecordType != record.RecordType {
+		// If node name or type changed, we need to delete the old record and create a new one
+		// to avoid "Record conflict" error from DNSHE API
+
+		// Delete the old record
+		err = p.DeleteRecord(ctx, apiKey, domainID, record.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to delete old record: %w", err)
+		}
+
+		// Create a new record with the updated values
+		newRecord := &models.Record{
+			DomainID:   domainID,
+			NodeName:   record.NodeName,
+			RecordType: record.RecordType,
+			TTL:        record.TTL,
+			Content:    record.Content,
+			Priority:   record.Priority,
+		}
+
+		createdRecord, err := p.CreateRecord(ctx, apiKey, domainID, newRecord)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new record: %w", err)
+		}
+
+		return createdRecord, nil
+	}
+
+	// If only content/TTL/priority changed, use the normal update
 	recordID, err := strconv.Atoi(record.ID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid record ID: %w", err)
