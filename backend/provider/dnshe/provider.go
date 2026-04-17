@@ -203,17 +203,24 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 		return nil, err
 	}
 
-	// Get the old record to compare
+	// Get the old record first
 	oldRecord, err := p.GetRecord(ctx, apiKey, domainID, record.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get old record: %w", err)
 	}
 
-	// Check if the node name has changed
-	if oldRecord.NodeName != record.NodeName || oldRecord.RecordType != record.RecordType {
-		// If node name or type changed, we need to delete the old record and create a new one
-		// to avoid "Record conflict" error from DNSHE API
+	// Check if record has actually changed
+	if oldRecord.NodeName == record.NodeName &&
+		oldRecord.RecordType == record.RecordType &&
+		oldRecord.Content == record.Content &&
+		oldRecord.TTL == record.TTL &&
+		oldRecord.Priority == record.Priority {
+		// No changes, return the original record
+		return record, nil
+	}
 
+	// If node name or type changed, we need to delete and recreate
+	if oldRecord.NodeName != record.NodeName || oldRecord.RecordType != record.RecordType {
 		// Delete the old record
 		err = p.DeleteRecord(ctx, apiKey, domainID, record.ID)
 		if err != nil {
@@ -232,13 +239,26 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 
 		createdRecord, err := p.CreateRecord(ctx, apiKey, domainID, newRecord)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create new record: %w", err)
+			// Try to restore old record if create failed
+			restoreRecord := &models.Record{
+				DomainID:   domainID,
+				NodeName:   oldRecord.NodeName,
+				RecordType: oldRecord.RecordType,
+				TTL:        oldRecord.TTL,
+				Content:    oldRecord.Content,
+				Priority:   oldRecord.Priority,
+			}
+			_, restoreErr := p.CreateRecord(ctx, apiKey, domainID, restoreRecord)
+			if restoreErr != nil {
+				return nil, fmt.Errorf("failed to create new record: %w, and failed to restore old record: %v", err, restoreErr)
+			}
+			return nil, fmt.Errorf("failed to create new record: %w (old record has been restored)", err)
 		}
 
 		return createdRecord, nil
 	}
 
-	// If only content/TTL/priority changed, use the normal update
+	// Only content/TTL/priority changed, use update API
 	recordID, err := strconv.Atoi(record.ID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid record ID: %w", err)
@@ -262,6 +282,9 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 	if err != nil {
 		return nil, err
 	}
+
+	// Set update time
+	record.UpdatedOn = time.Now().Format(time.RFC3339)
 
 	return record, nil
 }
