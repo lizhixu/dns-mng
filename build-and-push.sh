@@ -13,6 +13,15 @@ echo "🔨 Building DNS Manager Docker images..."
 echo "📦 Version: $VERSION"
 echo ""
 
+# Remove old images before building
+echo "🗑️ Removing old images..."
+docker rmi ${DOCKER_USERNAME}/${IMAGE_NAME}:backend-${VERSION} 2>/dev/null || true
+docker rmi ${DOCKER_USERNAME}/${IMAGE_NAME}:backend 2>/dev/null || true
+docker rmi ${DOCKER_USERNAME}/${IMAGE_NAME}:frontend-${VERSION} 2>/dev/null || true
+docker rmi ${DOCKER_USERNAME}/${IMAGE_NAME}:frontend 2>/dev/null || true
+docker image prune -f --filter "dangling=true" 2>/dev/null || true
+echo ""
+
 # Build backend image
 echo "🔨 Building backend image..."
 docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME}:backend-${VERSION} ./backend
@@ -22,6 +31,11 @@ docker tag ${DOCKER_USERNAME}/${IMAGE_NAME}:backend-${VERSION} ${DOCKER_USERNAME
 echo "🔨 Building frontend image..."
 docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME}:frontend-${VERSION} ./frontend
 docker tag ${DOCKER_USERNAME}/${IMAGE_NAME}:frontend-${VERSION} ${DOCKER_USERNAME}/${IMAGE_NAME}:frontend
+
+# Remove dangling images after build
+echo ""
+echo "🗑️ Cleaning up dangling images..."
+docker image prune -f --filter "dangling=true" 2>/dev/null || true
 
 echo ""
 echo "✅ Build completed!"
