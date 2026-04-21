@@ -79,9 +79,9 @@ const Domains = () => {
                 }
             } else {
                 // 正常加载从缓存
-                data = await api.getDomains(accountId);
-                data = data || [];
-                setCacheTimestamp(null);
+                const response = await api.getDomains(accountId);
+                data = response.domains || response || [];
+                setCacheTimestamp(response.cache_timestamp || null);
             }
             
             setDomains(data);

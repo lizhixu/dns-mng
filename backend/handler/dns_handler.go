@@ -35,7 +35,30 @@ func (h *DNSHandler) ListAllDomains(c *gin.Context) {
 	if domains == nil {
 		domains = []models.Domain{}
 	}
-	c.JSON(http.StatusOK, domains)
+
+	// Get the latest cache sync time from domains
+	domainCacheService := service.NewDomainCacheService()
+	caches, err := domainCacheService.GetCacheByUser(userID)
+	var latestSyncTime *time.Time
+	if err == nil && len(caches) > 0 {
+		for _, cache := range caches {
+			if cache.LastSyncAt != nil {
+				if latestSyncTime == nil || cache.LastSyncAt.After(*latestSyncTime) {
+					latestSyncTime = cache.LastSyncAt
+				}
+			}
+		}
+	}
+
+	response := gin.H{
+		"domains": domains,
+	}
+	// Only include cache_timestamp if we have a valid sync time
+	if latestSyncTime != nil {
+		response["cache_timestamp"] = latestSyncTime.Format(time.RFC3339)
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
@@ -105,6 +128,7 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 	}
 
 	// Update last sync time for all domains
+	syncTime := time.Now()
 	for _, d := range domains {
 		var updatedOn *time.Time
 		if d.UpdatedOn != "" {
@@ -123,7 +147,7 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 		Domains:         domains,
 		DomainsToDelete: domainsToDelete,
 		RestoredDomains: restoredDomains,
-		CacheTimestamp:  time.Now().Format(time.RFC3339),
+		CacheTimestamp:  syncTime.Format(time.RFC3339),
 		HasChanges:      len(domainsToDelete) > 0 || len(restoredDomains) > 0,
 	}
 
@@ -146,7 +170,29 @@ func (h *DNSHandler) ListDomains(c *gin.Context) {
 	if domains == nil {
 		domains = []models.Domain{}
 	}
-	c.JSON(http.StatusOK, domains)
+	// Get the latest cache sync time from domains
+	var latestSyncTime *time.Time
+	domainCacheService := service.NewDomainCacheService()
+	caches, err := domainCacheService.GetCacheByUser(userID)
+	if err == nil && len(caches) > 0 {
+		for _, cache := range caches {
+			if cache.AccountID == accountID && cache.LastSyncAt != nil {
+				if latestSyncTime == nil || cache.LastSyncAt.After(*latestSyncTime) {
+					latestSyncTime = cache.LastSyncAt
+				}
+			}
+		}
+	}
+	
+	response := gin.H{
+		"domains": domains,
+	}
+	// Only include cache_timestamp if we have a valid sync time
+	if latestSyncTime != nil {
+		response["cache_timestamp"] = latestSyncTime.Format(time.RFC3339)
+	}
+	
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *DNSHandler) RefreshDomains(c *gin.Context) {
@@ -166,11 +212,28 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		domains = []models.Domain{}
 	}
 
+	// Update last sync time for all domains
+	syncTime := time.Now()
+	domainCacheService := service.NewDomainCacheService()
+	for _, d := range domains {
+		var updatedOn *time.Time
+		if d.UpdatedOn != "" {
+			if t, err := time.Parse(time.RFC3339, d.UpdatedOn); err == nil {
+				updatedOn = &t
+			} else if t, err := time.Parse("2006-01-02T15:04:05Z", d.UpdatedOn); err == nil {
+				updatedOn = &t
+			} else if t, err := time.Parse("2006-01-02", d.UpdatedOn); err == nil {
+				updatedOn = &t
+			}
+		}
+		domainCacheService.UpdateLastSyncTime(userID, d.AccountID, d.ID, updatedOn)
+	}
+
 	// Return domains and domains that should be deleted
 	response := gin.H{
 		"domains":           domains,
 		"domains_to_delete": domainsToDelete,
-		"cache_timestamp":   time.Now().Format(time.RFC3339),
+		"cache_timestamp":   syncTime.Format(time.RFC3339),
 	}
 	c.JSON(http.StatusOK, response)
 }

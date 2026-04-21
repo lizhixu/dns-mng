@@ -58,9 +58,9 @@ const AllDomains = () => {
                 }
             } else {
                 // 正常加载从缓存
-                data = await api.getAllDomains();
-                data = data || [];
-                setCacheTimestamp(new Date().toISOString());
+                const response = await api.getAllDomains();
+                data = response.domains || [];
+                setCacheTimestamp(response.cache_timestamp || new Date().toISOString());
             }
             setDomains(data);
             setFilteredDomains(data);
