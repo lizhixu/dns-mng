@@ -38,12 +38,12 @@ const Login = () => {
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
-        setError(''); // 清除服务器错误
+        setError('');
     };
 
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
-        setError(''); // 清除服务器错误
+        setError('');
     };
 
     const handleUsernameBlur = () => {
@@ -56,21 +56,19 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // 标记所有字段为已触摸
+
         setTouched({ username: true, password: true });
-        
-        // 验证表单
+
         const usernameErr = validateUsername(username);
         const passwordErr = validatePassword(password);
-        
+
         if (usernameErr || passwordErr) {
             return;
         }
 
         setLoading(true);
         setError('');
-        
+
         try {
             await login(username.trim(), password);
             navigate('/domains');
@@ -82,10 +80,10 @@ const Login = () => {
     };
 
     return (
-        <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
             minHeight: '100vh',
             background: 'var(--bg-primary)',
             padding: '24px',
@@ -103,7 +101,7 @@ const Login = () => {
                 animation: 'rotate 30s linear infinite',
                 pointerEvents: 'none'
             }} />
-            
+
             {/* 网格背景 */}
             <div style={{
                 position: 'absolute',
@@ -121,110 +119,48 @@ const Login = () => {
             }} />
 
             {/* 右上角工具栏 */}
-            <div style={{ 
-                position: 'fixed', 
-                top: '24px', 
-                right: '24px',
+            <div style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
                 display: 'flex',
-                gap: '12px',
+                gap: '8px',
                 alignItems: 'center',
                 zIndex: 10
             }}>
                 {/* GitHub Link */}
-                <a 
-                    href="https://github.com/lizhixu/dns-mng" 
-                    target="_blank" 
+                <a
+                    href="https://github.com/lizhixu/dns-mng"
+                    target="_blank"
                     rel="noopener noreferrer"
                     title={t.login.viewOnGitHub}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '6px',
-                        background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-sm)',
-                        color: 'var(--text-secondary)',
-                        transition: 'var(--transition)',
-                        backdropFilter: 'blur(10px)',
-                        textDecoration: 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--text-primary)';
-                        e.currentTarget.style.borderColor = 'var(--text-tertiary)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                        e.currentTarget.style.borderColor = 'var(--border-color)';
-                    }}
+                    className="login-toolbar-btn"
                 >
-                    <Github size={16} />
+                    <Github size={15} />
                 </a>
 
                 {/* Theme Switcher */}
-                <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '2px', 
-                    background: 'var(--bg-secondary)', 
-                    border: '1px solid var(--border-color)', 
-                    borderRadius: 'var(--radius-sm)', 
-                    padding: '2px',
-                    backdropFilter: 'blur(10px)'
-                }}>
+                <div className="login-theme-switcher">
                     <button
                         onClick={() => changeTheme('light')}
                         title="Light Mode"
-                        style={{
-                            padding: '6px',
-                            borderRadius: '3px',
-                            background: themeMode === 'light' ? 'var(--bg-primary)' : 'transparent',
-                            color: themeMode === 'light' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                            border: themeMode === 'light' ? '1px solid var(--border-color)' : '1px solid transparent',
-                            transition: 'var(--transition)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer'
-                        }}
+                        className={`login-theme-btn ${themeMode === 'light' ? 'active' : ''}`}
                     >
-                        <Sun size={14} />
+                        <Sun size={13} />
                     </button>
                     <button
                         onClick={() => changeTheme('system')}
                         title="System Theme"
-                        style={{
-                            padding: '6px',
-                            borderRadius: '3px',
-                            background: themeMode === 'system' ? 'var(--bg-primary)' : 'transparent',
-                            color: themeMode === 'system' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                            border: themeMode === 'system' ? '1px solid var(--border-color)' : '1px solid transparent',
-                            transition: 'var(--transition)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer'
-                        }}
+                        className={`login-theme-btn ${themeMode === 'system' ? 'active' : ''}`}
                     >
-                        <Monitor size={14} />
+                        <Monitor size={13} />
                     </button>
                     <button
                         onClick={() => changeTheme('dark')}
                         title="Dark Mode"
-                        style={{
-                            padding: '6px',
-                            borderRadius: '3px',
-                            background: themeMode === 'dark' ? 'var(--bg-primary)' : 'transparent',
-                            color: themeMode === 'dark' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                            border: themeMode === 'dark' ? '1px solid var(--border-color)' : '1px solid transparent',
-                            transition: 'var(--transition)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer'
-                        }}
+                        className={`login-theme-btn ${themeMode === 'dark' ? 'active' : ''}`}
                     >
-                        <Moon size={14} />
+                        <Moon size={13} />
                     </button>
                 </div>
 
@@ -232,14 +168,7 @@ const Login = () => {
                 <select
                     value={language}
                     onChange={(e) => changeLanguage(e.target.value)}
-                    className="form-input"
-                    style={{
-                        width: 'auto',
-                        height: '32px',
-                        padding: '0 8px',
-                        fontSize: '13px',
-                        backdropFilter: 'blur(10px)'
-                    }}
+                    className="form-input login-lang-select"
                 >
                     {Object.entries(languages).map(([code, lang]) => (
                         <option key={code} value={code}>{lang.name}</option>
@@ -247,86 +176,55 @@ const Login = () => {
                 </select>
             </div>
 
-            <div className="glass-panel" style={{ 
-                padding: '40px', 
-                width: '100%', 
-                maxWidth: '400px',
-                position: 'relative',
-                zIndex: 1,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-            }}>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <div style={{
-                        width: '64px',
-                        height: '64px',
-                        margin: '0 auto 16px',
-                        background: 'linear-gradient(135deg, var(--accent-primary) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        color: '#fff',
-                        boxShadow: '0 4px 16px rgba(0, 112, 243, 0.3)'
-                    }}>
-                        DNS
+            {/* 登录卡片 */}
+            <div className="login-card">
+                {/* Logo */}
+                <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+                    <div className="login-logo">
+                        <img src="/DNS.svg" alt="DNS Logo" style={{ width: '50px', height: '50px' }} />
                     </div>
-                    <h1 style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '600', 
-                        marginBottom: '8px',
-                        margin: 0
+                    <h1 style={{
+                        fontSize: '22px',
+                        fontWeight: '600',
+                        marginBottom: '6px',
+                        margin: 0,
+                        letterSpacing: '-0.02em'
                     }}>
                         {t.layout.title}
                     </h1>
-                    <p style={{ 
-                        fontSize: '14px', 
+                    <p style={{
+                        fontSize: '14px',
                         color: 'var(--text-secondary)',
-                        margin: 0
+                        margin: '8px 0 0',
+                        fontWeight: '400'
                     }}>
                         {t.login.title}
                     </p>
                 </div>
 
+                {/* 错误提示 */}
                 {error && (
-                    <div style={{ 
-                        color: 'var(--danger)', 
-                        marginBottom: '20px',
-                        padding: '12px',
-                        background: 'rgba(238, 0, 0, 0.1)',
-                        border: '1px solid rgba(238, 0, 0, 0.2)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '13px'
-                    }}>
+                    <div className="login-error">
                         {error}
                     </div>
                 )}
 
+                {/* 表单 */}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">{t.login.username}</label>
                         <input
                             type="text"
-                            className="form-input"
+                            className={`form-input ${usernameError ? 'input-error' : ''}`}
                             value={username}
                             onChange={handleUsernameChange}
                             onBlur={handleUsernameBlur}
                             autoComplete="username"
                             autoFocus
-                            style={{
-                                borderColor: usernameError ? 'var(--danger)' : undefined
-                            }}
+                            placeholder={t.login.usernamePlaceholder}
                         />
                         {usernameError && (
-                            <div style={{ 
-                                color: 'var(--danger)', 
-                                fontSize: '12px', 
-                                marginTop: '4px' 
-                            }}>
-                                {usernameError}
-                            </div>
+                            <div className="login-field-error">{usernameError}</div>
                         )}
                     </div>
                     <div className="form-group">
@@ -334,50 +232,29 @@ const Login = () => {
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showPassword ? "text" : "password"}
-                                className="form-input"
+                                className={`form-input ${passwordError ? 'input-error' : ''}`}
                                 value={password}
                                 onChange={handlePasswordChange}
                                 onBlur={handlePasswordBlur}
                                 autoComplete="current-password"
-                                style={{
-                                    borderColor: passwordError ? 'var(--danger)' : undefined,
-                                    paddingRight: '40px'
-                                }}
+                                placeholder={t.login.passwordPlaceholder}
+                                style={{ paddingRight: '44px' }}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '8px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-tertiary)',
-                                    cursor: 'pointer',
-                                    padding: '4px',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
+                                className="login-password-toggle"
                             >
                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
                         {passwordError && (
-                            <div style={{ 
-                                color: 'var(--danger)', 
-                                fontSize: '12px', 
-                                marginTop: '4px' 
-                            }}>
-                                {passwordError}
-                            </div>
+                            <div className="login-field-error">{passwordError}</div>
                         )}
                     </div>
-                    <button 
-                        type="submit" 
-                        className="btn btn-primary" 
-                        style={{ width: '100%', marginTop: '8px' }}
+                    <button
+                        type="submit"
+                        className="btn btn-primary login-submit-btn"
                         disabled={loading || !isFormValid}
                     >
                         {loading ? <div className="spinner"></div> : t.login.loginBtn}

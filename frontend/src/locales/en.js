@@ -32,6 +32,8 @@ export const en = {
     passwordRequired: 'Please enter password',
     passwordTooShort: 'Password must be at least 6 characters',
     viewOnGitHub: 'View on GitHub',
+    usernamePlaceholder: 'Enter username',
+    passwordPlaceholder: 'Enter password',
   },
 
   layout: {

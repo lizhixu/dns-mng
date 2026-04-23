@@ -32,6 +32,8 @@ export const zh = {
     passwordRequired: '请输入密码',
     passwordTooShort: '密码至少需要6个字符',
     viewOnGitHub: '在 GitHub 上查看',
+    usernamePlaceholder: '请输入用户名',
+    passwordPlaceholder: '请输入密码',
   },
 
   layout: {
