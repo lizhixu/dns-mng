@@ -87,6 +87,7 @@ export const en = {
     desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',
     dnsheFormat: 'Format: API Key,API Secret (comma separated, from DNSHE Dashboard → API Management)',
     ipv64Format: 'Format: API Token (from IPv64.net Dashboard → API Settings)',
+    hurricaneFormat: 'Format: username,password (comma separated, from Hurricane Electric login page)',
     goToProvider: 'Go to Provider Console',
     // DDNS Token
     ddnsTokenTitle: 'DDNS Token Management',

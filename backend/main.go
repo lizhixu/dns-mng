@@ -12,6 +12,7 @@ import (
 	"dns-mng/provider/desec"
 	"dns-mng/provider/dnshe"
 	"dns-mng/provider/dynu"
+	"dns-mng/provider/hurricane"
 	"dns-mng/provider/ipv64"
 	"dns-mng/provider/ndjp"
 	"dns-mng/provider/tencentcloud"
@@ -35,6 +36,7 @@ func main() {
 	provider.Register(ndjp.New())
 	provider.Register(desec.New())
 	provider.Register(dnshe.New())
+	provider.Register(hurricane.New())
 	provider.Register(ipv64.New())
 
 	// Init services

@@ -539,6 +539,11 @@ const Accounts = () => {
                                 {t.accounts.ipv64Format || 'Format: API Token (from IPv64.net Dashboard → API Settings)'}
                             </p>
                         )}
+                        {formData.provider_type === 'hurricane' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.hurricaneFormat || 'Format: username,password (comma separated)'}
+                            </p>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
