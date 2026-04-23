@@ -223,25 +223,28 @@ func (p *Provider) updateRootRecord(ctx context.Context, apiKey string, domainID
 	recordID := record.ID
 	if recordID == "" {
 		// Creating new root record
-		if recordType == "A" {
+		switch recordType {
+		case "A":
 			recordID = "root-a"
-		} else if recordType == "AAAA" {
+		case "AAAA":
 			recordID = "root-aaaa"
 		}
 	} else {
 		// Updating existing root record - derive type from ID
-		if recordID == "root-a" {
+		switch recordID {
+		case "root-a":
 			recordType = "A"
-		} else if recordID == "root-aaaa" {
+		case "root-aaaa":
 			recordType = "AAAA"
 		}
 	}
 
 	// Update the specific IP address
-	if recordType == "A" {
+	switch recordType {
+	case "A":
 		body["ipv4Address"] = record.Content
 		body["ipv4"] = true
-	} else if recordType == "AAAA" {
+	case "AAAA":
 		body["ipv6Address"] = record.Content
 		body["ipv6"] = true
 	}
