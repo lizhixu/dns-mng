@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、Dynu、NDJP NET、deSEC 等 DNS 服务提供商
+- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、Dynu、NDJP NET、deSEC、Hurricane Electric、IPv64、DNSHE 等 DNS 服务提供商
 - 🔐 **安全认证**：JWT 身份验证
 - 🎨 **现代 UI**：Vercel 风格的简洁界面
 - 🌓 **主题切换**：支持亮色/暗色/跟随系统三种模式
@@ -15,6 +15,7 @@
 - 🔍 **搜索过滤**：快速查找域名和记录
 - 📝 **操作日志**：记录所有操作历史
 - 🔒 **ACME DNS-01 API**：提供对外调用接口，便于自动签发证书（HTTP Basic Auth）
+- 🔄 **DDNS 支持**：DuckDNS 兼容的动态 DNS 更新 API
 
 ## 技术栈
 
@@ -25,9 +26,9 @@
 - JWT 认证
 
 ### 前端
-- React 18
-- React Router
-- Vite
+- React 19
+- React Router v7
+- Vite 7
 - Lucide Icons
 
 ## 快速开始
@@ -94,6 +95,46 @@ curl -u "your_user:your_pass" \
   -d '{"fqdn":"_acme-challenge.example.com.","value":"txt-value"}' \
   http://localhost:8080/api/acme/dns01/cleanup
 ```
+
+## DDNS API（动态 DNS）
+
+用于动态 DNS 更新，兼容 DuckDNS API 格式，支持路由器和客户端自动更新 IP。
+
+### 获取 Token
+
+登录系统后，在 DDNS 设置页面创建或获取 Token。每个用户只有一个 Token，可更新该用户下所有账户的所有域名。
+
+### API 端点
+
+**更新接口**: `GET /api/ddns/update`
+
+**参数**:
+- `domains` (必需): 要更新的域名（逗号分隔）
+- `token` (必需): DDNS token
+- `ip` (可选): IPv4 地址，不提供则使用客户端 IP
+- `ipv6` (可选): IPv6 地址
+
+### 使用示例
+
+```bash
+# 使用客户端 IP 更新
+curl "http://localhost:8080/api/ddns/update?domains=example.com&token=your-token"
+
+# 指定 IP 更新
+curl "http://localhost:8080/api/ddns/update?domains=example.com&token=your-token&ip=1.2.3.4"
+
+# 同时更新多个域名
+curl "http://localhost:8080/api/ddns/update?domains=example.com,sub.example.com&token=your-token"
+```
+
+### 路由器配置
+
+在路由器 DDNS 设置中选择 DuckDNS 或自定义 URL：
+- 域名：your-domain-name
+- Token：your-ddns-token
+- 更新 URL：`https://your-domain.com/api/ddns/update?domains=%s&token=%s&ip=%s`
+
+详细的 DDNS API 文档请查看 [DDNS_API.md](DDNS_API.md)
 
 详细的 Docker 部署说明请查看 [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
 
@@ -239,6 +280,9 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 | Dynu | ✅ | 免费动态 DNS |
 | NDJP NET | ✅ | 日本 DNS 服务 |
 | deSEC | ✅ | 免费开源，支持 DNSSEC |
+| Hurricane Electric | ✅ | 免费 DNS，支持 DDNS |
+| IPv64 | ✅ | 免费动态 DNS |
+| DNSHE | ✅ | 免费域名服务 |
 
 ### API 认证说明
 
@@ -247,6 +291,9 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 - **Dynu**: API Key
 - **NDJP NET**: Bearer Token
 - **deSEC**: Token
+- **Hurricane Electric**: 邮箱和密码
+- **IPv64**: API Key
+- **DNSHE**: API Key + API Secret
 
 ## 添加新的 DNS 提供商
 
@@ -269,7 +316,10 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   │   ├── tencentcloud/
 │   │   ├── dynu/
 │   │   ├── ndjp/
-│   │   └── desec/
+│   │   ├── desec/
+│   │   ├── hurricane/
+│   │   ├── ipv64/
+│   │   └── dnshe/
 │   └── service/         # 业务逻辑
 ├── frontend/            # React 前端
 │   ├── src/
@@ -297,7 +347,16 @@ MIT License
 
 ## 更新日志
 
-### v1.0.0 (2026-03-27)
+### v0.0.2 (2026-04-23)
+
+- ✨ 新增 3 个 DNS 提供商：Hurricane Electric、IPv64、DNSHE
+- 🔄 新增 DDNS 动态 DNS 功能，兼容 DuckDNS API
+- ⬆️ 升级 React 到 v19
+- ⬆️ 升级 React Router 到 v7
+- ⬆️ 升级 Vite 到 v7
+- 📝 完善文档和 API 说明
+
+### v0.0.1 (2026-03-27)
 
 - ✨ 支持 5 个 DNS 服务提供商
 - 🎨 现代化 UI 设计
