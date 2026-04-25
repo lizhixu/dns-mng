@@ -567,7 +567,19 @@ const LogsManagement = () => {
                                     const showDomainInTitle = domainName && (log.resource === 'domain' || log.resource === 'domain_cache' || log.resource === 'record');
                                     
                                     return (
-                                    <div key={log.id} className="glass-panel log-card" style={{ padding: '1rem' }}>
+                                    <div key={log.id} className="glass-panel log-card" style={{
+                                        padding: '1rem',
+                                        transition: 'all 0.2s',
+                                        cursor: 'pointer'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}>
                                         <div className="log-card-layout" style={{ display: 'flex', alignItems: hasDetails ? 'flex-start' : 'center', gap: '1rem' }}>
                                             <Activity size={20} style={{ color: getActionColor(log.action), flexShrink: 0, marginTop: hasDetails ? '0.125rem' : '0' }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
@@ -723,7 +735,19 @@ const LogsManagement = () => {
                                     }
 
                                     return (
-                                        <div key={log.id} className="glass-panel log-card" style={{ padding: '1rem' }}>
+                                        <div key={log.id} className="glass-panel log-card" style={{
+                                            padding: '1rem',
+                                            transition: 'all 0.2s',
+                                            cursor: 'pointer'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}>
                                             <div className="log-card-layout" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <span style={{ 
                                                     fontSize: '1.25rem',

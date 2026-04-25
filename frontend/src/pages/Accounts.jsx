@@ -281,7 +281,17 @@ const Accounts = () => {
                         padding: '20px',
                         display: 'flex',
                         flexDirection: 'column',
-                        height: '100%'
+                        height: '100%',
+                        transition: 'all 0.2s',
+                        cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                     }}>
                         <div style={{ flex: 1 }}>
                             <div className="account-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
