@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { api } from '../api';
-import { Sun, Moon, Monitor, FileText, Globe, Server, User, Settings, ChevronDown, X, Github } from 'lucide-react';
+import { Sun, Moon, Monitor, FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu } from 'lucide-react';
 import BackToTop from './BackToTop';
-
+import useMediaQuery from '../hooks/useMediaQuery';
 
 const Layout = () => {
     const { user, logout } = useAuth();
@@ -17,24 +17,35 @@ const Layout = () => {
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const [passwordForm, setPasswordForm] = useState({
         old_password: '',
         new_password: '',
         confirm_password: ''
     });
 
+    const { language, changeLanguage, languages, t } = useLanguage();
+
+    useEffect(() => {
+        if (!isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [isMobile]);
+
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [isMobile, location.pathname]);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
-    const { language, changeLanguage, languages, t } = useLanguage();
 
-    // Check if a path is active - improved logic
     const isActive = (path) => {
-        // Exact match
         if (location.pathname === path) return true;
-        // Check if current path starts with the menu path
-        // Add trailing slash to avoid false matches (e.g., /accounts matching /account)
         return location.pathname.startsWith(path + '/');
     };
 
@@ -90,57 +101,62 @@ const Layout = () => {
         setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
     };
 
-    return (
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            {/* 侧边栏 */}
-            <aside style={{
-                width: '200px',
-                background: 'var(--bg-primary)',
-                borderRight: '1px solid var(--border-color)',
-                padding: '24px 16px',
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'auto'
-            }}>
-                <h1 style={{ 
-                    fontSize: '16px', 
-                    fontWeight: '600', 
-                    marginBottom: '24px',
+    const navigationItems = useMemo(() => ([
+        { path: '/domains', icon: Globe, label: t.layout.domains },
+        { path: '/accounts', icon: Server, label: t.layout.accounts },
+        { path: '/logs', icon: FileText, label: t.layout.logsManagement || t.layout.logs },
+        { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications }
+    ]), [t]);
+
+    const sidebar = (
+        <aside className={`app-sidebar ${isMobile ? 'mobile' : 'desktop'} ${sidebarOpen ? 'open' : ''}`}>
+            <div className="app-sidebar-header">
+                <h1 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
                     padding: '0 8px',
-                    flexShrink: 0
+                    margin: 0
                 }}>
                     {t.layout.title}
                 </h1>
-                <nav style={{ flex: 1, minHeight: 0 }}>
-                    <Link to="/domains" style={menuItemStyle('/domains')}>
+                {isMobile && (
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen(false)}
+                        className="mobile-sidebar-close"
+                        aria-label={t.common.close || 'Close'}
+                    >
+                        <X size={18} />
+                    </button>
+                )}
+            </div>
+            <nav style={{ flex: 1, minHeight: 0 }}>
+                {navigationItems.map(({ path, icon: Icon, label }) => (
+                    <Link key={path} to={path} style={menuItemStyle(path)}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Globe size={14} />
-                            {t.layout.domains}
+                            <Icon size={14} />
+                            {label}
                         </div>
                     </Link>
-                    <Link to="/accounts" style={menuItemStyle('/accounts')}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Server size={14} />
-                            {t.layout.accounts}
-                        </div>
-                    </Link>
-                    <Link to="/logs" style={menuItemStyle('/logs')}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FileText size={14} />
-                            {t.layout.logsManagement || t.layout.logs}
-                        </div>
-                    </Link>
-                    <Link to="/email-settings" style={menuItemStyle('/email-settings')}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Settings size={14} />
-                            {t.layout.emailNotifications}
-                        </div>
-                    </Link>
-                </nav>
-            </aside>
+                ))}
+            </nav>
+        </aside>
+    );
 
-            {/* 主内容区 */}
+    return (
+        <div className="app-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            {!isMobile && sidebar}
+
+            {isMobile && (
+                <>
+                    <div
+                        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                    {sidebar}
+                </>
+            )}
+
             <main style={{
                 flex: 1,
                 display: 'flex',
@@ -148,21 +164,41 @@ const Layout = () => {
                 overflow: 'hidden',
                 minWidth: 0
             }}>
-                {/* 顶部 Header */}
-                <header style={{
+                <header className="app-header" style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '0 24px',
+                    padding: isMobile ? '0 16px' : '0 24px',
                     height: '64px',
                     background: 'var(--bg-primary)',
                     borderBottom: '1px solid var(--border-color)',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    gap: '12px'
                 }}>
-                    <div></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {/* Theme Switcher */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
+                    <div className="app-header-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                        {isMobile && (
+                            <button
+                                type="button"
+                                onClick={() => setSidebarOpen(true)}
+                                className="mobile-menu-btn"
+                                aria-label={t.layout.title}
+                            >
+                                <Menu size={18} />
+                            </button>
+                        )}
+                        {isMobile && (
+                            <div className="app-header-title" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', lineHeight: 1.1 }}>
+                                    DNS Manager
+                                </span>
+                                <span style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {t.layout.title}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', minWidth: 0, flexShrink: 0 }}>
+                        <div className="header-theme-switcher" style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2px', flexShrink: 0 }}>
                             <button
                                 onClick={() => changeTheme('light')}
                                 title={t.layout.themeLight}
@@ -216,88 +252,94 @@ const Layout = () => {
                             </button>
                         </div>
 
-                        {/* Language Switcher */}
                         <select
                             value={language}
                             onChange={(e) => changeLanguage(e.target.value)}
-                            className="form-input"
+                            className={`form-input header-language-select ${isMobile ? 'mobile' : 'desktop'}`}
                             style={{
-                                width: 'auto',
+                                width: isMobile ? '72px' : 'auto',
                                 height: '32px',
-                                padding: '0 8px',
+                                padding: isMobile ? '0 6px' : '0 8px',
                                 fontSize: '13px'
                             }}
                         >
                             {Object.entries(languages).map(([code, lang]) => (
-                                <option key={code} value={code}>{lang.name}</option>
+                                <option key={code} value={code}>{isMobile ? code.toUpperCase() : lang.name}</option>
                             ))}
                         </select>
 
-                        {/* GitHub Link */}
-                        <a
-                            href="https://github.com/lizhixu/dns-mng"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="GitHub"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '6px',
-                                background: 'var(--bg-secondary)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: 'var(--radius-sm)',
-                                color: 'var(--text-secondary)',
-                                transition: 'var(--transition)',
-                                textDecoration: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.color = 'var(--text-primary)';
-                                e.currentTarget.style.borderColor = 'var(--text-tertiary)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.color = 'var(--text-secondary)';
-                                e.currentTarget.style.borderColor = 'var(--border-color)';
-                            }}
-                        >
-                            <Github size={16} />
-                        </a>
+                        {!isMobile && (
+                            <a
+                                href="https://github.com/lizhixu/dns-mng"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="GitHub"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '6px',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    color: 'var(--text-secondary)',
+                                    transition: 'var(--transition)',
+                                    textDecoration: 'none'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.color = 'var(--text-primary)';
+                                    e.currentTarget.style.borderColor = 'var(--text-tertiary)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                                }}
+                            >
+                                <Github size={16} />
+                            </a>
+                        )}
 
-                        <div style={{ 
-                            height: '20px', 
-                            width: '1px', 
-                            background: 'var(--border-color)' 
-                        }}></div>
+                        {!isMobile && (
+                            <div style={{
+                                height: '20px',
+                                width: '1px',
+                                background: 'var(--border-color)'
+                            }}></div>
+                        )}
 
-                        {/* User Menu */}
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', minWidth: 0 }}>
                             <button
+                                className="header-user-btn"
                                 onClick={() => setShowSettings(!showSettings)}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.5rem',
-                                    padding: '6px 10px',
+                                    gap: isMobile ? '0.35rem' : '0.5rem',
+                                    padding: isMobile ? '6px 8px' : '6px 10px',
                                     background: 'var(--bg-secondary)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: 'var(--radius-sm)',
                                     color: 'var(--text-primary)',
                                     fontSize: '14px',
                                     cursor: 'pointer',
-                                    transition: 'var(--transition)'
+                                    transition: 'var(--transition)',
+                                    maxWidth: isMobile ? '120px' : 'none'
                                 }}
                             >
                                 <Settings size={14} />
-                                {user?.username}
-                                <ChevronDown size={14} style={{ 
+                                <span className="header-user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {user?.username}
+                                </span>
+                                <ChevronDown size={14} style={{
                                     transform: showSettings ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s'
+                                    transition: 'transform 0.2s',
+                                    flexShrink: 0
                                 }} />
                             </button>
 
                             {showSettings && (
                                 <>
-                                    <div 
+                                    <div
                                         style={{
                                             position: 'fixed',
                                             top: 0,
@@ -313,12 +355,13 @@ const Layout = () => {
                                         top: '100%',
                                         right: 0,
                                         marginTop: '8px',
-                                        width: '320px',
+                                        width: isMobile ? 'min(320px, calc(100vw - 32px))' : '320px',
+                                        maxWidth: 'calc(100vw - 32px)',
                                         background: 'var(--bg-primary)',
                                         border: '1px solid var(--border-color)',
                                         borderRadius: 'var(--radius-md)',
                                         boxShadow: 'var(--shadow-lg)',
-                                        zIndex: 50,
+                                        zIndex: 60,
                                         overflow: 'hidden'
                                     }}>
                                         <div style={{
@@ -329,7 +372,7 @@ const Layout = () => {
                                             alignItems: 'center'
                                         }}>
                                             <span style={{ fontWeight: '500', fontSize: '14px' }}>{t.layout.settings}</span>
-                                            <button 
+                                            <button
                                                 onClick={closeSettings}
                                                 style={{
                                                     padding: '4px',
@@ -341,7 +384,7 @@ const Layout = () => {
                                                 <X size={16} />
                                             </button>
                                         </div>
-                                        
+
                                         <div style={{ padding: '16px' }}>
                                             {error && (
                                                 <div style={{
@@ -450,11 +493,10 @@ const Layout = () => {
                     </div>
                 </header>
 
-                {/* 内容区 */}
-                <div style={{
+                <div className="app-content" style={{
                     flex: 1,
                     overflow: 'auto',
-                    padding: '24px',
+                    padding: isMobile ? '16px' : '24px',
                     background: 'var(--bg-primary)'
                 }}>
                     <Outlet />

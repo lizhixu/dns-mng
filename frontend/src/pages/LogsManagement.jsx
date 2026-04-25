@@ -460,14 +460,14 @@ const LogsManagement = () => {
     return (
         <div>
             <div ref={topRef} style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.logsManagement.title}</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                             {t.logsManagement.subtitle}
                         </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div className="page-actions-bar logs-toolbar" style={{ display: 'flex', gap: '0.75rem' }}>
                         <button
                             onClick={handleRefresh}
                             disabled={opLoading || schedLoading}
@@ -491,13 +491,14 @@ const LogsManagement = () => {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ 
-                display: 'flex', 
-                gap: '0.5rem', 
+            <div className="tab-nav" style={{
+                display: 'flex',
+                gap: '0.5rem',
                 marginBottom: '1.5rem',
                 borderBottom: '1px solid var(--border-color)'
             }}>
                 <button
+                    className={`tab-nav-btn${activeTab === 'operation' ? ' active' : ''}`}
                     onClick={() => setActiveTab('operation')}
                     style={{
                         padding: '0.75rem 1.5rem',
@@ -517,6 +518,7 @@ const LogsManagement = () => {
                     {t.logsManagement.operationTab} ({opPagination.total})
                 </button>
                 <button
+                    className={`tab-nav-btn${activeTab === 'scheduler' ? ' active' : ''}`}
                     onClick={() => setActiveTab('scheduler')}
                     style={{
                         padding: '0.75rem 1.5rem',
@@ -558,15 +560,15 @@ const LogsManagement = () => {
                     {/* Operation Logs */}
                     {activeTab === 'operation' && (
                         <>
-                            <div style={{ display: 'grid', gap: '0.75rem' }}>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
                                 {operationLogs.map(log => {
                                     const hasDetails = log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0;
                                     const domainName = log.details?.domain || log.details?.name || null;
                                     const showDomainInTitle = domainName && (log.resource === 'domain' || log.resource === 'domain_cache' || log.resource === 'record');
                                     
                                     return (
-                                    <div key={log.id} className="glass-panel" style={{ padding: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: hasDetails ? 'flex-start' : 'center', gap: '1rem' }}>
+                                    <div key={log.id} className="glass-panel log-card" style={{ padding: '1rem' }}>
+                                        <div className="log-card-layout" style={{ display: 'flex', alignItems: hasDetails ? 'flex-start' : 'center', gap: '1rem' }}>
                                             <Activity size={20} style={{ color: getActionColor(log.action), flexShrink: 0, marginTop: hasDetails ? '0.125rem' : '0' }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: hasDetails ? '0.5rem' : '0' }}>
@@ -637,11 +639,11 @@ const LogsManagement = () => {
                                 )}
                             </div>
                             {opPagination.totalPages > 1 && (
-                                <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'center', 
-                                    alignItems: 'center', 
-                                    gap: '0.75rem', 
+                                <div className="pagination-controls" style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
                                     marginTop: '2rem',
                                     padding: '1rem',
                                     borderTop: '1px solid var(--border-color)'
@@ -711,7 +713,7 @@ const LogsManagement = () => {
                     {/* Scheduler Logs */}
                     {activeTab === 'scheduler' && (
                         <>
-                            <div style={{ display: 'grid', gap: '0.75rem' }}>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
                                 {schedulerLogs.map(log => {
                                     let details = {};
                                     try {
@@ -721,8 +723,8 @@ const LogsManagement = () => {
                                     }
 
                                     return (
-                                        <div key={log.id} className="glass-panel" style={{ padding: '1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div key={log.id} className="glass-panel log-card" style={{ padding: '1rem' }}>
+                                            <div className="log-card-layout" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <span style={{ 
                                                     fontSize: '1.25rem',
                                                     color: getStatusColor(log.status),
@@ -837,11 +839,11 @@ const LogsManagement = () => {
                                 )}
                             </div>
                             {schedPagination.totalPages > 1 && (
-                                <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'center', 
-                                    alignItems: 'center', 
-                                    gap: '0.75rem', 
+                                <div className="pagination-controls" style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
                                     marginTop: '2rem',
                                     padding: '1rem',
                                     borderTop: '1px solid var(--border-color)'

@@ -5,9 +5,11 @@ import { Plus, Settings, Trash2, ExternalLink, Eye, EyeOff, Copy, Key, RefreshCw
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 const Accounts = () => {
     const { t } = useLanguage();
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -250,12 +252,15 @@ const Accounts = () => {
     return (
         <div>
             <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>{t.accounts.title}</h1>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <h1 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', margin: 0 }}>{t.accounts.title}</h1>
+                    </div>
+                    <div className="page-actions-bar" style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={() => openDdnsTokenModal()} className="btn btn-secondary">
                             <Key size={16} />
-                            {t.accounts.manageDDNSToken}
+                            {!isMobile && t.accounts.manageDDNSToken}
+                            {isMobile && <span style={{ fontSize: '13px' }}>DDNS</span>}
                         </button>
                         <button onClick={openCreateModal} className="btn btn-primary">
                             <Plus size={16} />
@@ -266,21 +271,21 @@ const Accounts = () => {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>{t.accounts.subtitle}</p>
             </div>
 
-            <div style={{ 
-                display: 'grid', 
+            <div className="accounts-grid" style={{
+                display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                 gap: '16px'
             }}>
                 {accounts.map(account => (
-                    <div key={account.id} className="glass-panel" style={{ 
+                    <div key={account.id} className="glass-panel account-list-card" style={{
                         padding: '20px',
                         display: 'flex',
                         flexDirection: 'column',
                         height: '100%'
                     }}>
                         <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="account-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                <div className="account-card-main" style={{ flex: 1, minWidth: 0 }}>
                                     <h3 style={{ 
                                         fontSize: '16px', 
                                         fontWeight: '500', 
@@ -296,7 +301,7 @@ const Accounts = () => {
                                         {providers.find(p => p.name === account.provider_type)?.display_name || account.provider_type}
                                     </span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '2px', marginLeft: '8px' }}>
+                                <div className="account-card-actions" style={{ display: 'flex', gap: '2px', marginLeft: '8px' }}>
                                     <button 
                                         onClick={() => openEditModal(account)} 
                                         className="btn btn-ghost" 
@@ -320,7 +325,7 @@ const Accounts = () => {
                                 {t.accounts.addedOn} {new Date(account.created_at).toLocaleDateString()}
                             </div>
 
-                            <div style={{ 
+                            <div className="account-key-box" style={{
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: '6px',

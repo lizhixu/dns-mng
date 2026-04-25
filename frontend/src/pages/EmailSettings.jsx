@@ -166,7 +166,7 @@ const EmailSettings = () => {
 
                     {config.enabled && (
                         <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+                            <div className="email-smtp-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
                                 <div className="form-group">
                                     <label className="form-label">{t.emailSettings.smtpServer}</label>
                                     <input
@@ -271,7 +271,7 @@ const EmailSettings = () => {
                         </>
                     )}
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+                    <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
                         <button type="submit" className="btn btn-primary" disabled={saving}>
                             {saving ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : t.emailSettings.saveConfig}
                         </button>

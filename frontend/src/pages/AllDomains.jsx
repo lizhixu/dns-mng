@@ -245,8 +245,8 @@ const AllDomains = () => {
     return (
         <div>
             <div style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.allDomains.title}</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                             {t.allDomains.subtitle}
@@ -256,7 +256,7 @@ const AllDomains = () => {
                                 </span>
                             )}
                             {cacheTimestamp && (
-                                <span style={{ marginLeft: '0.5rem' }}>
+                                <span style={{ marginLeft: '0.5rem', fontSize: '0.8125rem' }}>
                                     • {t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
                                         month: '2-digit',
                                         day: '2-digit',
@@ -267,14 +267,14 @@ const AllDomains = () => {
                             )}
                         </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <div style={{ position: 'relative' }}>
+                    <div className="page-actions-bar alldomain-toolbar" style={{ display: 'flex', gap: '0.75rem' }}>
+                        <div className="search-box-fixed" style={{ position: 'relative' }}>
                             <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                             <input
                                 type="text"
                                 className="form-input"
                                 placeholder={t.allDomains.searchPlaceholder}
-                                style={{ paddingLeft: '2.5rem', width: '250px' }}
+                                style={{ paddingLeft: '2.5rem', width: '220px' }}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
@@ -327,8 +327,8 @@ const AllDomains = () => {
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = 'none';
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                            <div className="domain-card-layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                                <div className="domain-card-main" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                     <Globe size={20} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
@@ -395,7 +395,7 @@ const AllDomains = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                <div className="domain-card-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"
@@ -409,7 +409,7 @@ const AllDomains = () => {
                                         to={`/accounts/${domain.account_id}/domains/${domain.id}/records`}
                                         state={{ from: '/domains' }}
                                         className="btn btn-secondary"
-                                        style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', flexShrink: 0 }}
+                                        style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
                                     >
                                         {t.domains.manageRecords}
                                         <ExternalLink size={14} />

@@ -236,33 +236,35 @@ const Domains = () => {
                     <ArrowLeft size={16} />
                     {t.domains.backToAccounts}
                 </Link>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 0' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.domains.title}</h2>
                         {cacheTimestamp && (
-                            <div style={{ 
-                                display: 'inline-flex', 
-                                alignItems: 'center', 
+                            <div style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
                                 gap: '0.5rem',
-                                fontSize: '0.875rem',
+                                fontSize: '0.8125rem',
                                 color: 'var(--accent-primary)',
                                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: 'var(--radius-md)'
+                                padding: '0.25rem 0.625rem',
+                                borderRadius: 'var(--radius-md)',
+                                maxWidth: '100%',
+                                overflow: 'hidden'
                             }}>
-                                <Clock size={14} />
-                                <span>{t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
+                                <Clock size={12} style={{ flexShrink: 0 }} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
                             </div>
                         )}
                     </div>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <div style={{ position: 'relative' }}>
-                            <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                    <div className="page-actions-bar domains-toolbar" style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+                        <div style={{ position: 'relative' }} className="search-box-fixed">
+                            <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
                             <input
                                 type="text"
-                                className="form-input"
+                                className="form-input domains-search-input"
                                 placeholder={t.domains.searchPlaceholder}
-                                style={{ paddingLeft: '2.5rem', width: '250px' }}
+                                style={{ paddingLeft: '2.5rem', width: '220px' }}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
@@ -279,9 +281,9 @@ const Domains = () => {
             {loading && !domains.length ? (
                 <div className="spinner" style={{ margin: '4rem auto' }}></div>
             ) : (
-                <div style={{ display: 'grid', gap: '1rem' }}>
+                <div className="domains-list" style={{ display: 'grid', gap: '1rem' }}>
                     {filteredDomains.map(domain => (
-                        <div key={domain.id} className="glass-panel" style={{ 
+                        <div key={domain.id} className="glass-panel domain-list-card" style={{
                             padding: '1rem 1.25rem',
                             transition: 'all 0.2s',
                             cursor: 'pointer'
@@ -294,8 +296,8 @@ const Domains = () => {
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = 'none';
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1 }}>
+                            <div className="domain-card-layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <div className="domain-card-main" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                     <Globe size={20} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                     <div>
                                         <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
@@ -336,14 +338,14 @@ const Domains = () => {
                                                     {(domain.renewal_date || domain.renewal_date === 'permanent') && (
                                                         <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
                                                     )}
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', maxWidth: '200px' }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', maxWidth: '200px', minWidth: 0 }}>
                                                         <LinkIcon size={12} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                                         <a
                                                             href={domain.renewal_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             onClick={(e) => e.stopPropagation()}
-                                                            style={{ color: 'var(--accent-primary)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                            style={{ color: 'var(--accent-primary)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
                                                             title={domain.renewal_url}
                                                         >
                                                             {domain.renewal_url}
@@ -354,7 +356,7 @@ const Domains = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                <div className="domain-card-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"

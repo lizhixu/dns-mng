@@ -5,11 +5,13 @@ import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server,
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SPF', 'SRV'];
 
 const Records = () => {
     const { t, language } = useLanguage();
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const { accountId, domainId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -363,7 +365,7 @@ const Records = () => {
                     <ArrowLeft size={16} />
                     {getBackText()}
                 </button>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{t.records.title}</h2>
                     <button onClick={openCreateModal} className="btn btn-primary">
                         <Plus size={18} />
@@ -374,9 +376,9 @@ const Records = () => {
 
             {/* Domain Info Card */}
             {domain && (
-                <div className="glass-panel" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '200px' }}>
+                <div className="glass-panel record-domain-info" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+                    <div className="record-domain-info-layout" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                        <div className="record-domain-main" style={{ flex: 1, minWidth: '200px' }}>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
                                 {t.records.domainName || 'Domain'}
                             </div>
@@ -385,7 +387,7 @@ const Records = () => {
                             </div>
                         </div>
                         {account && (
-                            <div style={{ minWidth: '150px' }}>
+                            <div className="record-domain-account" style={{ minWidth: '150px' }}>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
                                     {t.records.account}
                                 </div>
@@ -399,30 +401,32 @@ const Records = () => {
                 </div>
             )}
 
-            <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
+            <div className="glass-panel records-filter-bar" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="records-search-box" style={{ position: 'relative', flex: '1 1 160px', minWidth: 0 }}>
                     <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                     <input
                         type="text"
                         className="form-input"
                         placeholder={t.records.searchPlaceholder}
-                        style={{ paddingLeft: '2.5rem' }}
+                        style={{ paddingLeft: '2.5rem', width: '100%' }}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <select
-                    className="form-input"
-                    style={{ width: 'auto' }}
-                    value={typeFilter}
-                    onChange={e => setTypeFilter(e.target.value)}
-                >
-                    <option value="ALL">{t.records.allTypes}</option>
-                    {RECORD_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
-                </select>
-                <button onClick={loadRecords} className="btn btn-secondary" title={t.common.refresh}>
-                    <RefreshCw size={18} className={loading ? "spin" : ""} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-                </button>
+                <div className="records-filter-controls" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                    <select
+                        className="form-input records-filter-select"
+                        style={{ width: 'auto' }}
+                        value={typeFilter}
+                        onChange={e => setTypeFilter(e.target.value)}
+                    >
+                        <option value="ALL">{t.records.allTypes}</option>
+                        {RECORD_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                    <button onClick={loadRecords} className="btn btn-secondary records-refresh-btn" title={t.common.refresh}>
+                        <RefreshCw size={18} className={loading ? "spin" : ""} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                    </button>
+                </div>
             </div>
 
             {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)' }}>{t.common.error}: {error}</div>}
@@ -430,29 +434,29 @@ const Records = () => {
             {loading && !records.length ? (
                 <div className="spinner" style={{ margin: '4rem auto' }}></div>
             ) : (
-                <div className="glass-panel" style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.state}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.updatedAt}</th>
-                                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRecords.map(record => (
-                                <tr key={record.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s', ':hover': { backgroundColor: 'rgba(255,255,255,0.02)' } }}>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span className="badge badge-neutral" style={{ fontWeight: 'bold', width: '60px', justifyContent: 'center' }}>
+                <>
+                    {/* 移动端卡片视图 */}
+                    <div className="mobile-only-cards">
+                        {filteredRecords.length === 0 ? (
+                            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                {t.records.noRecords}
+                            </div>
+                        ) : (
+                            filteredRecords.map(record => (
+                                <div key={record.id} className="record-card glass-panel">
+                                    <div className="record-card-header">
+                                        <span className="badge badge-neutral" style={{ fontWeight: 'bold' }}>
                                             {record.record_type}
                                         </span>
-                                    </td>
-                                    <td style={{ padding: '1rem', fontWeight: 500 }}>{record.node_name || '@'}</td>
-                                    <td style={{ padding: '1rem', maxWidth: '400px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        <span className="record-card-node" style={{ fontWeight: 500, fontSize: '0.9rem', flex: 1 }}>
+                                            {record.node_name || '@'}
+                                        </span>
+                                        <span className={`badge ${record.state ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: '0.75rem' }}>
+                                            {record.state ? t.common.active : t.common.inactive}
+                                        </span>
+                                    </div>
+                                    <div className="record-card-content">
+                                        <div className="record-card-content-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                             <span style={{
                                                 display: 'inline-block',
                                                 fontSize: '0.7rem',
@@ -467,64 +471,149 @@ const Records = () => {
                                             }}>
                                                 {getContentLabel(record.record_type)}
                                             </span>
-                                            <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }} title={record.content}>
+                                            <span className="record-card-value" style={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
                                                 {record.content}
                                             </span>
                                         </div>
                                         {record.record_type === 'MX' && record.priority != null && (
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginLeft: '0.25rem' }}>
-                                                ({t.records.priority}: {record.priority})
-                                            </span>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                                {t.records.priority}: {record.priority}
+                                            </div>
                                         )}
-                                    </td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span className={`badge ${record.state ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: '0.75rem' }}>
-                                            {record.state ? t.common.active : t.common.inactive}
+                                    </div>
+                                    <div className="record-card-footer">
+                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                                            {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                                month: '2-digit',
+                                                day: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }) : '-'}
                                         </span>
-                                    </td>
-                                    <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                        {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
-                                            year: 'numeric',
-                                            month: '2-digit',
-                                            day: '2-digit',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        }) : '-'}
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                        <div className="record-card-actions" style={{ display: 'flex', gap: '4px' }}>
                                             <button
                                                 onClick={() => handleCheckDNS(record)}
                                                 className="btn btn-ghost"
                                                 title={t.records.checkDns}
                                                 disabled={checkingRecord === record.id}
+                                                style={{ padding: '4px 8px', height: 'auto' }}
                                             >
                                                 {checkingRecord === record.id ? (
-                                                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></div>
+                                                    <div className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></div>
                                                 ) : (
-                                                    <CheckCircle size={16} />
+                                                    <CheckCircle size={14} />
                                                 )}
                                             </button>
-                                            <button onClick={() => openEditModal(record)} className="btn btn-ghost" title={t.common.edit}>
-                                                <Edit2 size={16} />
+                                            <button onClick={() => openEditModal(record)} className="btn btn-ghost" title={t.common.edit} style={{ padding: '4px 8px', height: 'auto' }}>
+                                                <Edit2 size={14} />
                                             </button>
-                                            <button onClick={() => handleDelete(record.id)} className="btn btn-ghost" style={{ color: 'var(--danger)' }} title={t.common.delete}>
-                                                <Trash2 size={16} />
+                                            <button onClick={() => handleDelete(record.id)} className="btn btn-ghost" style={{ color: 'var(--danger)', padding: '4px 8px', height: 'auto' }} title={t.common.delete}>
+                                                <Trash2 size={14} />
                                             </button>
                                         </div>
-                                    </td>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* 桌面端表格视图 */}
+                    <div className="desktop-only-table glass-panel table-scroll-container" style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.state}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.updatedAt}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
                                 </tr>
-                            ))}
-                            {filteredRecords.length === 0 && (
-                                <tr>
-                                    <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                        {t.records.noRecords}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {filteredRecords.map(record => (
+                                    <tr key={record.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
+                                        <td style={{ padding: '1rem' }}>
+                                            <span className="badge badge-neutral" style={{ fontWeight: 'bold', width: '60px', justifyContent: 'center' }}>
+                                                {record.record_type}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '1rem', fontWeight: 500 }}>{record.node_name || '@'}</td>
+                                        <td style={{ padding: '1rem', maxWidth: '400px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600,
+                                                    padding: '0.15rem 0.4rem',
+                                                    borderRadius: '4px',
+                                                    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                                                    color: 'var(--accent-primary)',
+                                                    whiteSpace: 'nowrap',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.03em'
+                                                }}>
+                                                    {getContentLabel(record.record_type)}
+                                                </span>
+                                                <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', wordBreak: 'break-all' }} title={record.content}>
+                                                    {record.content}
+                                                </span>
+                                            </div>
+                                            {record.record_type === 'MX' && record.priority != null && (
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginLeft: '0.25rem' }}>
+                                                    ({t.records.priority}: {record.priority})
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '1rem' }}>
+                                            <span className={`badge ${record.state ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: '0.75rem' }}>
+                                                {record.state ? t.common.active : t.common.inactive}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                                            {record.updated_on ? new Date(record.updated_on).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+                                                year: 'numeric',
+                                                month: '2-digit',
+                                                day: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }) : '-'}
+                                        </td>
+                                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    onClick={() => handleCheckDNS(record)}
+                                                    className="btn btn-ghost"
+                                                    title={t.records.checkDns}
+                                                    disabled={checkingRecord === record.id}
+                                                >
+                                                    {checkingRecord === record.id ? (
+                                                        <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></div>
+                                                    ) : (
+                                                        <CheckCircle size={16} />
+                                                    )}
+                                                </button>
+                                                <button onClick={() => openEditModal(record)} className="btn btn-ghost" title={t.common.edit}>
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button onClick={() => handleDelete(record.id)} className="btn btn-ghost" style={{ color: 'var(--danger)' }} title={t.common.delete}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredRecords.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                            {t.records.noRecords}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
 
             <Modal

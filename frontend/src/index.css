@@ -441,7 +441,7 @@ aside nav a {
 
 aside nav a > div {
     display: flex;
-    alignItems: center;
+    align-items: center;
     gap: 0.5rem;
 }
 
@@ -463,6 +463,7 @@ aside nav a:hover {
 
 .settings-dropdown {
     animation: slideIn 0.15s ease-out;
+    z-index: 60;
 }
 /* Login page background animation */
 @keyframes rotate {
@@ -708,5 +709,686 @@ aside nav a:hover {
 
     .login-submit-btn {
         height: 42px;
+    }
+}
+
+/* ===== 移动端响应式 ===== */
+
+/* 顶部导航 */
+.app-header {
+    position: relative;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.app-header-title {
+    min-width: 0;
+}
+
+.app-header-actions {
+    min-width: 0;
+}
+
+.header-theme-switcher {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.header-language-select {
+    flex-shrink: 0;
+}
+
+.header-user-btn {
+    min-width: 0;
+}
+
+.header-user-name {
+    display: inline-block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* 汉堡菜单按钮 */
+.mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.mobile-menu-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* 侧边栏头部（标题 + 关闭按钮） */
+.app-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+}
+
+/* 侧边栏 — 桌面端静态 */
+.app-sidebar.desktop {
+    width: 200px;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    padding: 24px 16px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+/* 侧边栏 — 移动端抽屉 */
+.app-sidebar.mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+}
+
+.app-sidebar.mobile.open {
+    transform: translateX(0);
+}
+
+/* 移动端侧边栏关闭按钮 */
+.mobile-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.mobile-sidebar-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* 遮罩层 */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.sidebar-overlay.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* 表格横向滚动容器 */
+.table-scroll-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 记录卡片（移动端） */
+.record-card {
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.record-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.record-card-node {
+    min-width: 0;
+    word-break: break-word;
+}
+
+.record-card-content {
+    font-size: 13px;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+.record-card-content-row {
+    width: 100%;
+}
+
+.record-card-value {
+    min-width: 0;
+    flex: 1;
+}
+
+.record-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.record-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.domain-list-card,
+.account-list-card,
+.log-card {
+    transition: var(--transition);
+}
+
+.domain-card-layout,
+.log-card-layout {
+    width: 100%;
+}
+
+.domain-card-main {
+    min-width: 0;
+}
+
+.account-key-box {
+    overflow: hidden;
+}
+
+/* 日志卡片（移动端） */
+.log-card {
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.log-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.log-card-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.log-card-footer {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* 响应式分页控件 */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* 移动端 ≤ 768px */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 10px 14px !important;
+        height: auto !important;
+        min-height: 64px;
+        align-items: stretch !important;
+    }
+
+    .app-header-left {
+        min-width: 0;
+        align-items: center;
+    }
+
+    .app-header-title {
+        gap: 2px;
+    }
+
+    .app-header-actions {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: 6px !important;
+    }
+
+    .header-theme-switcher {
+        transform: scale(0.96);
+        transform-origin: right center;
+    }
+
+    .header-language-select.mobile {
+        width: 64px !important;
+        min-width: 64px;
+        padding: 0 4px !important;
+    }
+
+    .header-user-btn {
+        max-width: 104px !important;
+        padding: 6px 7px !important;
+    }
+
+    .header-user-name {
+        max-width: 54px;
+    }
+
+    /* Records 域名信息卡片在移动端 flex-wrap，两区块各占满宽 */
+    .record-domain-info-layout {
+        gap: 0.75rem;
+    }
+
+    .record-domain-main {
+        flex: 1 1 100%;
+        min-width: 0 !important;
+    }
+
+    .record-domain-account {
+        flex: 0 0 auto;
+        min-width: 0 !important;
+    }
+
+    /* Profile / EmailSettings 容器在移动端不贴边 */
+    .profile-page-wrapper {
+        padding: 0 4px;
+    }
+
+    /* Accounts 卡片强制单列 */
+    .accounts-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 操作栏换行 */
+    .page-actions-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .page-actions-bar > * {
+        flex-shrink: 0;
+    }
+
+    /* 页面标题行 — 竖向排列 */
+    .page-title-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    /* 域名/日志页工具栏全宽 */
+    .domains-toolbar,
+    .logs-toolbar,
+    .alldomain-toolbar {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    /* 记录筛选栏对齐 */
+    .records-filter-bar {
+        align-items: stretch !important;
+    }
+
+    /* 搜索框全宽 */
+    .records-search-box,
+    .search-box-fixed {
+        width: 100% !important;
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .search-box-fixed input,
+    .records-search-box input,
+    .domains-search-input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* 筛选控件容器：搜索占全宽一行，select+刷新在第二行 */
+    .records-filter-controls {
+        width: 100%;
+        flex: 1 1 100%;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* 筛选 select 和刷新按钮横向对齐（一行） */
+    .records-filter-select {
+        flex: 1 1 0;
+        min-width: 80px;
+        width: auto !important;
+    }
+
+    .records-refresh-btn {
+        flex-shrink: 0;
+    }
+
+    /* 域名搜索框全宽 */
+    .domains-toolbar .search-box-fixed,
+    .alldomain-toolbar .search-box-fixed {
+        flex: 1 1 100%;
+        order: 0;
+    }
+
+    .domains-toolbar .btn,
+    .alldomain-toolbar .btn {
+        flex-shrink: 0;
+    }
+
+    /* 域名卡片 — 操作区单独一行 */
+    .domain-card-layout {
+        flex-wrap: wrap;
+    }
+
+    .domain-card-main {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .domain-card-main > div {
+        min-width: 0;
+    }
+
+    .domain-card-actions {
+        flex-wrap: wrap;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .domain-card-actions > * {
+        flex: 1 1 calc(50% - 4px);
+        justify-content: center;
+    }
+
+    /* 邮件设置 SMTP 行 */
+    .email-smtp-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 日志卡片 — 时间信息移到底部 */
+    .log-card-layout {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .log-card-layout > :last-child {
+        width: 100%;
+        text-align: left !important;
+        align-items: flex-start !important;
+        flex-direction: row !important;
+        gap: 1rem;
+    }
+
+    /* 账号卡片 */
+    .account-list-card {
+        padding: 16px !important;
+    }
+
+    .account-card-header {
+        align-items: center !important;
+    }
+
+    .account-key-box {
+        padding: 10px !important;
+    }
+
+    .log-card {
+        padding: 14px !important;
+    }
+
+    /* 分页简化 */
+    .pagination-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* 隐藏表格，显示卡片 */
+    .desktop-only-table {
+        display: none;
+    }
+
+    .mobile-only-cards {
+        display: block;
+    }
+
+    /* Tab 标签等宽 */
+    .tab-nav {
+        display: flex;
+        gap: 0;
+        overflow: hidden;
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .tab-nav .tab-nav-btn {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-bottom: none !important;
+        border-radius: 0;
+    }
+
+    .tab-nav .tab-nav-btn.active {
+        background: var(--accent-primary) !important;
+        color: white !important;
+    }
+}
+
+/* 桌面端 > 768px */
+@media (min-width: 769px) {
+    .mobile-only-cards {
+        display: none;
+    }
+
+    .desktop-only-table {
+        display: block;
+    }
+
+    /* Records 域名信息卡片在桌面端保持横向 */
+    .record-domain-info-layout {
+        flex-wrap: nowrap;
+    }
+
+    .record-domain-main {
+        min-width: 180px;
+    }
+
+    .record-domain-account {
+        min-width: 130px;
+    }
+}
+
+/* 窄屏 ≤ 640px */
+@media (max-width: 640px) {
+    .page-title-row > div:first-child {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .records-filter-controls {
+        width: 100%;
+    }
+
+    .records-filter-select {
+        flex: 1;
+    }
+
+    .tab-nav .tab-nav-btn {
+        gap: 0.25rem;
+    }
+}
+
+/* 极小屏 ≤ 480px */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+    }
+
+    .back-to-top-btn {
+        right: 12px !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        gap: 4px !important;
+    }
+
+    .form-actions-row,
+    .confirm-dialog-actions {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .form-actions-row > .btn,
+    .confirm-dialog-actions > .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .app-header-title > span:first-child {
+        font-size: 0.6875rem !important;
+    }
+
+    .app-header-title > span:last-child {
+        font-size: 0.875rem !important;
+    }
+
+    .app-header-actions {
+        gap: 4px !important;
+    }
+
+    .header-theme-switcher {
+        padding: 1px !important;
+    }
+
+    .header-theme-switcher button {
+        padding: 5px !important;
+    }
+
+    .header-language-select.mobile {
+        width: 56px !important;
+        min-width: 56px;
+        font-size: 12px !important;
+    }
+
+    .header-user-btn {
+        max-width: 84px !important;
+    }
+
+    .header-user-name {
+        max-width: 36px;
+    }
+
+    .header-user-btn svg:last-child {
+        display: none;
+    }
+
+    /* modal 从底部弹出 */
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal-container {
+        max-width: 100vw !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        max-height: 95vh;
+    }
+
+    /* 域名卡片操作每个按钮全宽 */
+    .domain-card-actions > * {
+        flex-basis: 100%;
+    }
+
+    /* 记录卡片更紧凑 */
+    .record-card {
+        padding: 12px 14px;
+        gap: 8px;
+    }
+
+    /* 记录操作按钮区 */
+    .record-card-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .record-card-actions > button {
+        flex: 1;
+        justify-content: center;
+        max-width: 60px;
+    }
+
+    /* 分页控件竖排 */
+    .pagination-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pagination-controls > button.btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 日志卡片时间独占一行 */
+    .log-card-layout > :last-child {
+        flex-direction: column !important;
+        gap: 0.25rem;
+    }
+
+    /* 账号页操作栏 */
+    .page-actions-bar {
+        width: 100%;
+    }
+
+    .page-actions-bar > button,
+    .page-actions-bar > a {
+        flex: 1 1 auto;
+    }
+
+    /* 按钮更友好（触摸） */
+    .btn {
+        min-height: 40px;
     }
 }

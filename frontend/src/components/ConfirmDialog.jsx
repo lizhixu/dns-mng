@@ -109,26 +109,22 @@ const ConfirmDialog = ({
                     </div>
                 </div>
 
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
+                <div className="confirm-dialog-actions" style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
                     gap: '12px',
                     marginTop: '24px'
                 }}>
                     <button
                         onClick={onClose}
                         disabled={loading}
+                        className="btn btn-secondary"
                         style={{
                             padding: '8px 16px',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid var(--border-color)',
-                            background: 'transparent',
-                            color: 'var(--text-secondary)',
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: loading ? 'not-allowed' : 'pointer',
-                            opacity: loading ? 0.5 : 1,
-                            transition: 'var(--transition)'
+                            opacity: loading ? 0.5 : 1
                         }}
                     >
                         {resolvedCancelText}
