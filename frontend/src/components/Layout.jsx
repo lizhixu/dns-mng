@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
@@ -19,6 +19,7 @@ const Layout = () => {
     const [success, setSuccess] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const isMobile = useMediaQuery('(max-width: 768px)');
+    const settingsRef = useRef(null);
     const [passwordForm, setPasswordForm] = useState({
         old_password: '',
         new_password: '',
@@ -38,6 +39,26 @@ const Layout = () => {
             setSidebarOpen(false);
         }
     }, [isMobile, location.pathname]);
+
+    useEffect(() => {
+        if (!showSettings) {
+            return undefined;
+        }
+
+        const handlePointerDown = (event) => {
+            if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+                closeSettings();
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('touchstart', handlePointerDown);
+
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('touchstart', handlePointerDown);
+        };
+    }, [showSettings]);
 
     const handleLogout = () => {
         logout();
@@ -86,7 +107,7 @@ const Layout = () => {
             });
             setSuccess(t.layout.passwordUpdated);
             setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
-            setTimeout(() => setShowSettings(false), 1500);
+            setTimeout(() => resetAndCloseSettings(), 1500);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -95,6 +116,10 @@ const Layout = () => {
     };
 
     const closeSettings = () => {
+        setShowSettings(false);
+    };
+
+    const resetAndCloseSettings = () => {
         setShowSettings(false);
         setError('');
         setSuccess('');
@@ -144,7 +169,7 @@ const Layout = () => {
     );
 
     return (
-        <div className="app-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+        <div className="app-shell" style={{ display: 'flex', height: '100vh' }}>
             {!isMobile && sidebar}
 
             {isMobile && (
@@ -161,7 +186,6 @@ const Layout = () => {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden',
                 minWidth: 0
             }}>
                 <header className="app-header" style={{
@@ -173,7 +197,9 @@ const Layout = () => {
                     background: 'var(--bg-primary)',
                     borderBottom: '1px solid var(--border-color)',
                     flexShrink: 0,
-                    gap: '12px'
+                    gap: '12px',
+                    position: 'relative',
+                    zIndex: 50
                 }}>
                     <div className="app-header-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                         {isMobile && (
@@ -307,7 +333,7 @@ const Layout = () => {
                             }}></div>
                         )}
 
-                        <div style={{ position: 'relative', minWidth: 0 }}>
+                        <div ref={settingsRef} style={{ position: 'relative', minWidth: 0 }}>
                             <button
                                 className="header-user-btn"
                                 onClick={() => setShowSettings(!showSettings)}
@@ -338,32 +364,19 @@ const Layout = () => {
                             </button>
 
                             {showSettings && (
-                                <>
-                                    <div
-                                        style={{
-                                            position: 'fixed',
-                                            top: 0,
-                                            left: 0,
-                                            right: 0,
-                                            bottom: 0,
-                                            zIndex: 40
-                                        }}
-                                        onClick={closeSettings}
-                                    />
-                                    <div className="settings-dropdown" style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        marginTop: '8px',
-                                        width: isMobile ? 'min(320px, calc(100vw - 32px))' : '320px',
-                                        maxWidth: 'calc(100vw - 32px)',
-                                        background: 'var(--bg-primary)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: 'var(--radius-md)',
-                                        boxShadow: 'var(--shadow-lg)',
-                                        zIndex: 60,
-                                        overflow: 'hidden'
-                                    }}>
+                                <div className="settings-dropdown" style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '8px',
+                                    width: isMobile ? 'min(320px, calc(100vw - 32px))' : '320px',
+                                    maxWidth: 'calc(100vw - 32px)',
+                                    background: 'var(--bg-primary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-md)',
+                                    boxShadow: 'var(--shadow-lg)',
+                                    overflow: 'hidden'
+                                }}>
                                         <div style={{
                                             padding: '16px',
                                             borderBottom: '1px solid var(--border-color)',
@@ -373,7 +386,7 @@ const Layout = () => {
                                         }}>
                                             <span style={{ fontWeight: '500', fontSize: '14px' }}>{t.layout.settings}</span>
                                             <button
-                                                onClick={closeSettings}
+                                                onClick={resetAndCloseSettings}
                                                 style={{
                                                     padding: '4px',
                                                     borderRadius: '4px',
@@ -487,7 +500,6 @@ const Layout = () => {
                                             </button>
                                         </div>
                                     </div>
-                                </>
                             )}
                         </div>
                     </div>

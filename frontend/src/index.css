@@ -268,7 +268,7 @@ textarea.form-input {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50;
+  z-index: 100;
   animation: fadeIn 0.15s ease-out;
 }
 
@@ -716,8 +716,6 @@ aside nav a:hover {
 
 /* 顶部导航 */
 .app-header {
-    position: relative;
-    z-index: 100;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
