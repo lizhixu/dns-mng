@@ -559,6 +559,11 @@ const Accounts = () => {
                                 {t.accounts.hurricaneFormat || 'Format: username,password (comma separated)'}
                             </p>
                         )}
+                        {formData.provider_type === 'vps8' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.vps8Format || 'Format: API Key (from VPS8 Client Area → Profile → API Key)'}
+                            </p>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>

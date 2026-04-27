@@ -29,6 +29,7 @@ go.work
 .DS_Store
 .arts
 .tocodex
+.claude
 
 # Node
 node_modules/

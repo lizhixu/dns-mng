@@ -16,6 +16,7 @@ import (
 	"dns-mng/provider/ipv64"
 	"dns-mng/provider/ndjp"
 	"dns-mng/provider/tencentcloud"
+	"dns-mng/provider/vps8"
 	"dns-mng/service"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,7 @@ func main() {
 	provider.Register(dnshe.New())
 	provider.Register(hurricane.New())
 	provider.Register(ipv64.New())
+	provider.Register(vps8.New())
 
 	// Init services
 	userService := service.NewUserService(cfg)

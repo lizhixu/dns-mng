@@ -125,21 +125,28 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 	// This will be handled by the handler which has account context
 	_ = allDomainsToDelete
 
-	// Merge domain cache data and update cache
+	// Merge domain cache data and save provider's renewal date to cache
 	if s.domainCacheService != nil {
 		cacheMap, err := s.domainCacheService.BatchGetCacheByUser(userID)
 		if err == nil {
 			for i := range allDomains {
 				key := cacheKey(allDomains[i].AccountID, allDomains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					allDomains[i].RenewalDate = cache.RenewalDate
-					allDomains[i].RenewalURL = cache.RenewalURL
+					// Cache exists - use cache data, but if cache has no renewal date and provider does, use provider's
+					if cache.RenewalDate != "" {
+						allDomains[i].RenewalDate = cache.RenewalDate
+					}
+					// Use cached renewal URL if provider didn't return one
+					if allDomains[i].RenewalURL == "" && cache.RenewalURL != "" {
+						allDomains[i].RenewalURL = cache.RenewalURL
+					}
 					allDomains[i].CacheSynced = true
-				} else {
-					// 为新域名创建缓存条目
+				}
+				// Save provider's renewal date and URL to cache if we have them
+				if allDomains[i].RenewalDate != "" || allDomains[i].RenewalURL != "" {
 					s.domainCacheService.UpsertCache(userID, allDomains[i].AccountID, allDomains[i].ID, allDomains[i].Name, &models.UpdateDomainCacheRequest{
-						RenewalDate: "",
-						RenewalURL:  "",
+						RenewalDate: allDomains[i].RenewalDate,
+						RenewalURL:  allDomains[i].RenewalURL,
 					})
 				}
 			}
@@ -262,6 +269,12 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 		return nil, nil, err
 	}
 
+	// Set account info for all domains
+	for i := range domains {
+		domains[i].AccountID = accountID
+		domains[i].AccountName = account.Name
+	}
+
 	// Get current cache to compare
 	var domainsToDelete []string
 	if s.domainCacheService != nil {
@@ -281,18 +294,25 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 				}
 			}
 
-			// Merge domain cache data and update cache
+			// Merge domain cache data and save provider's renewal date to cache
 			for i := range domains {
 				key := cacheKey(domains[i].AccountID, domains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					domains[i].RenewalDate = cache.RenewalDate
-					domains[i].RenewalURL = cache.RenewalURL
+					// Cache exists - use cache data, but if cache has no renewal date and provider does, use provider's
+					if cache.RenewalDate != "" {
+						domains[i].RenewalDate = cache.RenewalDate
+					}
+					// Use cached renewal URL if provider didn't return one
+					if domains[i].RenewalURL == "" && cache.RenewalURL != "" {
+						domains[i].RenewalURL = cache.RenewalURL
+					}
 					domains[i].CacheSynced = true
-				} else {
-					// 为新域名创建缓存条目
-					s.domainCacheService.UpsertCache(userID, accountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
-						RenewalDate: "",
-						RenewalURL:  "",
+				}
+				// Save provider's renewal date and URL to cache if we have them
+				if domains[i].RenewalDate != "" || domains[i].RenewalURL != "" {
+					s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
+						RenewalDate: domains[i].RenewalDate,
+						RenewalURL:  domains[i].RenewalURL,
 					})
 				}
 			}
