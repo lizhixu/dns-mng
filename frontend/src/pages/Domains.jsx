@@ -25,9 +25,9 @@ const Domains = () => {
 
     // Renewal modal state
     const [renewalModal, setRenewalModal] = useState({ open: false, domain: null });
-    const [renewalForm, setRenewalForm] = useState({ 
-        renewal_date: '', 
-        renewal_url: '', 
+    const [renewalForm, setRenewalForm] = useState({
+        renewal_date: '',
+        renewal_url: '',
         is_permanent_free: false,
         notify_days_before: 30,
         notify_enabled: false

@@ -64,7 +64,7 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 			UnicodeName: d.Domain,
 			State:       "Active",
 			RenewalDate: renewalDate,
-			RenewalURL:  "https://vps8.zz.cd/client/domains",
+			RenewalURL:  "https://vps8.zz.cd",
 		})
 	}
 
