@@ -38,7 +38,7 @@ func (p *Provider) WebsiteURL() string {
 }
 
 func (p *Provider) DefaultTTL() int {
-	return 600
+	return 100
 }
 
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
@@ -102,7 +102,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 	for _, r := range records {
 		ttl := r.TTL
 		if ttl == 0 {
-			ttl = 600
+			ttl = 100
 		}
 
 		// Handle node name
