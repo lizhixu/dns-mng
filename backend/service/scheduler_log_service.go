@@ -13,24 +13,6 @@ func NewSchedulerLogService() *SchedulerLogService {
 	return &SchedulerLogService{}
 }
 
-// CreateSchedulerLog creates a new scheduler log entry
-func (s *SchedulerLogService) CreateSchedulerLog(taskName string, status string, message string, details interface{}, startedAt time.Time, completedAt *time.Time) error {
-	detailsJSON, _ := json.Marshal(details)
-
-	var durationMs *int64
-	if completedAt != nil {
-		dur := completedAt.Sub(startedAt).Milliseconds()
-		durationMs = &dur
-	}
-
-	_, err := database.DB.Exec(
-		`INSERT INTO scheduler_logs (task_name, status, message, details, started_at, completed_at, duration_ms) 
-		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		taskName, status, message, string(detailsJSON), startedAt, completedAt, durationMs,
-	)
-	return err
-}
-
 // StartTask starts a new task and returns the log ID for later update
 func (s *SchedulerLogService) StartTask(taskName string, details interface{}) (int64, error) {
 	startedAt := time.Now()

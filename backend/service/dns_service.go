@@ -112,18 +112,12 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 
 	// Collect all results
 	var allDomains []models.Domain
-	var allDomainsToDelete []string
 	for res := range results {
 		if res.err == nil && res.domains != nil {
 			allDomains = append(allDomains, res.domains...)
-			allDomainsToDelete = append(allDomainsToDelete, res.domainsToDelete...)
 		}
 		// Silently ignore errors from individual accounts
 	}
-
-	// Soft delete domains that no longer exist
-	// This will be handled by the handler which has account context
-	_ = allDomainsToDelete
 
 	// Merge domain cache data and save provider's renewal date to cache
 	if s.domainCacheService != nil {
