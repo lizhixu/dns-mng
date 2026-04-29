@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、Dynu、NDJP NET、deSEC、Hurricane Electric、IPv64、DNSHE 等 DNS 服务提供商
+- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、Dynu、NDJP NET、deSEC、Hurricane Electric、IPv64、DNSHE、VPS8 等 DNS 服务提供商
 - 🔐 **安全认证**：JWT 身份验证
 - 🎨 **现代 UI**：Vercel 风格的简洁界面
 - 🌓 **主题切换**：支持亮色/暗色/跟随系统三种模式
@@ -283,6 +283,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 | Hurricane Electric | ✅ | 免费 DNS，支持 DDNS |
 | IPv64 | ✅ | 免费动态 DNS |
 | DNSHE | ✅ | 免费域名服务 |
+| VPS8 | ✅ | VPS8 DNS 服务 |
 
 ### API 认证说明
 
@@ -294,6 +295,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 - **Hurricane Electric**: 邮箱和密码
 - **IPv64**: API Key
 - **DNSHE**: API Key + API Secret
+- **VPS8**: API Key
 
 ## 添加新的 DNS 提供商
 
@@ -319,12 +321,14 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   │   ├── desec/
 │   │   ├── hurricane/
 │   │   ├── ipv64/
-│   │   └── dnshe/
-│   └── service/         # 业务逻辑
+│   │   ├── dnshe/
+│   │   └── vps8/
+│   ├── service/         # 业务逻辑
 ├── frontend/            # React 前端
 │   ├── src/
 │   │   ├── components/  # 组件
 │   │   ├── pages/       # 页面
+│   │   ├── hooks/       # 自定义 Hooks
 │   │   ├── locales/     # 国际化
 │   │   └── ...
 │   └── ...
