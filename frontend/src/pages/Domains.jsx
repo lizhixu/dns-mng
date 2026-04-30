@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
-import { ArrowLeft, Search, RefreshCw, Globe, ExternalLink, Calendar, Link as LinkIcon, Edit2, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Search, RefreshCw, Globe, ExternalLink, Calendar, Link as LinkIcon, Edit2, Clock, Server } from 'lucide-react';
 import Modal from '../components/Modal';
-import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
 
 const Domains = () => {
@@ -15,13 +14,9 @@ const Domains = () => {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [cacheTimestamp, setCacheTimestamp] = useState(null);
-
-    // Confirm dialog state for soft delete
-    const [confirmDialog, setConfirmDialog] = useState({ 
-        open: false, 
-        domainsToDelete: [],
-        onConfirm: null 
-    });
+    const [domainsToDelete, setDomainsToDelete] = useState([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [restoredDomains, setRestoredDomains] = useState([]);
 
     // Renewal modal state
     const [renewalModal, setRenewalModal] = useState({ open: false, domain: null });
@@ -39,43 +34,27 @@ const Domains = () => {
         setLoading(true);
         try {
             let data;
+            let deletedItems = [];
+            let restored = [];
+
             if (forceRefresh) {
                 // 强制刷新时调用refresh API
                 const refreshData = await api.refreshDomains(accountId);
                 data = refreshData.domains || [];
+                deletedItems = refreshData.domains_to_delete || [];
+                restored = refreshData.restored_domains || [];
                 setCacheTimestamp(refreshData.cache_timestamp || null);
-                
-                // 检查是否有需要删除的域名
-                if (refreshData.domains_to_delete && refreshData.domains_to_delete.length > 0) {
-                    // 获取这些域名的详细信息用于显示
-                    const domainsToDeleteDetails = data.filter(d => 
-                        refreshData.domains_to_delete.includes(d.id)
-                    );
-                    
-                    // 显示确认对话框
-                    setConfirmDialog({
-                        open: true,
-                        domainsToDelete: domainsToDeleteDetails,
-                        onConfirm: async () => {
-                            try {
-                                // 执行软删除
-                                const deleteItems = refreshData.domains_to_delete.map(domainId => ({
-                                    account_id: parseInt(accountId),
-                                    domain_id: domainId
-                                }));
-                                await api.batchDeleteDomainCache(deleteItems);
-                                
-                                // 重新加载域名列表
-                                await loadDomains(false);
-                            } catch (err) {
-                                setError(err.message);
-                            }
-                        }
-                    });
-                    
-                    // 先显示从API获取的域名（不包括待删除的）
-                    const domainIdsToDelete = new Set(refreshData.domains_to_delete);
-                    data = data.filter(d => !domainIdsToDelete.has(d.id));
+
+                // 如果有需要删除的域名，显示确认对话框
+                if (deletedItems.length > 0) {
+                    setDomainsToDelete(deletedItems);
+                    setShowDeleteConfirm(true);
+                }
+
+                // 如果有恢复的域名，显示提示
+                if (restored.length > 0) {
+                    setRestoredDomains(restored);
+                    setTimeout(() => setRestoredDomains([]), 5000);
                 }
             } else {
                 // 正常加载从缓存
@@ -83,7 +62,7 @@ const Domains = () => {
                 data = response.domains || response || [];
                 setCacheTimestamp(response.cache_timestamp || null);
             }
-            
+
             setDomains(data);
             setFilteredDomains(data);
             setError('');
@@ -92,7 +71,7 @@ const Domains = () => {
         } finally {
             setLoading(false);
         }
-    }, [accountId]); // 移除 domains 依赖
+    }, [accountId]);
 
     useEffect(() => {
         loadDomains();
@@ -172,6 +151,23 @@ const Domains = () => {
     const closeRenewalModal = () => {
         setRenewalModal({ open: false, domain: null });
         setRenewalError('');
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await api.batchSoftDeleteDomains(domainsToDelete);
+            setShowDeleteConfirm(false);
+            setDomainsToDelete([]);
+            // 重新加载域名列表
+            await loadDomains(false);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setDomainsToDelete([]);
     };
 
     // Calculate days until expiry
@@ -277,6 +273,22 @@ const Domains = () => {
             </div>
 
             {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)' }}>{t.common.error}: {error}</div>}
+
+            {restoredDomains.length > 0 && (
+                <div style={{
+                    color: 'var(--success)',
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>✓ {t.domains.restoredDomainsTitle}</div>
+                    <div style={{ fontSize: '0.875rem' }}>
+                        {restoredDomains.join(', ')}
+                    </div>
+                </div>
+            )}
 
             {loading && !domains.length ? (
                 <div className="spinner" style={{ margin: '4rem auto' }}></div>
@@ -474,49 +486,60 @@ const Domains = () => {
                 </form>
             </Modal>
 
-            {/* Confirm Dialog for Soft Delete */}
-            <ConfirmDialog
-                isOpen={confirmDialog.open}
-                onClose={() => setConfirmDialog({ open: false, domainsToDelete: [], onConfirm: null })}
-                onConfirm={() => {
-                    if (confirmDialog.onConfirm) {
-                        confirmDialog.onConfirm();
-                    }
-                    setConfirmDialog({ open: false, domainsToDelete: [], onConfirm: null });
-                }}
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteConfirm}
+                onClose={handleCancelDelete}
                 title={t.domains.confirmDeleteTitle}
-                message={
-                    <div>
-                        <p style={{ marginBottom: '1rem' }}>
-                            {t.domains.confirmDeleteMessage}
-                        </p>
-                        <ul style={{ 
-                            listStyle: 'none', 
-                            padding: 0,
-                            maxHeight: '200px',
-                            overflowY: 'auto'
-                        }}>
-                            {confirmDialog.domainsToDelete.map(domain => (
-                                <li key={domain.id} style={{
-                                    padding: '0.5rem',
-                                    marginBottom: '0.5rem',
-                                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <AlertTriangle size={14} style={{ color: 'var(--warning)' }} />
-                                    <span>{domain.name}</span>
-                                </li>
-                            ))}
-                        </ul>
+            >
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                        {t.domains.confirmDeleteMessage}
+                    </p>
+                    <div style={{
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        padding: '1rem',
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)'
+                    }}>
+                        {domainsToDelete.map((item, index) => (
+                            <div key={index} style={{
+                                padding: '0.75rem',
+                                marginBottom: '0.5rem',
+                                backgroundColor: 'var(--bg-primary)',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '0.875rem',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                gap: '1rem'
+                            }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{
+                                        fontWeight: '500',
+                                        color: 'var(--text-primary)',
+                                        marginBottom: '0.25rem',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {item.domain_name || item.domain_id}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                }
-                confirmText={t.common.confirm || '确认'}
-                cancelText={t.common.cancel}
-                type="warning"
-            />
+                    <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
+                        {t.domains.softDeleteNote}
+                    </p>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                    <button onClick={handleCancelDelete} className="btn btn-ghost">{t.common.cancel}</button>
+                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.domains.confirmDeleteBtn}</button>
+                </div>
+            </Modal>
         </div>
     );
 };

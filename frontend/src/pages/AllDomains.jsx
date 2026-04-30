@@ -297,7 +297,7 @@ const AllDomains = () => {
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid rgba(16, 185, 129, 0.2)'
                 }}>
-                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>✓ 以下域名已重新激活：</div>
+                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>✓ {t.domains.restoredDomainsTitle}</div>
                     <div style={{ fontSize: '0.875rem' }}>
                         {restoredDomains.join(', ')}
                     </div>
@@ -522,11 +522,11 @@ const AllDomains = () => {
             <Modal
                 isOpen={showDeleteConfirm}
                 onClose={handleCancelDelete}
-                title="确认删除域名"
+                title={t.domains.confirmDeleteTitle}
             >
                 <div style={{ marginBottom: '1.5rem' }}>
                     <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-                        发现以下域名在服务商中已不存在，是否将这些域名标记为已删除？
+                        {t.domains.confirmDeleteMessage}
                     </p>
                     <div style={{ 
                         maxHeight: '200px', 
@@ -567,19 +567,19 @@ const AllDomains = () => {
                                         gap: '0.25rem'
                                     }}>
                                         <Server size={12} />
-                                        {item.account_name || `账户 ${item.account_id}`}
+                                        {item.account_name || t.domains.accountFallback.replace('{id}', item.account_id)}
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                     <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
-                        注意：这是软删除操作，如果域名重新出现，将自动恢复。
+                        {t.domains.softDeleteNote}
                     </p>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                    <button onClick={handleCancelDelete} className="btn btn-ghost">取消</button>
-                    <button onClick={handleConfirmDelete} className="btn btn-primary">确认删除</button>
+                    <button onClick={handleCancelDelete} className="btn btn-ghost">{t.common.cancel}</button>
+                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.domains.confirmDeleteBtn}</button>
                 </div>
             </Modal>
         </div>

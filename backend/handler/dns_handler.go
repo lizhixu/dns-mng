@@ -203,7 +203,18 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		return
 	}
 
-	domains, domainsToDelete, err := h.dnsService.ListDomainsFromProvider(c.Request.Context(), userID, accountID)
+	// Get soft deleted domains before refresh
+	domainCacheService := service.NewDomainCacheService()
+	softDeletedDomains, _ := domainCacheService.GetSoftDeletedDomains(userID)
+	softDeletedMap := make(map[string]bool)
+	for _, d := range softDeletedDomains {
+		if d.AccountID == accountID {
+			key := fmt.Sprintf("%d:%s", d.AccountID, d.DomainID)
+			softDeletedMap[key] = true
+		}
+	}
+
+	domains, _, err := h.dnsService.ListDomainsFromProvider(c.Request.Context(), userID, accountID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -212,9 +223,45 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		domains = []models.Domain{}
 	}
 
+	// Check for domains to delete and domains to restore
+	providerDomainMap := make(map[string]bool)
+	for _, d := range domains {
+		key := fmt.Sprintf("%d:%s", d.AccountID, d.ID)
+		providerDomainMap[key] = true
+	}
+
+	// Get cached domains for this account to compare
+	allCaches, _ := domainCacheService.GetCacheByUser(userID)
+
+	var domainsToDelete []models.BatchCacheDeleteItem
+	for _, cache := range allCaches {
+		if cache.AccountID != accountID {
+			continue
+		}
+		key := fmt.Sprintf("%d:%s", cache.AccountID, cache.DomainID)
+		if !providerDomainMap[key] {
+			domainsToDelete = append(domainsToDelete, models.BatchCacheDeleteItem{
+				AccountID:   cache.AccountID,
+				DomainID:    cache.DomainID,
+				DomainName:  cache.DomainName,
+			})
+		}
+	}
+
+	// Check for restored domains (soft deleted but now exist in provider)
+	var restoredDomains []string
+	for _, d := range domains {
+		key := fmt.Sprintf("%d:%s", d.AccountID, d.ID)
+		if softDeletedMap[key] {
+			domainCacheService.BatchRestoreCache(userID, []models.BatchCacheDeleteItem{
+				{AccountID: d.AccountID, DomainID: d.ID},
+			})
+			restoredDomains = append(restoredDomains, d.Name)
+		}
+	}
+
 	// Update last sync time for all domains
 	syncTime := time.Now()
-	domainCacheService := service.NewDomainCacheService()
 	for _, d := range domains {
 		var updatedOn *time.Time
 		if d.UpdatedOn != "" {
@@ -229,12 +276,14 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		domainCacheService.UpdateLastSyncTime(userID, d.AccountID, d.ID, updatedOn)
 	}
 
-	// Return domains and domains that should be deleted
-	response := gin.H{
-		"domains":           domains,
-		"domains_to_delete": domainsToDelete,
-		"cache_timestamp":   syncTime.Format(time.RFC3339),
+	response := models.RefreshDomainsResponse{
+		Domains:         domains,
+		DomainsToDelete: domainsToDelete,
+		RestoredDomains: restoredDomains,
+		CacheTimestamp:  syncTime.Format(time.RFC3339),
+		HasChanges:      len(domainsToDelete) > 0 || len(restoredDomains) > 0,
 	}
+
 	c.JSON(http.StatusOK, response)
 }
 

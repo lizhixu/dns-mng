@@ -135,8 +135,12 @@ export const en = {
     noDomains: 'No domains found for this account',
     noSearchResults: 'No domains match your search',
     updatedAt: 'Updated at',
-    confirmDeleteTitle: 'Confirm Delete Domain Cache',
-    confirmDeleteMessage: 'The following domains no longer exist in the DNS provider. Delete local cache? (Soft delete, will auto-restore if domains reappear)',
+    confirmDeleteTitle: 'Confirm Delete Domains',
+    confirmDeleteMessage: 'The following domains no longer exist in the provider. Mark them as deleted?',
+    softDeleteNote: 'Note: This is a soft delete. Domains will be automatically restored if they reappear.',
+    confirmDeleteBtn: 'Confirm Delete',
+    restoredDomainsTitle: 'The following domains have been reactivated:',
+    accountFallback: 'Account {id}',
   },
 
   records: {

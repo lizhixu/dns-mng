@@ -135,8 +135,12 @@ export const zh = {
     noDomains: '此账户暂无域名',
     noSearchResults: '未找到匹配的域名',
     updatedAt: '更新于',
-    confirmDeleteTitle: '确认删除域名缓存',
-    confirmDeleteMessage: '以下域名在DNS服务商中已不存在，是否删除本地缓存？（软删除，如果域名重新出现将自动恢复）',
+    confirmDeleteTitle: '确认删除域名',
+    confirmDeleteMessage: '发现以下域名在服务商中已不存在，是否将这些域名标记为已删除？',
+    softDeleteNote: '注意：这是软删除操作，如果域名重新出现，将自动恢复。',
+    confirmDeleteBtn: '确认删除',
+    restoredDomainsTitle: '以下域名已重新激活：',
+    accountFallback: '账户 {id}',
   },
 
   records: {
