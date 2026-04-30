@@ -130,7 +130,8 @@ func (s *NotificationService) GetExpiringDomains() ([]models.ExpiringDomain, err
 			dc.renewal_url,
 			ns.days_before,
 			ns.last_notified_at,
-			ec.to_email
+			ec.to_email,
+			ec.language
 		FROM domain_cache dc
 		INNER JOIN notification_settings ns ON 
 			dc.user_id = ns.user_id AND 
@@ -160,7 +161,7 @@ func (s *NotificationService) GetExpiringDomains() ([]models.ExpiringDomain, err
 
 		if err := rows.Scan(&domain.UserID, &domain.AccountID, &domain.DomainID,
 			&domain.DomainName, &renewalDate, &domain.RenewalURL,
-			&daysBefore, &lastNotifiedAt, &domain.ToEmail); err != nil {
+			&daysBefore, &lastNotifiedAt, &domain.ToEmail, &domain.Language); err != nil {
 			continue
 		}
 

@@ -22,12 +22,12 @@ func (s *EmailService) GetEmailConfig(userID int64) (*models.EmailConfig, error)
 	var enabled int
 
 	err := database.DB.QueryRow(
-		`SELECT id, user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, enabled, created_at, updated_at
+		`SELECT id, user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, language, enabled, created_at, updated_at
 		 FROM email_config WHERE user_id = ?`,
 		userID,
 	).Scan(&config.ID, &config.UserID, &config.SMTPHost, &config.SMTPPort,
 		&config.SMTPUsername, &config.SMTPPassword, &config.FromEmail, &config.FromName,
-		&config.ToEmail, &enabled, &config.CreatedAt, &config.UpdatedAt)
+		&config.ToEmail, &config.Language, &enabled, &config.CreatedAt, &config.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -59,28 +59,28 @@ func (s *EmailService) UpsertEmailConfig(userID int64, req *models.UpdateEmailCo
 	case sql.ErrNoRows:
 		// Insert new config
 		_, err = database.DB.Exec(
-			`INSERT INTO email_config (user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, enabled, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO email_config (user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, language, enabled, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			userID, req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword,
-			req.FromEmail, req.FromName, req.ToEmail, enabled, now, now,
+			req.FromEmail, req.FromName, req.ToEmail, req.Language, enabled, now, now,
 		)
 	case nil:
 		// Update existing config
 		if req.SMTPPassword != "" {
 			// Update with new password
 			_, err = database.DB.Exec(
-				`UPDATE email_config SET smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, 
-				 from_email = ?, from_name = ?, to_email = ?, enabled = ?, updated_at = ? WHERE user_id = ?`,
+				`UPDATE email_config SET smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?,
+				 from_email = ?, from_name = ?, to_email = ?, language = ?, enabled = ?, updated_at = ? WHERE user_id = ?`,
 				req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword,
-				req.FromEmail, req.FromName, req.ToEmail, enabled, now, userID,
+				req.FromEmail, req.FromName, req.ToEmail, req.Language, enabled, now, userID,
 			)
 		} else {
 			// Update without changing password
 			_, err = database.DB.Exec(
-				`UPDATE email_config SET smtp_host = ?, smtp_port = ?, smtp_username = ?, 
-				 from_email = ?, from_name = ?, to_email = ?, enabled = ?, updated_at = ? WHERE user_id = ?`,
+				`UPDATE email_config SET smtp_host = ?, smtp_port = ?, smtp_username = ?,
+				 from_email = ?, from_name = ?, to_email = ?, language = ?, enabled = ?, updated_at = ? WHERE user_id = ?`,
 				req.SMTPHost, req.SMTPPort, req.SMTPUsername,
-				req.FromEmail, req.FromName, req.ToEmail, enabled, now, userID,
+				req.FromEmail, req.FromName, req.ToEmail, req.Language, enabled, now, userID,
 			)
 		}
 	}
@@ -193,11 +193,12 @@ func (s *EmailService) SendEmail(userID int64, to, subject, body string) error {
 
 // SendExpiryNotification sends expiry notification email
 func (s *EmailService) SendExpiryNotification(userID int64, domain models.ExpiringDomain) error {
-	subject := fmt.Sprintf("域名续费提醒：%s 将在 %d 天后到期", domain.DomainName, domain.DaysRemaining)
+	t := GetEmailTranslations(domain.Language, "zh")
+	subject := t.ExpirySubject(domain.DomainName, domain.DaysRemaining)
 
 	renewalLink := ""
 	if domain.RenewalURL != "" {
-		renewalLink = fmt.Sprintf(`<p><a href="%s" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">立即续费</a></p>`, domain.RenewalURL)
+		renewalLink = fmt.Sprintf(`<p><a href="%s" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">%s</a></p>`, domain.RenewalURL, t.RenewNowBtn)
 	}
 
 	body := fmt.Sprintf(`
@@ -218,26 +219,30 @@ func (s *EmailService) SendExpiryNotification(userID int64, domain models.Expiri
 <body>
     <div class="container">
         <div class="header">
-            <h2 style="margin: 0; color: #1f2937;">🔔 域名续费提醒</h2>
+            <h2 style="margin: 0; color: #1f2937;">🔔 %s</h2>
         </div>
         <div class="content">
-            <p>您好，</p>
-            <p>您的域名即将到期，请及时续费以避免服务中断。</p>
+            <p>%s</p>
+            <p>%s</p>
             <div class="info">
-                <p style="margin: 5px 0;"><strong>域名：</strong>%s</p>
-                <p style="margin: 5px 0;"><strong>到期日期：</strong>%s</p>
-                <p style="margin: 5px 0;"><strong class="warning">剩余天数：%d 天</strong></p>
+                <p style="margin: 5px 0;"><strong>%s</strong>%s</p>
+                <p style="margin: 5px 0;"><strong>%s</strong>%s</p>
+                <p style="margin: 5px 0;"><strong class="warning">%s</strong></p>
             </div>
             %s
-            <p>请尽快完成续费，以确保您的域名服务不受影响。</p>
+            <p>%s</p>
         </div>
         <div class="footer">
-            <p>此邮件由 DNS Manager 系统自动发送，请勿直接回复。</p>
+            <p>%s</p>
         </div>
     </div>
 </body>
 </html>
-`, domain.DomainName, domain.RenewalDate, domain.DaysRemaining, renewalLink)
+`, t.ExpiryHeader, t.ExpiryGreeting, t.ExpiryMessage,
+		t.DomainLabel, domain.DomainName,
+		t.ExpiryDateLabel, domain.RenewalDate,
+		t.DaysRemainingFmt(domain.DaysRemaining),
+		renewalLink, t.RenewSoonMsg, t.Footer)
 
 	err := s.SendEmail(userID, domain.ToEmail, subject, body)
 	if err != nil {
@@ -248,19 +253,21 @@ func (s *EmailService) SendExpiryNotification(userID int64, domain models.Expiri
 
 // TestEmailConfig tests email configuration by sending a test email
 func (s *EmailService) TestEmailConfig(userID int64) error {
-	// Get email config with to_email
+	// Get email config with to_email and language
 	var toEmail string
+	var language string
 	err := database.DB.QueryRow(
-		`SELECT to_email FROM email_config WHERE user_id = ?`,
+		`SELECT to_email, language FROM email_config WHERE user_id = ?`,
 		userID,
-	).Scan(&toEmail)
+	).Scan(&toEmail, &language)
 
 	if err != nil {
 		return fmt.Errorf("email configuration not found")
 	}
 
-	subject := "DNS Manager - 邮件配置测试"
-	body := `
+	t := GetEmailTranslations(language, "zh")
+	subject := t.TestSubject
+	body := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -268,14 +275,14 @@ func (s *EmailService) TestEmailConfig(userID int64) error {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #3b82f6;">✅ 邮件配置测试成功</h2>
-        <p>恭喜！您的邮件配置已正确设置。</p>
-        <p>DNS Manager 现在可以向您发送域名到期提醒通知。</p>
+        <h2 style="color: #3b82f6;">✅ %s</h2>
+        <p>%s</p>
+        <p>%s</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="font-size: 12px; color: #6b7280;">此邮件由 DNS Manager 系统发送。</p>
+        <p style="font-size: 12px; color: #6b7280;">%s</p>
     </div>
 </body>
 </html>
-`
+`, t.TestSuccessTitle, t.TestCongrats, t.TestConfirmation, t.TestFooter)
 	return s.SendEmail(userID, toEmail, subject, body)
 }

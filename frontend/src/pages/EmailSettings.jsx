@@ -13,6 +13,7 @@ const EmailSettings = () => {
         from_email: '',
         from_name: '',
         to_email: '',
+        language: 'zh',
         enabled: true
     });
     const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ const EmailSettings = () => {
                     from_email: data.from_email || '',
                     from_name: data.from_name || '',
                     to_email: data.to_email || '',
+                    language: data.language || 'zh',
                     enabled: data.enabled !== undefined ? data.enabled : true
                 });
             } else {
@@ -55,6 +57,7 @@ const EmailSettings = () => {
                     from_email: '',
                     from_name: 'DNS Manager',
                     to_email: '',
+                    language: 'zh',
                     enabled: true
                 });
             }
@@ -249,6 +252,21 @@ const EmailSettings = () => {
                                 />
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
                                     {t.emailSettings.toEmailHint}
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">{t.emailSettings.language}</label>
+                                <select
+                                    className="form-input"
+                                    value={config.language || 'zh'}
+                                    onChange={e => setConfig({ ...config, language: e.target.value })}
+                                >
+                                    <option value="zh">{t.emailSettings.languageZh}</option>
+                                    <option value="en">{t.emailSettings.languageEn}</option>
+                                </select>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                                    {t.emailSettings.languageHint}
                                 </div>
                             </div>
 

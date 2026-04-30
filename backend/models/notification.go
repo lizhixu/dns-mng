@@ -26,6 +26,7 @@ type EmailConfig struct {
 	FromEmail    string    `json:"from_email"`
 	FromName     string    `json:"from_name,omitempty"`
 	ToEmail      string    `json:"to_email"` // Recipient email
+	Language     string    `json:"language"`  // Email language: zh, en, or empty (follow system)
 	Enabled      bool      `json:"enabled"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
@@ -46,6 +47,7 @@ type UpdateEmailConfigRequest struct {
 	FromEmail    string `json:"from_email" binding:"required,email"`
 	FromName     string `json:"from_name"`
 	ToEmail      string `json:"to_email" binding:"required,email"`
+	Language     string `json:"language"`
 	Enabled      bool   `json:"enabled"`
 }
 
@@ -65,4 +67,5 @@ type ExpiringDomain struct {
 	RenewalURL    string
 	DaysRemaining int
 	ToEmail       string // Recipient email from config
+	Language      string // Email language from config
 }

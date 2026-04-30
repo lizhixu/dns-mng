@@ -111,6 +111,8 @@ func createTables() {
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_email_config_user_id ON email_config(user_id)`,
+		// 为兼容旧版本，添加邮件语言列（如果不存在）
+		`ALTER TABLE email_config ADD COLUMN language TEXT DEFAULT ''`,
 
 		// Scheduler logs table
 		`CREATE TABLE IF NOT EXISTS scheduler_logs (
