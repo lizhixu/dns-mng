@@ -4,14 +4,15 @@ package dnshe
 
 // Subdomain represents a subdomain in DNSHE
 type Subdomain struct {
-	ID          int    `json:"id"`
-	Subdomain   string `json:"subdomain"`
-	RootDomain  string `json:"rootdomain"`
-	FullDomain  string `json:"full_domain"`
-	Status      string `json:"status"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
-	ExpiresAt   string `json:"expires_at,omitempty"`
+	ID           int    `json:"id"`
+	Subdomain    string `json:"subdomain"`
+	RootDomain   string `json:"rootdomain"`
+	FullDomain   string `json:"full_domain"`
+	Status       string `json:"status"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
+	ExpiresAt    string `json:"expires_at,omitempty"`
+	NeverExpires int    `json:"never_expires"`
 }
 
 // SubdomainsResponse represents the response from list subdomains

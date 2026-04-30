@@ -63,6 +63,17 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 
 	domains := make([]models.Domain, 0, len(resp.Subdomains))
 	for _, sub := range resp.Subdomains {
+		// Parse expires_at to renewal date format (YYYY-MM-DD)
+		renewalDate := ""
+		if sub.NeverExpires == 1 {
+			renewalDate = "permanent"
+		} else if sub.ExpiresAt != "" {
+			parts := strings.Split(sub.ExpiresAt, " ")
+			if len(parts) > 0 {
+				renewalDate = parts[0]
+			}
+		}
+
 		domains = append(domains, models.Domain{
 			ID:          strconv.Itoa(sub.ID),
 			Name:        sub.FullDomain,
@@ -70,6 +81,8 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 			State:       sub.Status,
 			CreatedOn:   sub.CreatedAt,
 			UpdatedOn:   sub.UpdatedAt,
+			RenewalDate: renewalDate,
+			RenewalURL:  "https://www.dnshe.com",
 		})
 	}
 

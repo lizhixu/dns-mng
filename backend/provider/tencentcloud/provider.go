@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"dns-mng/models"
@@ -53,11 +54,22 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 			status = "Inactive"
 		}
 
+		// Parse VipEndAt to renewal date format (YYYY-MM-DD)
+		renewalDate := ""
+		if d.VipEndAt != nil && *d.VipEndAt != "" {
+			parts := strings.SplitN(*d.VipEndAt, " ", 2)
+			if len(parts) > 0 {
+				renewalDate = parts[0]
+			}
+		}
+
 		domains = append(domains, models.Domain{
 			ID:          *d.Name, // Use domain name as ID
 			Name:        *d.Name,
 			UnicodeName: *d.Name,
 			State:       status,
+			RenewalDate: renewalDate,
+			RenewalURL:  "https://console.cloud.tencent.com/cns",
 			CreatedOn:   safeString(d.CreatedOn),
 			UpdatedOn:   safeString(d.UpdatedOn),
 		})
