@@ -136,13 +136,11 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 					}
 					allDomains[i].CacheSynced = true
 				}
-				// Save provider's renewal date and URL to cache if we have them
-				if allDomains[i].RenewalDate != "" || allDomains[i].RenewalURL != "" {
-					s.domainCacheService.UpsertCache(userID, allDomains[i].AccountID, allDomains[i].ID, allDomains[i].Name, &models.UpdateDomainCacheRequest{
-						RenewalDate: allDomains[i].RenewalDate,
-						RenewalURL:  allDomains[i].RenewalURL,
-					})
-				}
+				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
+				s.domainCacheService.UpsertCache(userID, allDomains[i].AccountID, allDomains[i].ID, allDomains[i].Name, &models.UpdateDomainCacheRequest{
+					RenewalDate: allDomains[i].RenewalDate,
+					RenewalURL:  allDomains[i].RenewalURL,
+				})
 			}
 		}
 	}
@@ -302,13 +300,11 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 					}
 					domains[i].CacheSynced = true
 				}
-				// Save provider's renewal date and URL to cache if we have them
-				if domains[i].RenewalDate != "" || domains[i].RenewalURL != "" {
-					s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
-						RenewalDate: domains[i].RenewalDate,
-						RenewalURL:  domains[i].RenewalURL,
-					})
-				}
+				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
+				s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
+					RenewalDate: domains[i].RenewalDate,
+					RenewalURL:  domains[i].RenewalURL,
+				})
 			}
 		}
 	}

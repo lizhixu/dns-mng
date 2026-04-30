@@ -89,9 +89,12 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 	if err == nil && isDeleted {
 		// Activate the soft deleted record
 		_, err = database.DB.Exec(
-			`UPDATE domain_cache SET deleted_at = NULL, renewal_date = ?, renewal_url = ?, domain_name = ?, updated_at = ?
+			`UPDATE domain_cache SET deleted_at = NULL,
+			 renewal_date = CASE WHEN ? != '' THEN ? ELSE renewal_date END,
+			 renewal_url = CASE WHEN ? != '' THEN ? ELSE renewal_url END,
+			 domain_name = ?, updated_at = ?
 			 WHERE id = ?`,
-			req.RenewalDate, req.RenewalURL, domainName, now, existingID,
+			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL, domainName, now, existingID,
 		)
 		if err != nil {
 			return nil, err
@@ -99,9 +102,12 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 	} else if err == nil {
 		// Record exists and is not deleted, update it
 		result, err := database.DB.Exec(
-			`UPDATE domain_cache SET renewal_date = ?, renewal_url = ?, domain_name = ?, updated_at = ?
+			`UPDATE domain_cache SET
+			 renewal_date = CASE WHEN ? != '' THEN ? ELSE renewal_date END,
+			 renewal_url = CASE WHEN ? != '' THEN ? ELSE renewal_url END,
+			 domain_name = ?, updated_at = ?
 			 WHERE user_id = ? AND account_id = ? AND domain_id = ? AND deleted_at IS NULL`,
-			req.RenewalDate, req.RenewalURL, domainName, now,
+			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL, domainName, now,
 			userID, accountID, domainID,
 		)
 		if err != nil {
