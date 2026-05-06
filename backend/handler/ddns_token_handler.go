@@ -64,13 +64,11 @@ func (h *DDNSTokenHandler) UpdateToken(c *gin.Context) {
 	}
 
 	var token *models.DDNSToken
-	action := "create"
 	if existing == nil {
 		// Create new token
 		token, err = h.ddnsTokenService.CreateToken(userID, req.Token)
 	} else {
 		// Update existing token
-		action = "update"
 		token, err = h.ddnsTokenService.UpdateToken(userID, req.Enabled, req.Token)
 	}
 
@@ -78,19 +76,6 @@ func (h *DDNSTokenHandler) UpdateToken(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update token"})
 		return
 	}
-
-	// Log operation
-	h.logService.CreateLog(
-		userID,
-		action,
-		"ddns_token",
-		"",
-		map[string]interface{}{
-			"token_prefix": token.Token[:8] + "...",
-			"enabled":      token.Enabled,
-		},
-		c.ClientIP(),
-	)
 
 	c.JSON(http.StatusOK, token)
 }
@@ -111,25 +96,11 @@ func (h *DDNSTokenHandler) DeleteToken(c *gin.Context) {
 		return
 	}
 
-	tokenPrefix := existing.Token[:8] + "..."
-
 	err = h.ddnsTokenService.DeleteToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete token"})
 		return
 	}
-
-	// Log operation
-	h.logService.CreateLog(
-		userID,
-		"delete",
-		"ddns_token",
-		"",
-		map[string]interface{}{
-			"token_prefix": tokenPrefix,
-		},
-		c.ClientIP(),
-	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "token deleted successfully"})
 }

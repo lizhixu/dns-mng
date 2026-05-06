@@ -55,14 +55,6 @@ func (h *DomainCacheHandler) UpdateDomainCache(c *gin.Context) {
 		return
 	}
 
-	// Log operation
-	h.logService.CreateLog(userID, "update", "domain", domainID, map[string]interface{}{
-		"domain":       domainName,
-		"renewal_date": req.RenewalDate,
-		"renewal_url":  req.RenewalURL,
-		"account":      accountID,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusOK, updatedDomain)
 }
 
@@ -86,20 +78,6 @@ func (h *DomainCacheHandler) BatchUpdateDomainCache(c *gin.Context) {
 		return
 	}
 
-	// Collect domain names for logging
-	domainNames := make([]string, 0, len(req.Items))
-	for _, item := range req.Items {
-		if item.DomainName != "" {
-			domainNames = append(domainNames, item.DomainName)
-		}
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "batch_update", "domain_cache", "", map[string]interface{}{
-		"count":   len(req.Items),
-		"domains": domainNames,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusOK, gin.H{"message": "batch update successful", "count": len(req.Items)})
 }
 
@@ -122,20 +100,6 @@ func (h *DomainCacheHandler) BatchDeleteDomainCache(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Collect domain names for logging
-	domainNames := make([]string, 0, len(req.Items))
-	for _, item := range req.Items {
-		if item.DomainName != "" {
-			domainNames = append(domainNames, item.DomainName)
-		}
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "batch_delete", "domain_cache", "", map[string]interface{}{
-		"count":   len(req.Items),
-		"domains": domainNames,
-	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "batch delete successful", "count": len(req.Items)})
 }
@@ -172,20 +136,6 @@ func (h *DomainCacheHandler) BatchSoftDeleteDomains(c *gin.Context) {
 		return
 	}
 
-	// Collect domain names for logging
-	domainNames := make([]string, 0, len(req.Items))
-	for _, item := range req.Items {
-		if item.DomainName != "" {
-			domainNames = append(domainNames, item.DomainName)
-		}
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "soft_delete", "domain", "", map[string]interface{}{
-		"count":   len(req.Items),
-		"domains": domainNames,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusOK, gin.H{"message": "domains soft deleted successfully", "count": len(req.Items)})
 }
 
@@ -208,20 +158,6 @@ func (h *DomainCacheHandler) BatchRestoreDomains(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Collect domain names for logging
-	domainNames := make([]string, 0, len(req.Items))
-	for _, item := range req.Items {
-		if item.DomainName != "" {
-			domainNames = append(domainNames, item.DomainName)
-		}
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "restore", "domain", "", map[string]interface{}{
-		"count":   len(req.Items),
-		"domains": domainNames,
-	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "domains restored successfully", "count": len(req.Items)})
 }

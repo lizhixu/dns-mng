@@ -346,28 +346,6 @@ func (h *DNSHandler) CreateRecord(c *gin.Context) {
 		return
 	}
 
-	// Get domain name for logging - prefer from record, fallback to GetDomain
-	domainName := record.DomainName
-	if domainName == "" {
-		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
-		if domain != nil {
-			domainName = domain.Name
-			if domain.UnicodeName != "" {
-				domainName = domain.UnicodeName
-			}
-		} else {
-			domainName = domainID
-		}
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "create", "record", record.ID, map[string]interface{}{
-		"domain":    domainName,
-		"type":      record.RecordType,
-		"node_name": record.NodeName,
-		"content":   record.Content,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusCreated, record)
 }
 
@@ -381,16 +359,6 @@ func (h *DNSHandler) UpdateRecord(c *gin.Context) {
 	domainID := c.Param("domainId")
 	recordID := c.Param("recordId")
 
-	// Get old record for comparison
-	oldRecords, _ := h.dnsService.ListRecords(c.Request.Context(), userID, accountID, domainID)
-	var oldRecord *models.Record
-	for _, r := range oldRecords {
-		if r.ID == recordID {
-			oldRecord = &r
-			break
-		}
-	}
-
 	var req models.UpdateRecordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -402,43 +370,6 @@ func (h *DNSHandler) UpdateRecord(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Get domain name for logging - prefer from record, fallback to GetDomain
-	domainName := record.DomainName
-	if domainName == "" {
-		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
-		if domain != nil {
-			domainName = domain.Name
-			if domain.UnicodeName != "" {
-				domainName = domain.UnicodeName
-			}
-		} else {
-			domainName = domainID
-		}
-	}
-
-	// Log operation with changes
-	logDetails := map[string]interface{}{
-		"domain":    domainName,
-		"type":      record.RecordType,
-		"node_name": record.NodeName,
-	}
-	if oldRecord != nil {
-		changes := make(map[string]interface{})
-		if oldRecord.Content != record.Content {
-			changes["content"] = map[string]string{"old": oldRecord.Content, "new": record.Content}
-		}
-		if oldRecord.TTL != record.TTL {
-			changes["ttl"] = map[string]int{"old": oldRecord.TTL, "new": record.TTL}
-		}
-		if oldRecord.State != record.State {
-			changes["state"] = map[string]bool{"old": oldRecord.State, "new": record.State}
-		}
-		if len(changes) > 0 {
-			logDetails["changes"] = changes
-		}
-	}
-	h.logService.CreateLog(userID, "update", "record", recordID, logDetails, c.ClientIP())
 
 	c.JSON(http.StatusOK, record)
 }
@@ -453,47 +384,10 @@ func (h *DNSHandler) DeleteRecord(c *gin.Context) {
 	domainID := c.Param("domainId")
 	recordID := c.Param("recordId")
 
-	// Get record details before deletion
-	records, _ := h.dnsService.ListRecords(c.Request.Context(), userID, accountID, domainID)
-	var recordDetails map[string]interface{}
-	var domainName string
-	for _, r := range records {
-		if r.ID == recordID {
-			recordDetails = map[string]interface{}{
-				"type":      r.RecordType,
-				"node_name": r.NodeName,
-				"content":   r.Content,
-			}
-			// Get domain name from record
-			domainName = r.DomainName
-			break
-		}
-	}
-
-	// Fallback to GetDomain if domain name not found in record
-	if domainName == "" {
-		domain, _ := h.dnsService.GetDomain(c.Request.Context(), userID, accountID, domainID)
-		if domain != nil {
-			domainName = domain.Name
-			if domain.UnicodeName != "" {
-				domainName = domain.UnicodeName
-			}
-		} else {
-			domainName = domainID
-		}
-	}
-
 	if err := h.dnsService.DeleteRecord(c.Request.Context(), userID, accountID, domainID, recordID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Log operation
-	if recordDetails == nil {
-		recordDetails = map[string]interface{}{}
-	}
-	recordDetails["domain"] = domainName
-	h.logService.CreateLog(userID, "delete", "record", recordID, recordDetails, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "record deleted"})
 }

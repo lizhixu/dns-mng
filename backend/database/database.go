@@ -21,7 +21,19 @@ func Init(dbPath string) {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
+	// SQLite is embedded and this application performs async API log writes while
+	// pages are reading log data. Keeping a single connection avoids intermittent
+	// "database is locked" failures from competing pooled connections.
+	DB.SetMaxOpenConns(1)
+	DB.SetMaxIdleConns(1)
+
 	createTables()
+
+	// Run migration from old operation_logs to new api_call_logs
+	if err := MigrateOperationLogsToAPILogs(); err != nil {
+		log.Printf("Warning: Migration failed: %v", err)
+	}
+
 	log.Println("Database initialized successfully")
 }
 
@@ -43,19 +55,30 @@ func createTables() {
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
-		`CREATE TABLE IF NOT EXISTS operation_logs (
+		// New API call logs table - complete recording without truncation
+		`CREATE TABLE IF NOT EXISTS api_call_logs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
-			action TEXT NOT NULL,
-			resource TEXT NOT NULL,
-			resource_id TEXT NOT NULL,
-			details TEXT,
+			method TEXT NOT NULL,
+			path TEXT NOT NULL,
+			query TEXT,
+			request_headers TEXT,
+			request_body TEXT,
+			status_code INTEGER NOT NULL,
+			response_body TEXT,
 			ip_address TEXT,
+			user_agent TEXT,
+			duration_ms INTEGER,
+			error_message TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
-		`CREATE INDEX IF NOT EXISTS idx_logs_user_id ON operation_logs(user_id)`,
-		`CREATE INDEX IF NOT EXISTS idx_logs_created_at ON operation_logs(created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_user_id ON api_call_logs(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_created_at ON api_call_logs(created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_user_created ON api_call_logs(user_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_method ON api_call_logs(method)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_path ON api_call_logs(path)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_logs_status_code ON api_call_logs(status_code)`,
 		`CREATE TABLE IF NOT EXISTS domain_cache (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,

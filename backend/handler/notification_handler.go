@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"dns-mng/database"
 	"dns-mng/middleware"
 	"dns-mng/models"
 	"dns-mng/service"
@@ -75,25 +74,6 @@ func (h *NotificationHandler) UpdateNotificationSetting(c *gin.Context) {
 		return
 	}
 
-	// Get domain name from cache for logging
-	domainName := domainID
-	var cachedDomain models.DomainCache
-	database.DB.QueryRow(`
-		SELECT domain_name 
-		FROM domain_cache 
-		WHERE user_id = ? AND account_id = ? AND domain_id = ?
-	`, userID, accountID, domainID).Scan(&cachedDomain.DomainName)
-	if cachedDomain.DomainName != "" {
-		domainName = cachedDomain.DomainName
-	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "update", "notification_setting", domainID, map[string]interface{}{
-		"domain":      domainName,
-		"days_before": req.DaysBefore,
-		"enabled":     req.Enabled,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusOK, setting)
 }
 
@@ -148,13 +128,6 @@ func (h *NotificationHandler) UpdateEmailConfig(c *gin.Context) {
 		return
 	}
 
-	// Log operation
-	h.logService.CreateLog(userID, "update", "email_config", "", map[string]interface{}{
-		"smtp_host": req.SMTPHost,
-		"smtp_port": req.SMTPPort,
-		"enabled":   req.Enabled,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusOK, config)
 }
 
@@ -167,9 +140,6 @@ func (h *NotificationHandler) TestEmailConfig(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Log operation
-	h.logService.CreateLog(userID, "test", "email_config", "", map[string]interface{}{}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "test email sent successfully"})
 }

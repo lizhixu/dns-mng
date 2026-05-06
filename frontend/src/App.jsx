@@ -9,7 +9,7 @@ import AllDomains from './pages/AllDomains';
 import Domains from './pages/Domains';
 import Records from './pages/Records';
 import Profile from './pages/Profile';
-import LogsManagement from './pages/LogsManagement';
+import APILogsManagement from './pages/APILogsManagement';
 import EmailSettings from './pages/EmailSettings';
 
 // Placeholder components until we implement them
@@ -38,7 +38,7 @@ function App() {
                 <Route path="accounts/:accountId/domains" element={<Domains />} />
                 <Route path="accounts/:accountId/domains/:domainId/records" element={<Records />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="logs" element={<LogsManagement />} />
+                <Route path="logs" element={<APILogsManagement />} />
                 <Route path="email-settings" element={<EmailSettings />} />
               </Route>
             </Routes>

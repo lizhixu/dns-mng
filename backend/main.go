@@ -76,6 +76,8 @@ func main() {
 	// Setup router
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware())
+	// Add API logger middleware to record all API calls
+	r.Use(middleware.APILogger(logService))
 
 	// Public routes
 	api := r.Group("/api")
@@ -107,8 +109,8 @@ func main() {
 		protected.GET("/user/profile", authHandler.GetProfile)
 		protected.PUT("/user/password", authHandler.UpdatePassword)
 
-		// Operation logs
-		protected.GET("/logs", logHandler.GetLogs)
+		// API call logs
+		protected.GET("/api-logs", logHandler.GetAPICallLogs)
 
 		// Scheduler logs
 		protected.GET("/scheduler-logs", schedulerLogHandler.GetSchedulerLogs)

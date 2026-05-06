@@ -34,11 +34,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Log registration
-	h.logService.CreateLog(resp.User.ID, "create", "user", req.Username, map[string]interface{}{
-		"username": req.Username,
-	}, c.ClientIP())
-
 	c.JSON(http.StatusCreated, resp)
 }
 
@@ -51,22 +46,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	resp, err := h.userService.Login(&req)
 	if err != nil {
-		// Log failed login attempt
-		h.logService.CreateLog(0, "login", "user", req.Username, map[string]interface{}{
-			"username": req.Username,
-			"success":  false,
-			"reason":   err.Error(),
-		}, c.ClientIP())
-		
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Log successful login
-	h.logService.CreateLog(resp.User.ID, "login", "user", req.Username, map[string]interface{}{
-		"username": req.Username,
-		"success":  true,
-	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, resp)
 }
@@ -96,12 +78,6 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Log password change
-	user, _ := h.userService.GetUser(userID)
-	h.logService.CreateLog(userID, "update", "password", user.Username, map[string]interface{}{
-		"username": user.Username,
-	}, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }

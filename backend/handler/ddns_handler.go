@@ -195,29 +195,5 @@ func (h *DDNSHandler) UpdateDDNS(c *gin.Context) {
 	// Update last used timestamp
 	h.ddnsTokenService.UpdateLastUsed(tokenValue, ip)
 
-	// Log operation with detailed information
-	logDetails := map[string]interface{}{
-		"requested_domains": domainsParam,
-		"ip":               ip,
-		"ipv6":             ipv6,
-		"ddns":             true,
-		"updated_domains":  updatedDomains,
-		"updated_count":    len(updatedDomains),
-		"records_updated":  len(updatedRecords),
-		"skipped_domains":  skippedDomains,
-	}
-	if len(updatedRecords) > 0 {
-		logDetails["updated_records"] = updatedRecords
-	}
-
-	h.logService.CreateLog(
-		userID,
-		"update",
-		"ddns",
-		"",
-		logDetails,
-		c.ClientIP(),
-	)
-
 	c.String(http.StatusOK, "OK")
 }

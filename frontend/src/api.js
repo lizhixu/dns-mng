@@ -72,9 +72,9 @@ export const api = {
         return handleResponse(response);
     },
 
-    // Operation Logs
-    getLogs: async (page = 1, pageSize = 20) => {
-        const response = await fetch(`${API_BASE}/logs?page=${page}&page_size=${pageSize}`, {
+    // API Call Logs
+    getAPICallLogs: async (page = 1, pageSize = 20) => {
+        const response = await fetch(`${API_BASE}/api-logs?page=${page}&page_size=${pageSize}`, {
             headers: getHeaders(),
         });
         return handleResponse(response);
