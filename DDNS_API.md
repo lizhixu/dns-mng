@@ -222,13 +222,13 @@ CREATE INDEX IF NOT EXISTS idx_ddns_tokens_token ON ddns_tokens(token);
 
 ## 日志记录
 
-每次 DDNS 更新都会记录操作日志：
-- 操作类型: update
-- 资源类型: ddns
-- 详细信息: 域名、IP、DDNS 标记
-- 客户端 IP
+每次 DDNS 更新都会记录 API 调用日志：
+- 请求路径和参数
+- 响应状态码
+- 客户端 IP 和用户信息
+- 执行时间
 
-可以在操作日志页面查看所有 DDNS 更新历史。
+可以在日志管理页面的"API 调用"标签查看所有 DDNS 更新历史。
 
 ## 功能特点
 
@@ -239,4 +239,4 @@ CREATE INDEX IF NOT EXISTS idx_ddns_tokens_token ON ddns_tokens(token);
 - ✅ **DuckDNS API 兼容**
 - ✅ 启用/禁用功能
 - ✅ 记录使用历史（时间和 IP）
-- ✅ 完整的操作日志
+- ✅ 完整的 API 调用日志
