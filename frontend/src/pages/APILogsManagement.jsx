@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
-import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Zap, Play } from 'lucide-react';
+import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Play } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 let initialAPILogsRequest = null;
@@ -376,114 +376,57 @@ const APILogsManagement = () => {
                                     padding: '1rem',
                                     transition: 'all 0.2s'
                                 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        {/* Status Code Icon */}
-                                        <span style={{ 
-                                            fontSize: '0.75rem', 
-                                            fontWeight: '700',
-                                            color: getStatusCodeColor(log.status_code),
-                                            padding: '0.25rem 0.5rem',
-                                            backgroundColor: `${getStatusCodeColor(log.status_code)}15`,
-                                            borderRadius: 'var(--radius-sm)',
-                                            fontFamily: 'monospace',
-                                            minWidth: '50px',
-                                            textAlign: 'center',
-                                            flexShrink: 0
-                                        }}>
-                                            {log.status_code}
-                                        </span>
-
-                                        {/* Main Content */}
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            {/* First Line: Method + Path */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-                                                <span style={{ 
-                                                    fontSize: '0.75rem', 
-                                                    fontWeight: '700',
-                                                    color: getMethodColor(log.method),
-                                                    padding: '0.125rem 0.5rem',
-                                                    backgroundColor: `${getMethodColor(log.method)}20`,
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    fontFamily: 'monospace',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.05em'
-                                                }}>
-                                                    {log.method}
-                                                </span>
-                                                <span style={{ 
-                                                    fontSize: '0.875rem', 
-                                                    fontWeight: '600',
-                                                    color: 'var(--text-primary)',
-                                                    fontFamily: 'monospace'
-                                                }}>
-                                                    {log.path}
-                                                </span>
-                                            </div>
-
-                                            {/* Second Line: Query + Meta Info */}
-                                            <div style={{ 
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flexDirection: 'column' }}>
+                                        {/* Top Row: Status + Method + Path */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', flexWrap: 'wrap' }}>
+                                            {/* Status Code */}
+                                            <span style={{ 
                                                 fontSize: '0.75rem', 
-                                                color: 'var(--text-tertiary)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '1rem',
-                                                flexWrap: 'wrap'
+                                                fontWeight: '700',
+                                                color: getStatusCodeColor(log.status_code),
+                                                padding: '0.25rem 0.5rem',
+                                                backgroundColor: `${getStatusCodeColor(log.status_code)}15`,
+                                                borderRadius: 'var(--radius-sm)',
+                                                fontFamily: 'monospace',
+                                                minWidth: '50px',
+                                                textAlign: 'center',
+                                                flexShrink: 0
                                             }}>
-                                                {log.query && (
-                                                    <div style={{ 
-                                                        fontFamily: 'monospace',
-                                                        color: 'var(--text-secondary)'
-                                                    }}>
-                                                        ?{log.query}
-                                                    </div>
-                                                )}
-                                                {log.username && (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                        <User size={12} />
-                                                        {log.username}
-                                                    </div>
-                                                )}
-                                                {log.ip_address && (
-                                                    <div style={{ 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        gap: '0.25rem',
-                                                        fontFamily: 'monospace'
-                                                    }}>
-                                                        <Globe size={12} />
-                                                        {log.ip_address}
-                                                    </div>
-                                                )}
-                                                {log.error_message && (
-                                                    <div style={{ color: '#ef4444', fontWeight: '500' }}>
-                                                        ⚠ {log.error_message}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
+                                                {log.status_code}
+                                            </span>
 
-                                        {/* Right Side: Time + Duration + Expand */}
-                                        <div style={{ 
-                                            textAlign: 'right', 
-                                            flexShrink: 0, 
-                                            display: 'flex', 
-                                            alignItems: 'center',
-                                            gap: '0.75rem'
-                                        }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                                    {formatDate(log.created_at)}
-                                                </div>
-                                                <div style={{ 
-                                                    fontSize: '0.75rem',
-                                                    color: 'var(--text-tertiary)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.25rem'
-                                                }}>
-                                                    ⏱ {log.duration_ms}ms
-                                                </div>
-                                            </div>
+                                            {/* Method */}
+                                            <span style={{ 
+                                                fontSize: '0.75rem', 
+                                                fontWeight: '700',
+                                                color: getMethodColor(log.method),
+                                                padding: '0.125rem 0.5rem',
+                                                backgroundColor: `${getMethodColor(log.method)}20`,
+                                                borderRadius: 'var(--radius-sm)',
+                                                fontFamily: 'monospace',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.05em',
+                                                flexShrink: 0
+                                            }}>
+                                                {log.method}
+                                            </span>
+
+                                            {/* Path - takes remaining space */}
+                                            <span style={{ 
+                                                fontSize: '0.875rem', 
+                                                fontWeight: '600',
+                                                color: 'var(--text-primary)',
+                                                fontFamily: 'monospace',
+                                                flex: 1,
+                                                minWidth: 0,
+                                                wordBreak: 'break-all'
+                                            }}
+                                            title={log.path}
+                                            >
+                                                {log.path}
+                                            </span>
+
+                                            {/* Expand Button */}
                                             <button
                                                 onClick={() => toggleExpand(log.id)}
                                                 style={{
@@ -493,11 +436,84 @@ const APILogsManagement = () => {
                                                     color: 'var(--text-secondary)',
                                                     padding: '0.25rem',
                                                     display: 'flex',
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
+                                                    flexShrink: 0,
+                                                    marginLeft: 'auto'
                                                 }}
                                             >
                                                 {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                             </button>
+                                        </div>
+
+                                        {/* Bottom Row: Meta Info */}
+                                        <div style={{ 
+                                            fontSize: '0.75rem', 
+                                            color: 'var(--text-tertiary)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            flexWrap: 'wrap',
+                                            width: '100%',
+                                            paddingLeft: '0.25rem'
+                                        }}>
+                                            {/* Time */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                <Clock size={12} />
+                                                <span>{formatDate(log.created_at)}</span>
+                                            </div>
+
+                                            {/* Duration */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                ⏱ {log.duration_ms}ms
+                                            </div>
+
+                                            {/* Username */}
+                                            {log.username && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                    <User size={12} />
+                                                    {log.username}
+                                                </div>
+                                            )}
+
+                                            {/* IP Address */}
+                                            {log.ip_address && (
+                                                <div style={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    gap: '0.25rem',
+                                                    fontFamily: 'monospace',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    <Globe size={12} />
+                                                    {log.ip_address}
+                                                </div>
+                                            )}
+
+                                            {/* Query - can wrap to new line if needed */}
+                                            {log.query && (
+                                                <div style={{ 
+                                                    fontFamily: 'monospace',
+                                                    color: 'var(--text-secondary)',
+                                                    wordBreak: 'break-all',
+                                                    flex: '1 1 100%'
+                                                }}
+                                                title={`?${log.query}`}
+                                                >
+                                                    ?{log.query}
+                                                </div>
+                                            )}
+
+                                            {/* Error Message - full width */}
+                                            {log.error_message && (
+                                                <div style={{ 
+                                                    color: '#ef4444', 
+                                                    fontWeight: '500',
+                                                    flex: '1 1 100%',
+                                                    wordBreak: 'break-word'
+                                                }}>
+                                                    ⚠ {log.error_message}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
