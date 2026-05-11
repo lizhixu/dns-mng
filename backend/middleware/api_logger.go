@@ -90,8 +90,11 @@ func APILogger(logService *service.LogService) gin.HandlerFunc {
 		// Process request
 		c.Next()
 
-		// Calculate duration
-		duration := time.Since(startTime)
+		// Calculate duration in milliseconds (minimum 1ms to avoid zero values)
+		durationMs := int(time.Since(startTime).Milliseconds())
+		if durationMs < 1 {
+			durationMs = 1
+		}
 
 		// Get user ID (0 if not authenticated)
 		userID, exists := c.Get("user_id")
@@ -118,7 +121,7 @@ func APILogger(logService *service.LogService) gin.HandlerFunc {
 			ResponseBody:   blw.body.String(),
 			IPAddress:      c.ClientIP(),
 			UserAgent:      c.Request.UserAgent(),
-			DurationMs:     int(duration.Milliseconds()),
+			DurationMs:     durationMs,
 			ErrorMessage:   errorMessage,
 		}
 
