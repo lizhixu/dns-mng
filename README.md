@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、Dynu、NDJP NET、deSEC、Hurricane Electric、IPv64、DNSHE、VPS8 等 DNS 服务提供商
+- 🌐 **多提供商支持**：支持 Cloudflare、腾讯云 DNSPod、阿里云云解析 DNS、华为云云解析 DNS、Dynu、NDJP NET、deSEC、Hurricane Electric、IPv64、DNSHE、VPS8 等 DNS 服务提供商
 - 🔐 **安全认证**：JWT 身份验证
 - 🎨 **现代 UI**：Vercel 风格的简洁界面
 - 🌓 **主题切换**：支持亮色/暗色/跟随系统三种模式
@@ -278,7 +278,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 | Cloudflare | ✅ | 全功能支持 |
 | 腾讯云 DNSPod | ✅ | 支持记录启用/禁用 |
 | 阿里云云解析 DNS | ✅ | 支持记录启用/禁用；域名列表仅含注册商 NS 已全部指向阿里云解析的域名（`DescribeDomainNs` → `AllAliDns`） |
-| 华为云云解析 DNS | ✅ | 公网域名；记录集模型（同类型多值显示为多条，记录 ID 带 `|索引`）；支持启用/暂停 |
+| 华为云云解析 DNS | ✅ | 支持记录启用/禁用 |
 | Dynu | ✅ | 免费动态 DNS |
 | NDJP NET | ✅ | 日本 DNS 服务 |
 | deSEC | ✅ | 免费开源，支持 DNSSEC |
