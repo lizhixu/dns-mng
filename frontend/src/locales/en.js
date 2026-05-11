@@ -84,6 +84,7 @@ export const en = {
     deleteAccountMessage: 'Are you sure you want to delete account "{name}"? This will also delete all domains and records under this account and cannot be undone.',
     deleteAccountMessageDefault: 'Are you sure you want to delete this account? This action cannot be undone.',
     tencentcloudFormat: 'Format: SecretId,SecretKey (separated by comma)',
+    aliyunFormat: 'Format: AccessKeyId,AccessKeySecret (comma separated; RAM must allow DNS APIs including DescribeDomainNs). Domain list only includes zones whose registrar NS are all delegated to Alibaba Cloud DNS.',
     cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
     ndjpFormat: 'Format: Bearer Token (from NDJP NET Dashboard)',
     desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',

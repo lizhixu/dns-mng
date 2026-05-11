@@ -277,6 +277,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 |--------|------|------|
 | Cloudflare | ✅ | 全功能支持 |
 | 腾讯云 DNSPod | ✅ | 支持记录启用/禁用 |
+| 阿里云云解析 DNS | ✅ | AccessKey；列表仅含注册商 NS 已全部指向阿里云（`DescribeDomainNs` / `AllAliDns`）的域名 |
 | Dynu | ✅ | 免费动态 DNS |
 | NDJP NET | ✅ | 日本 DNS 服务 |
 | deSEC | ✅ | 免费开源，支持 DNSSEC |
@@ -289,6 +290,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 
 - **Cloudflare**: API Token（推荐）或 Global API Key
 - **腾讯云 DNSPod**: SecretId,SecretKey（逗号分隔）
+- **阿里云云解析 DNS**: AccessKeyId,AccessKeySecret（逗号分隔，需 RAM 授权云解析 DNS，含 `DescribeDomainNs`）；域名列表会排除未将 NS 全部切到阿里云的域名
 - **Dynu**: API Key
 - **NDJP NET**: Bearer Token
 - **deSEC**: Token
@@ -315,6 +317,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   ├── models/          # 数据模型
 │   ├── provider/        # DNS 提供商实现
 │   │   ├── cloudflare/
+│   │   ├── aliyun/
 │   │   ├── tencentcloud/
 │   │   ├── dynu/
 │   │   ├── ndjp/

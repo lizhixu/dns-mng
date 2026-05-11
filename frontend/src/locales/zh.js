@@ -84,6 +84,7 @@ export const zh = {
     deleteAccountMessage: '确定要删除账户 "{name}" 吗？这将同时删除该账户下的所有域名和记录，且无法撤销。',
     deleteAccountMessageDefault: '确定要删除此账户吗？此操作无法撤销。',
     tencentcloudFormat: '格式：SecretId,SecretKey（用英文逗号分隔）',
+    aliyunFormat: '格式：AccessKeyId,AccessKeySecret（用英文逗号分隔，RAM 需授权云解析 DNS）。域名列表仅包含注册商 NS 已全部指向阿里云解析的域名。',
     cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
     ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
     desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',

@@ -8,6 +8,7 @@ import (
 	"dns-mng/handler"
 	"dns-mng/middleware"
 	"dns-mng/provider"
+	"dns-mng/provider/aliyun"
 	"dns-mng/provider/cloudflare"
 	"dns-mng/provider/desec"
 	"dns-mng/provider/dnshe"
@@ -33,6 +34,7 @@ func main() {
 	// Register providers
 	provider.Register(dynu.New())
 	provider.Register(tencentcloud.New())
+	provider.Register(aliyun.New())
 	provider.Register(cloudflare.New())
 	provider.Register(ndjp.New())
 	provider.Register(desec.New())

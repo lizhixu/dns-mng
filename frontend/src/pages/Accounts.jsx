@@ -486,9 +486,11 @@ const Accounts = () => {
                                 type={showModalApiKey ? "text" : "password"}
                                 className="form-input"
                                 placeholder={
-                                    formData.provider_type === 'tencentcloud' 
-                                        ? 'SecretId,SecretKey' 
-                                        : formData.provider_type === 'dnshe'
+                                    formData.provider_type === 'tencentcloud'
+                                        ? 'SecretId,SecretKey'
+                                        : formData.provider_type === 'aliyun'
+                                            ? 'AccessKeyId,AccessKeySecret'
+                                            : formData.provider_type === 'dnshe'
                                             ? 'API Key,API Secret'
                                             : formData.provider_type === 'cloudflare' || formData.provider_type === 'ndjp' || formData.provider_type === 'desec' || formData.provider_type === 'ipv64'
                                                 ? 'API Token'
@@ -527,6 +529,11 @@ const Accounts = () => {
                         {formData.provider_type === 'tencentcloud' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
                                 {t.accounts.tencentcloudFormat}
+                            </p>
+                        )}
+                        {formData.provider_type === 'aliyun' && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
+                                {t.accounts.aliyunFormat}
                             </p>
                         )}
                         {formData.provider_type === 'cloudflare' && (
