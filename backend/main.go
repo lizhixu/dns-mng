@@ -13,6 +13,7 @@ import (
 	"dns-mng/provider/desec"
 	"dns-mng/provider/dnshe"
 	"dns-mng/provider/dynu"
+	"dns-mng/provider/huaweicloud"
 	"dns-mng/provider/hurricane"
 	"dns-mng/provider/ipv64"
 	"dns-mng/provider/ndjp"
@@ -35,6 +36,7 @@ func main() {
 	provider.Register(dynu.New())
 	provider.Register(tencentcloud.New())
 	provider.Register(aliyun.New())
+	provider.Register(huaweicloud.New())
 	provider.Register(cloudflare.New())
 	provider.Register(ndjp.New())
 	provider.Register(desec.New())

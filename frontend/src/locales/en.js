@@ -85,6 +85,7 @@ export const en = {
     deleteAccountMessageDefault: 'Are you sure you want to delete this account? This action cannot be undone.',
     tencentcloudFormat: 'Format: SecretId,SecretKey (separated by comma)',
     aliyunFormat: 'Format: AccessKeyId,AccessKeySecret (comma separated; RAM must allow DNS APIs including DescribeDomainNs). Domain list only includes zones whose registrar NS are all delegated to Alibaba Cloud DNS.',
+    huaweicloudFormat: 'Format: AccessKeyId,SecretAccessKey; optional 3rd field ProjectId; optional 4th RegionId (e.g. cn-south-1, default cn-north-4). If there are only 3 parts and the 3rd looks like a region (cn-/ap-/…), it is treated as RegionId. Multi-value record sets appear as multiple rows with ids like uuid|index.',
     cloudflareFormat: 'Format: API Token (from Cloudflare Dashboard → My Profile → API Tokens)',
     ndjpFormat: 'Format: Bearer Token (from NDJP NET Dashboard)',
     desecFormat: 'Format: Token (from deSEC Dashboard → Token Management)',

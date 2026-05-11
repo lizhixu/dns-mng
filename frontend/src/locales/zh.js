@@ -85,6 +85,7 @@ export const zh = {
     deleteAccountMessageDefault: '确定要删除此账户吗？此操作无法撤销。',
     tencentcloudFormat: '格式：SecretId,SecretKey（用英文逗号分隔）',
     aliyunFormat: '格式：AccessKeyId,AccessKeySecret（用英文逗号分隔，RAM 需授权云解析 DNS）。域名列表仅包含注册商 NS 已全部指向阿里云解析的域名。',
+    huaweicloudFormat: '格式：AccessKeyId,SecretAccessKey；可选第三段 ProjectId；可选第四段 RegionId（如 cn-south-1，默认 cn-north-4）。若仅三段且为 cn-/ap- 等区域前缀则视为 Region。多值记录集在列表中拆成多条，记录 ID 含 |索引。',
     cloudflareFormat: '格式：API Token（从 Cloudflare Dashboard → My Profile → API Tokens 获取）',
     ndjpFormat: '格式：Bearer Token（从 NDJP NET 控制台获取）',
     desecFormat: '格式：Token（从 deSEC 控制台 → Token Management 获取）',

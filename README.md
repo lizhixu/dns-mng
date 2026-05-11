@@ -278,6 +278,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 | Cloudflare | ✅ | 全功能支持 |
 | 腾讯云 DNSPod | ✅ | 支持记录启用/禁用 |
 | 阿里云云解析 DNS | ✅ | 支持记录启用/禁用；域名列表仅含注册商 NS 已全部指向阿里云解析的域名（`DescribeDomainNs` → `AllAliDns`） |
+| 华为云云解析 DNS | ✅ | 公网域名；记录集模型（同类型多值显示为多条，记录 ID 带 `|索引`）；支持启用/暂停 |
 | Dynu | ✅ | 免费动态 DNS |
 | NDJP NET | ✅ | 日本 DNS 服务 |
 | deSEC | ✅ | 免费开源，支持 DNSSEC |
@@ -291,6 +292,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 - **Cloudflare**: API Token（推荐）或 Global API Key
 - **腾讯云 DNSPod**: SecretId,SecretKey（逗号分隔）
 - **阿里云云解析 DNS**: `AccessKeyId,AccessKeySecret`（英文逗号分隔）。RAM 需具备云解析 DNS 只读/读写等权限，且能调用 `DescribeDomainNs`（用于判断注册商 NS 是否全部为阿里云分配）。**同步域名列表**时仅保留 `AllAliDns == true` 的域名；检测失败或仍为混合 NS 的域名不会出现在列表中。`GetDomain` 与记录的增删改按域名操作，不重复做上述列表过滤。
+- **华为云云解析 DNS**: `AccessKeyId,SecretAccessKey`（必填，英文逗号分隔）；可选第三段 `ProjectId`（多项目账号）；可选 `RegionId`（如 `cn-south-1`，默认 `cn-north-4`）。若第三段为区域 ID 形态（如 `cn-` 开头）则视为区域而非项目。需 IAM 用户具备云解析 DNS 权限。MX 记录值由接口格式 `优先级 主机名` 与本系统「优先级 + 内容」字段互转。
 - **Dynu**: API Key
 - **NDJP NET**: Bearer Token
 - **deSEC**: Token
@@ -318,6 +320,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   ├── provider/        # DNS 提供商实现
 │   │   ├── cloudflare/
 │   │   ├── aliyun/
+│   │   ├── huaweicloud/
 │   │   ├── tencentcloud/
 │   │   ├── dynu/
 │   │   ├── ndjp/
