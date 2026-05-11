@@ -50,6 +50,8 @@ func (h *DNSCheckHandler) CheckDNS(c *gin.Context) {
 
 	// Normalize domain and record type
 	domain := strings.TrimSpace(req.Domain)
+	// Strip leading "@." if present (root record should be just the domain)
+	domain = strings.TrimPrefix(domain, "@.")
 	recordType := strings.ToUpper(strings.TrimSpace(req.RecordType))
 	expected := strings.TrimSpace(req.Expected)
 

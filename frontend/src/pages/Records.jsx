@@ -292,7 +292,8 @@ const Records = () => {
 
         try {
             // Build full domain name
-            const fullDomain = record.node_name
+            // Root record (@) should use the domain name directly
+            const fullDomain = record.node_name && record.node_name !== '@'
                 ? `${record.node_name}.${domain.name}`
                 : domain.name;
 
