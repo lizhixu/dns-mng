@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, footer, size = 'default' }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, size = 'default', closeOnBackdrop = false }) => {
     const modalRef = useRef(null);
 
     useEffect(() => {
@@ -21,7 +21,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'default' }) =
     }, [isOpen, onClose]);
 
     const handleBackdropClick = (e) => {
-        if (modalRef.current && !modalRef.current.contains(e.target)) {
+        if (closeOnBackdrop && modalRef.current && !modalRef.current.contains(e.target)) {
             onClose();
         }
     };
