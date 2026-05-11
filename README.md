@@ -277,7 +277,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 |--------|------|------|
 | Cloudflare | ✅ | 全功能支持 |
 | 腾讯云 DNSPod | ✅ | 支持记录启用/禁用 |
-| 阿里云云解析 DNS | ✅ | AccessKey；列表仅含注册商 NS 已全部指向阿里云（`DescribeDomainNs` / `AllAliDns`）的域名 |
+| 阿里云云解析 DNS | ✅ | 支持记录启用/禁用；域名列表仅含注册商 NS 已全部指向阿里云解析的域名（`DescribeDomainNs` → `AllAliDns`） |
 | Dynu | ✅ | 免费动态 DNS |
 | NDJP NET | ✅ | 日本 DNS 服务 |
 | deSEC | ✅ | 免费开源，支持 DNSSEC |
@@ -290,7 +290,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 
 - **Cloudflare**: API Token（推荐）或 Global API Key
 - **腾讯云 DNSPod**: SecretId,SecretKey（逗号分隔）
-- **阿里云云解析 DNS**: AccessKeyId,AccessKeySecret（逗号分隔，需 RAM 授权云解析 DNS，含 `DescribeDomainNs`）；域名列表会排除未将 NS 全部切到阿里云的域名
+- **阿里云云解析 DNS**: `AccessKeyId,AccessKeySecret`（英文逗号分隔）。RAM 需具备云解析 DNS 只读/读写等权限，且能调用 `DescribeDomainNs`（用于判断注册商 NS 是否全部为阿里云分配）。**同步域名列表**时仅保留 `AllAliDns == true` 的域名；检测失败或仍为混合 NS 的域名不会出现在列表中。`GetDomain` 与记录的增删改按域名操作，不重复做上述列表过滤。
 - **Dynu**: API Key
 - **NDJP NET**: Bearer Token
 - **deSEC**: Token
