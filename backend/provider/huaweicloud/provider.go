@@ -277,12 +277,17 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 	if _, err := p.client.UpdateRecordSet(ctx, apiKey, up); err != nil {
 		return nil, err
 	}
-	status := "ENABLE"
-	if !record.State {
-		status = "DISABLE"
-	}
-	if err := p.client.SetRecordSetStatus(ctx, apiKey, baseID, status); err != nil {
-		return nil, err
+	// Only change status if it differs from current state.
+	// Huawei Cloud status values: ACTIVE (enabled) / DISABLE (disabled).
+	currentActive := !strings.EqualFold(deref(sh.Status), "DISABLE")
+	if currentActive != record.State {
+		status := "ENABLE"
+		if !record.State {
+			status = "DISABLE"
+		}
+		if err := p.client.SetRecordSetStatus(ctx, apiKey, baseID, status); err != nil {
+			return nil, err
+		}
 	}
 	return record, nil
 }

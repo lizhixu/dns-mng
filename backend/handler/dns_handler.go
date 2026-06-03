@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"dns-mng/middleware"
@@ -92,7 +94,7 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 
 	// Get all cached domains (excluding soft deleted for comparison)
 	allCaches, _ := domainCacheService.GetCacheByUser(userID)
-	
+
 	// Get account names for display
 	accountService := service.NewAccountService()
 	accounts, _ := accountService.List(userID)
@@ -100,7 +102,7 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 	for _, acc := range accounts {
 		accountMap[acc.ID] = acc.Name
 	}
-	
+
 	var domainsToDelete []models.BatchCacheDeleteItem
 	for _, cache := range allCaches {
 		key := fmt.Sprintf("%d:%s", cache.AccountID, cache.DomainID)
@@ -143,6 +145,11 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 		domainCacheService.UpdateLastSyncTime(userID, d.AccountID, d.ID, updatedOn)
 	}
 
+	// Sort domains alphabetically (case-insensitive)
+	slices.SortFunc(domains, func(a, b models.Domain) int {
+		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
+	})
+
 	response := models.RefreshDomainsResponse{
 		Domains:         domains,
 		DomainsToDelete: domainsToDelete,
@@ -183,7 +190,7 @@ func (h *DNSHandler) ListDomains(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	response := gin.H{
 		"domains": domains,
 	}
@@ -191,7 +198,7 @@ func (h *DNSHandler) ListDomains(c *gin.Context) {
 	if latestSyncTime != nil {
 		response["cache_timestamp"] = latestSyncTime.Format(time.RFC3339)
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -241,9 +248,9 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		key := fmt.Sprintf("%d:%s", cache.AccountID, cache.DomainID)
 		if !providerDomainMap[key] {
 			domainsToDelete = append(domainsToDelete, models.BatchCacheDeleteItem{
-				AccountID:   cache.AccountID,
-				DomainID:    cache.DomainID,
-				DomainName:  cache.DomainName,
+				AccountID:  cache.AccountID,
+				DomainID:   cache.DomainID,
+				DomainName: cache.DomainName,
 			})
 		}
 	}
@@ -275,6 +282,11 @@ func (h *DNSHandler) RefreshDomains(c *gin.Context) {
 		}
 		domainCacheService.UpdateLastSyncTime(userID, d.AccountID, d.ID, updatedOn)
 	}
+
+	// Sort domains alphabetically (case-insensitive)
+	slices.SortFunc(domains, func(a, b models.Domain) int {
+		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
+	})
 
 	response := models.RefreshDomainsResponse{
 		Domains:         domains,
