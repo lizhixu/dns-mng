@@ -245,6 +245,7 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 
 	// Return record with state always true for Cloudflare
 	record.State = true
+	record.UpdatedOn = time.Now().Format(time.RFC3339)
 	return record, nil
 }
 
