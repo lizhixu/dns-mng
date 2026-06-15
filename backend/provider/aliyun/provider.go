@@ -174,25 +174,58 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 	if strings.TrimSpace(record.ID) == "" {
 		return nil, fmt.Errorf("missing record id")
 	}
+
+	var oldRecord *models.Record
+	records, err := p.ListRecords(ctx, apiKey, domainID)
+	if err == nil {
+		for i := range records {
+			if records[i].ID == record.ID {
+				oldRecord = &records[i]
+				break
+			}
+		}
+	}
+
 	ttl := int64(record.TTL)
 	if ttl <= 0 {
 		ttl = 600
 	}
 	line := recordLineFromRaw(record.Raw)
+	if oldRecord != nil {
+		line = recordLineFromRaw(oldRecord.Raw)
+	}
 	rr := nodeNameToRR(record.NodeName)
 	recType := strings.ToUpper(strings.TrimSpace(record.RecordType))
 
-	if err := p.client.UpdateDomainRecord(ctx, apiKey, record.ID, rr, line, recType, record.Content, ttl, int64(record.Priority)); err != nil {
-		return nil, err
+	contentChanged := true
+	if oldRecord != nil {
+		contentChanged = rr != nodeNameToRR(oldRecord.NodeName) ||
+			line != recordLineFromRaw(oldRecord.Raw) ||
+			recType != strings.ToUpper(strings.TrimSpace(oldRecord.RecordType)) ||
+			record.Content != oldRecord.Content ||
+			int(ttl) != oldRecord.TTL ||
+			record.Priority != oldRecord.Priority
+	}
+	if contentChanged {
+		if err := p.client.UpdateDomainRecord(ctx, apiKey, record.ID, rr, line, recType, record.Content, ttl, int64(record.Priority)); err != nil {
+			return nil, err
+		}
 	}
 	status := "ENABLE"
 	if !record.State {
 		status = "DISABLE"
 	}
-	if err := p.client.SetRecordStatus(ctx, apiKey, record.ID, status); err != nil {
-		return nil, err
+	if oldRecord == nil || oldRecord.State != record.State {
+		if err := p.client.SetRecordStatus(ctx, apiKey, record.ID, status); err != nil {
+			return nil, err
+		}
 	}
 	record.Raw = map[string]interface{}{"line": line}
+	record.DomainID = domainID
+	record.DomainName = domainID
+	record.RecordType = recType
+	record.TTL = int(ttl)
+	record.UpdatedOn = time.Now().Format(time.RFC3339)
 	return record, nil
 }
 
