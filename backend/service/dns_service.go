@@ -6,6 +6,7 @@ import (
 	"dns-mng/provider"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type DNSService struct {
@@ -413,7 +414,15 @@ func (s *DNSService) UpdateRecord(ctx context.Context, userID, accountID int64, 
 		Priority:   req.Priority,
 	}
 
-	return p.UpdateRecord(ctx, account.APIKey, domainID, record)
+	updatedRecord, err := p.UpdateRecord(ctx, account.APIKey, domainID, record)
+	if err != nil {
+		return nil, err
+	}
+	if updatedRecord != nil && updatedRecord.UpdatedOn == "" {
+		updatedRecord.UpdatedOn = time.Now().Format(time.RFC3339)
+	}
+
+	return updatedRecord, nil
 }
 
 func (s *DNSService) DeleteRecord(ctx context.Context, userID, accountID int64, domainID, recordID string) error {
