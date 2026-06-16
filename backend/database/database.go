@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/tursodatabase/libsql-client-go/libsql"
 	_ "modernc.org/sqlite"
 )
 
@@ -37,23 +38,16 @@ func InitWithConfig(dbType, dbPath, dbURL, dbAuthToken string) {
 		DB.SetMaxOpenConns(1)
 		DB.SetMaxIdleConns(1)
 	case "libsql":
-		if !libsqlAvailable() {
-			log.Fatalf("DB_TYPE=libsql requires the libSQL driver, which is only available on linux/darwin (amd64/arm64) with CGO enabled. Current platform does not support it.")
-		}
 		dbDriver = "libsql"
-		dsn := dbURL
+		var opts []libsql.Option
 		if dbAuthToken != "" {
-			// libSQL 驱动通过查询参数携带 authToken；若 URL 已含其它查询参数则追加。
-			sep := "?"
-			if strings.Contains(dsn, "?") {
-				sep = "&"
-			}
-			dsn = dsn + sep + "authToken=" + dbAuthToken
+			opts = append(opts, libsql.WithAuthToken(dbAuthToken))
 		}
-		DB, err = sql.Open("libsql", dsn)
+		connector, err := libsql.NewConnector(dbURL, opts...)
 		if err != nil {
-			log.Fatalf("Failed to open libsql database: %v", err)
+			log.Fatalf("Failed to create libsql connector: %v", err)
 		}
+		DB = sql.OpenDB(connector)
 		if err = DB.Ping(); err != nil {
 			log.Fatalf("Failed to ping libsql database: %v", err)
 		}
