@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 import { api } from '../api';
-import { Sun, Moon, Monitor, FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu } from 'lucide-react';
+import { Sun, Moon, Monitor, FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup } from 'lucide-react';
 import BackToTop from './BackToTop';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -130,7 +130,8 @@ const Layout = () => {
         { path: '/domains', icon: Globe, label: t.layout.domains },
         { path: '/accounts', icon: Server, label: t.layout.accounts },
         { path: '/logs', icon: FileText, label: t.layout.logsManagement || t.layout.logs },
-        { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications }
+        { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications },
+        { path: '/backup', icon: DatabaseBackup, label: t.layout.backup }
     ]), [t]);
 
     const sidebar = (

@@ -10,22 +10,60 @@ import (
 
 var DB *sql.DB
 
-func Init(dbPath string) {
+// dbDriver 记录当前使用的驱动名 ("sqlite" 或 "libsql")，供 VACUUM 等仅本地可用的操作判断。
+var dbDriver string
+
+// IsLibSQL 返回当前是否使用 libSQL 驱动 (Turso/远程)。
+func IsLibSQL() bool { return dbDriver == "libsql" }
+
+// InitWithConfig 根据配置选择驱动并初始化数据库连接。
+// dbType: "sqlite" (本地文件, 默认) 或 "libsql" (Turso/远程 libSQL)。
+func InitWithConfig(dbType, dbPath, dbURL, dbAuthToken string) {
 	var err error
-	DB, err = sql.Open("sqlite", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
-	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
-	}
 
-	if err = DB.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+	switch strings.ToLower(dbType) {
+	case "", "sqlite":
+		dbDriver = "sqlite"
+		DB, err = sql.Open("sqlite", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
+		if err != nil {
+			log.Fatalf("Failed to open sqlite database: %v", err)
+		}
+		if err = DB.Ping(); err != nil {
+			log.Fatalf("Failed to ping sqlite database: %v", err)
+		}
+		// SQLite is embedded and this application performs async API log writes while
+		// pages are reading log data. Keeping a single connection avoids intermittent
+		// "database is locked" failures from competing pooled connections.
+		DB.SetMaxOpenConns(1)
+		DB.SetMaxIdleConns(1)
+	case "libsql":
+		if !libsqlAvailable() {
+			log.Fatalf("DB_TYPE=libsql requires the libSQL driver, which is only available on linux/darwin (amd64/arm64) with CGO enabled. Current platform does not support it.")
+		}
+		dbDriver = "libsql"
+		dsn := dbURL
+		if dbAuthToken != "" {
+			// libSQL 驱动通过查询参数携带 authToken；若 URL 已含其它查询参数则追加。
+			sep := "?"
+			if strings.Contains(dsn, "?") {
+				sep = "&"
+			}
+			dsn = dsn + sep + "authToken=" + dbAuthToken
+		}
+		DB, err = sql.Open("libsql", dsn)
+		if err != nil {
+			log.Fatalf("Failed to open libsql database: %v", err)
+		}
+		if err = DB.Ping(); err != nil {
+			log.Fatalf("Failed to ping libsql database: %v", err)
+		}
+		// 远程/嵌入式 libSQL 不存在本地文件锁竞争，放开连接池以提升并发吞吐。
+		DB.SetMaxOpenConns(10)
+		DB.SetMaxIdleConns(5)
+		DB.SetConnMaxIdleTime(0)
+	default:
+		log.Fatalf("Unsupported DB_TYPE %q: expected \"sqlite\" or \"libsql\"", dbType)
 	}
-
-	// SQLite is embedded and this application performs async API log writes while
-	// pages are reading log data. Keeping a single connection avoids intermittent
-	// "database is locked" failures from competing pooled connections.
-	DB.SetMaxOpenConns(1)
-	DB.SetMaxIdleConns(1)
 
 	createTables()
 
@@ -34,7 +72,13 @@ func Init(dbPath string) {
 		log.Printf("Warning: Migration failed: %v", err)
 	}
 
-	log.Println("Database initialized successfully")
+	log.Printf("Database initialized successfully (driver=%s)", dbDriver)
+}
+
+// Init 保留旧签名以兼容外部调用 (按本地 sqlite 路径初始化)。
+// Deprecated: 请改用 InitWithConfig。
+func Init(dbPath string) {
+	InitWithConfig("sqlite", dbPath, "", "")
 }
 
 func createTables() {

@@ -22,7 +22,7 @@
 ### 后端
 - Go 1.24+
 - Gin Web Framework
-- SQLite 数据库
+- SQLite / libSQL 数据库（默认本地 SQLite，可选 Turso 远程）
 - JWT 认证
 
 ### 前端
@@ -179,12 +179,35 @@ npm run build
 # JWT 密钥（生产环境必须修改）
 JWT_SECRET=your-secure-random-secret-key
 
-# 数据库路径
+# 数据库类型：sqlite（默认，本地文件）或 libsql（Turso / 远程 libSQL）
+DB_TYPE=sqlite
+
+# SQLite 模式：数据库路径
 DB_PATH=dns-mng.db
+
+# libSQL / Turso 模式（DB_TYPE=libsql 时使用）
+# DB_URL=libsql://your-db.turso.io
+# DB_AUTH_TOKEN=your-turso-auth-token
+# （本地 libSQL 文件无需 token：DB_URL=file:/data/dns-mng.db）
 
 # 服务器端口
 SERVER_PORT=8080
 ```
+
+### 使用 Turso 数据库
+
+通过 `DB_TYPE=libsql` 切换到 Turso 或自建的远程 libSQL，便于多实例共享、云托管与备份。
+
+1. 在 [Turso](https://turso.tech) 创建数据库，获取 `libsql://` 地址与 Auth Token。
+2. 配置环境变量：
+   ```bash
+   DB_TYPE=libsql
+   DB_URL=libsql://your-db.turso.io
+   DB_AUTH_TOKEN=your-turso-auth-token
+   ```
+3. 启动服务，系统会自动建表（与本地 SQLite 表结构一致）。
+
+> 说明：libSQL 驱动依赖预编译原生库，仅在 linux/darwin（amd64/arm64）+ CGO 环境下可用。Windows 本机构建仅支持 SQLite，连接 Turso 请使用 Docker 镜像。Turso 远程不支持 `VACUUM`，相关维护操作会自动跳过。
 
 ## 定时任务
 

@@ -11,6 +11,7 @@ import Records from './pages/Records';
 import Profile from './pages/Profile';
 import APILogsManagement from './pages/APILogsManagement';
 import EmailSettings from './pages/EmailSettings';
+import Backup from './pages/Backup';
 
 // Placeholder components until we implement them
 const PrivateRoute = ({ children }) => {
@@ -40,6 +41,7 @@ function App() {
                 <Route path="profile" element={<Profile />} />
                 <Route path="logs" element={<APILogsManagement />} />
                 <Route path="email-settings" element={<EmailSettings />} />
+                <Route path="backup" element={<Backup />} />
               </Route>
             </Routes>
           </AuthProvider>

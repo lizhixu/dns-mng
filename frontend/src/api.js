@@ -363,4 +363,30 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // Backup & Restore
+    exportBackup: async (password = '') => {
+        const params = password ? `?password=${encodeURIComponent(password)}` : '';
+        const response = await fetch(`${API_BASE}/backup/export${params}`, {
+            headers: getHeaders(),
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || response.statusText);
+        }
+        return response.blob();
+    },
+
+    importBackup: async ({ password = '', overwrite = false, content }) => {
+        const response = await fetch(`${API_BASE}/backup/import`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ password, overwrite, content }),
+        });
+        return handleResponse(response);
+    },
 };

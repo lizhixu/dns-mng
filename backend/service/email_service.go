@@ -43,6 +43,30 @@ func (s *EmailService) GetEmailConfig(userID int64) (*models.EmailConfig, error)
 	return &config, nil
 }
 
+// getEmailConfigWithPassword 读取邮件配置（包含密码），仅供备份导出使用。
+func (s *EmailService) getEmailConfigWithPassword(userID int64) (*models.EmailConfig, error) {
+	var config models.EmailConfig
+	var enabled int
+
+	err := database.DB.QueryRow(
+		`SELECT id, user_id, smtp_host, smtp_port, smtp_username, smtp_password, from_email, from_name, to_email, language, enabled, created_at, updated_at
+		 FROM email_config WHERE user_id = ?`,
+		userID,
+	).Scan(&config.ID, &config.UserID, &config.SMTPHost, &config.SMTPPort,
+		&config.SMTPUsername, &config.SMTPPassword, &config.FromEmail, &config.FromName,
+		&config.ToEmail, &config.Language, &enabled, &config.CreatedAt, &config.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	config.Enabled = enabled == 1
+	return &config, nil
+}
+
 // UpsertEmailConfig creates or updates email configuration
 func (s *EmailService) UpsertEmailConfig(userID int64, req *models.UpdateEmailConfigRequest) (*models.EmailConfig, error) {
 	now := time.Now()

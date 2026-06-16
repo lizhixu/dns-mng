@@ -56,6 +56,7 @@ export const en = {
     passwordUpdated: 'Password updated',
     logsManagement: 'Logs',
     emailNotifications: 'Email Notifications',
+    backup: 'Backup & Restore',
   },
 
   accounts: {
@@ -309,6 +310,39 @@ export const en = {
       ddns_token: 'DDNS Token',
       ddns: 'DDNS'
     }
+  },
+
+  backup: {
+    title: 'Backup & Restore',
+    subtitle: 'Export or import all your configurations (accounts, DDNS token, email, notifications)',
+    exportCard: 'Backup (Export)',
+    importCard: 'Restore (Import)',
+    encryptionPassword: 'Encryption Password (optional)',
+    encryptionPasswordPlaceholder: 'Leave empty to skip encryption; file contains API keys',
+    encryptionPasswordHint: 'Leave empty for plaintext; encrypted files require this password to restore',
+    exportButton: 'Export Backup File',
+    exportSuccess: 'Backup file download started',
+    exportError: 'Export failed',
+    sensitiveWarning: 'The backup file contains sensitive information including API keys and email passwords. Please keep it safe.',
+    selectFile: 'Select Backup File',
+    fileSelected: 'Selected',
+    noFileSelected: 'No file selected',
+    restorePasswordPlaceholder: 'Required if backup was encrypted',
+    overwrite: 'Overwrite existing configurations',
+    overwriteHint: 'When enabled, imported data overwrites matching existing items; when off, only new items are added',
+    restoreButton: 'Restore',
+    restoring: 'Restoring...',
+    restoreSuccess: 'Restore completed',
+    restoreError: 'Restore failed',
+    resultTitle: 'Restore Result',
+    resultAccounts: 'Accounts',
+    resultDomainCaches: 'Domain Cache (incl. expiry alerts)',
+    resultDDNSToken: 'DDNS Token',
+    resultEmailConfig: 'Email Config',
+    imported: 'Imported',
+    skipped: 'Skipped',
+    yes: 'Yes',
+    no: 'No',
   },
 };
 

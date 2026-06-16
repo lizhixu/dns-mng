@@ -29,7 +29,7 @@ func main() {
 	cfg := config.Load()
 
 	// Init database
-	database.Init(cfg.DBPath)
+	database.InitWithConfig(cfg.DBType, cfg.DBPath, cfg.DBURL, cfg.DBAuthToken)
 	defer database.Close()
 
 	// Register providers
@@ -62,6 +62,7 @@ func main() {
 	defer schedulerService.Stop()
 
 	ddnsTokenService := service.NewDDNSTokenService()
+	backupService := service.NewBackupService(accountService, domainCacheService, ddnsTokenService, emailService, notificationService)
 
 	// Init handlers
 	authHandler := handler.NewAuthHandler(userService, logService)
@@ -76,6 +77,7 @@ func main() {
 	acmeHandler := handler.NewAcmeHandler(acmeService)
 	ddnsHandler := handler.NewDDNSHandler(dnsService, accountService, logService, ddnsTokenService)
 	ddnsTokenHandler := handler.NewDDNSTokenHandler(ddnsTokenService, logService)
+	backupHandler := handler.NewBackupHandler(backupService)
 
 	// Setup router
 	r := gin.Default()
@@ -166,6 +168,10 @@ func main() {
 
 		// DNS Check
 		protected.POST("/dns/check", dnsCheckHandler.CheckDNS)
+
+		// Backup & Restore
+		protected.GET("/backup/export", backupHandler.Export)
+		protected.POST("/backup/import", backupHandler.Import)
 	}
 
 	log.Printf("Server starting on :%s", cfg.ServerPort)

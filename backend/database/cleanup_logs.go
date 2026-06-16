@@ -58,8 +58,13 @@ func GetAPILogsStats() (map[string]interface{}, error) {
 	return stats, nil
 }
 
-// VacuumDatabase optimizes the database after cleanup
+// VacuumDatabase optimizes the database after cleanup.
+// 注意: VACUUM 仅在本地 sqlite 可用；Turso/远程 libSQL 不支持，跳过并记录日志。
 func VacuumDatabase() error {
+	if IsLibSQL() {
+		log.Println("Vacuum skipped: not supported on libSQL/Turso remote")
+		return nil
+	}
 	_, err := DB.Exec(`VACUUM`)
 	if err != nil {
 		return err

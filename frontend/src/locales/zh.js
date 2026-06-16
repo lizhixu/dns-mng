@@ -56,6 +56,7 @@ export const zh = {
     passwordUpdated: '密码已更新',
     logsManagement: '日志管理',
     emailNotifications: '邮件通知',
+    backup: '备份与还原',
   },
 
   accounts: {
@@ -309,6 +310,39 @@ export const zh = {
       ddns_token: 'DDNS Token',
       ddns: 'DDNS'
     }
+  },
+
+  backup: {
+    title: '备份与还原',
+    subtitle: '导出或导入您的全部配置（账户、DDNS Token、邮件、通知）',
+    exportCard: '备份（导出）',
+    importCard: '还原（导入）',
+    encryptionPassword: '加密密码（可选）',
+    encryptionPasswordPlaceholder: '留空则不加密，包含 API 密钥等敏感信息',
+    encryptionPasswordHint: '留空表示不加密；加密后还原时需输入相同密码',
+    exportButton: '导出备份文件',
+    exportSuccess: '备份文件已开始下载',
+    exportError: '导出失败',
+    sensitiveWarning: '备份文件包含 API 密钥和邮件密码等敏感信息，请妥善保管',
+    selectFile: '选择备份文件',
+    fileSelected: '已选择',
+    noFileSelected: '未选择文件',
+    restorePasswordPlaceholder: '备份文件加密时需填写',
+    overwrite: '覆盖已存在的配置',
+    overwriteHint: '开启后，导入的数据将覆盖同名的现有配置；关闭则只导入新增项',
+    restoreButton: '还原',
+    restoring: '还原中...',
+    restoreSuccess: '还原完成',
+    restoreError: '还原失败',
+    resultTitle: '还原结果',
+    resultAccounts: '账户',
+    resultDomainCaches: '域名缓存（含到期提醒）',
+    resultDDNSToken: 'DDNS Token',
+    resultEmailConfig: '邮件配置',
+    imported: '已导入',
+    skipped: '已跳过',
+    yes: '是',
+    no: '否',
   },
 };
 
