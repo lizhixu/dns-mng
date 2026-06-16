@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -54,8 +55,24 @@ func NewClient(username, password string) *Client {
 	})
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-			Jar:     jar,
+			// No timeout at all: HE (dns.he.net) is frequently slow or stalls during
+			// TLS handshake, even from US nodes. We deliberately disable the overall
+			// client Timeout and the Transport dial/TLS handshake timeouts so a slow
+			// but eventually-successful request is never aborted proactively. The only
+			// bound is the caller-supplied context (if any).
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				DialContext: (&net.Dialer{
+					Timeout:   0, // no dial timeout
+					KeepAlive: 30 * time.Second,
+				}).DialContext,
+				TLSHandshakeTimeout:   0, // no TLS handshake timeout
+				ResponseHeaderTimeout: 0, // no response-header timeout
+				ExpectContinueTimeout: 0, // no expect-continue timeout
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+			},
+			Jar: jar,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				// Follow redirects but preserve cookies
 				return nil
