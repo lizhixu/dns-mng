@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"dns-mng/models"
@@ -11,11 +12,14 @@ import (
 
 // Provider implements the DNSProvider interface for Hurricane Electric (dns.he.net)
 type Provider struct {
-	client *Client
+	mu      sync.Mutex
+	clients map[string]*Client // per-account cached clients, keyed by apiKey
 }
 
 func New() *Provider {
-	return &Provider{}
+	return &Provider{
+		clients: make(map[string]*Client),
+	}
 }
 
 func (p *Provider) Name() string {
@@ -43,13 +47,32 @@ func parseAPIKey(apiKey string) (string, string, error) {
 	return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), nil
 }
 
-func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
+// getClient returns a cached client for the given apiKey, creating one if needed.
+// Each account gets its own client so sessions are fully isolated.
+func (p *Provider) getClient(apiKey string) (*Client, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if c, ok := p.clients[apiKey]; ok {
+		return c, nil
+	}
+
 	username, password, err := parseAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
 
-	client := NewClient(username, password)
+	c := NewClient(username, password)
+	p.clients[apiKey] = c
+	return c, nil
+}
+
+func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
+	client, err := p.getClient(apiKey)
+	if err != nil {
+		return nil, err
+	}
+
 	zones, err := client.ListZones(ctx)
 	if err != nil {
 		return nil, err
@@ -84,7 +107,7 @@ func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string
 }
 
 func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID string) ([]models.Record, error) {
-	username, password, err := parseAPIKey(apiKey)
+	client, err := p.getClient(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +118,6 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 		return nil, err
 	}
 
-	client := NewClient(username, password)
 	heRecords, err := client.ListRecords(ctx, domainID)
 	if err != nil {
 		return nil, err
@@ -134,7 +156,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 }
 
 func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
-	username, password, err := parseAPIKey(apiKey)
+	client, err := p.getClient(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +166,6 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 	if err != nil {
 		return nil, err
 	}
-
-	client := NewClient(username, password)
 
 	ttl := record.TTL
 	if ttl == 0 {
@@ -182,12 +202,10 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
-	username, password, err := parseAPIKey(apiKey)
+	client, err := p.getClient(apiKey)
 	if err != nil {
 		return nil, err
 	}
-
-	client := NewClient(username, password)
 
 	ttl := record.TTL
 	if ttl == 0 {
@@ -215,11 +233,10 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID string, recordID string) error {
-	username, password, err := parseAPIKey(apiKey)
+	client, err := p.getClient(apiKey)
 	if err != nil {
 		return err
 	}
 
-	client := NewClient(username, password)
 	return client.DeleteRecord(ctx, domainID, recordID)
 }

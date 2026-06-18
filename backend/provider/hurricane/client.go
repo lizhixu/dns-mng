@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,13 +19,6 @@ const (
 	baseURL  = "https://dns.he.net"
 	indexCGI = "https://dns.he.net/index.cgi"
 )
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 // cleanHTML removes HTML entities from a string
 func cleanHTML(s string) string {
@@ -45,6 +39,7 @@ type Client struct {
 	httpClient *http.Client
 	username   string
 	password   string
+	mu         sync.Mutex
 	loggedIn   bool
 }
 
@@ -84,10 +79,11 @@ func NewClient(username, password string) *Client {
 	}
 }
 
-// Login authenticates with Hurricane Electric and returns the HTML response
-func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
+// loginAndGetHTMLLocked performs the actual login or session verification.
+// Caller must hold c.mu.
+func (c *Client) loginAndGetHTMLLocked(ctx context.Context) (string, error) {
 	if c.loggedIn {
-		// Already logged in, fetch the page
+		// Already logged in, fetch the page and verify session is still valid
 		req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
 		if err != nil {
 			return "", fmt.Errorf("create request: %w", err)
@@ -104,7 +100,14 @@ func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("read response: %w", err)
 		}
-		return string(body), nil
+
+		bodyStr := string(body)
+		// Verify the response is actually the logged-in page, not a login form
+		if strings.Contains(bodyStr, "domains_table") {
+			return bodyStr, nil
+		}
+		// Session expired, fall through to re-login
+		c.loggedIn = false
 	}
 
 	baseURLParsed, _ := url.Parse(baseURL)
@@ -146,7 +149,6 @@ func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
 	}
 	defer resp.Body.Close()
 
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("read login response: %w", err)
@@ -169,14 +171,12 @@ func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
 		time.Sleep(100 * time.Millisecond)
 
 		req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
-		if err != nil {
-		} else {
+		if err == nil {
 			req2.Header.Set("User-Agent", "Mozilla/5.0")
 			req2.Header.Set("Referer", baseURL+"/")
 
 			resp2, err := c.httpClient.Do(req2)
 			if err == nil {
-				// Read body to consume it
 				io.Copy(io.Discard, resp2.Body)
 				resp2.Body.Close()
 			}
@@ -186,19 +186,28 @@ func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
 	return bodyStr, nil
 }
 
-// Login authenticates with Hurricane Electric (for backward compatibility)
+// loginAndGetHTML is the public entry point for login+fetch, with mutex protection.
+func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.loginAndGetHTMLLocked(ctx)
+}
+
+// Login authenticates with Hurricane Electric (for backward compatibility).
+// If already logged in, verifies the session is still valid before returning.
 func (c *Client) Login(ctx context.Context) error {
-	_, err := c.loginAndGetHTML(ctx)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	_, err := c.loginAndGetHTMLLocked(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Ensure we have cookies for subsequent requests
-	// This is important even if already logged in (e.g., when domain list is cached)
 	baseURLParsed, _ := url.Parse(baseURL)
 	cookies := c.httpClient.Jar.Cookies(baseURLParsed)
 	if len(cookies) == 0 {
-		// Call login again to get cookies
 		data := url.Values{}
 		data.Set("email", c.username)
 		data.Set("pass", c.password)
@@ -215,19 +224,16 @@ func (c *Client) Login(ctx context.Context) error {
 		if err != nil {
 			return nil // Don't fail if we can't get cookies
 		}
-		defer resp.Body.Close()
 
 		for _, cookie := range resp.Cookies() {
-			// Fix cookie domain if empty
 			if cookie.Domain == "" {
 				cookie.Domain = "dns.he.net"
 			}
-			// Set cookie in jar manually to ensure correct domain
 			c.httpClient.Jar.SetCookies(baseURLParsed, []*http.Cookie{cookie})
 		}
 
-		// Consume body
 		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
 	}
 
 	return nil
@@ -423,11 +429,7 @@ func (c *Client) parseRecords(html string, zoneID string) ([]Record, error) {
 
 // CreateRecord creates a new DNS record and returns the new record ID
 func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record) (string, error) {
-	if err := c.Login(ctx); err != nil {
-		return "", err
-	}
-
-	// Check for duplicate records before creating
+	// Check for duplicate records before creating (ListRecords handles login)
 	existingRecords, err := c.ListRecords(ctx, zoneID)
 	if err == nil {
 		for _, r := range existingRecords {
