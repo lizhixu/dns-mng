@@ -218,3 +218,27 @@ CNAME at zone apex is not allowed. (rfc1912 & rfc2181)
 
 ---
 
+## 未登录或登录失效
+
+所有接口在未登录或 `cookie` 失效时会指向登录页，注意解析实例中是否存在登录表单
+
+**示例**
+
+```html
+<form name="login" method="post" enctype="application/x-www-form-urlencoded" action="/">
+<ul class="menu">
+			<li class="heavy">
+    		<label style="margin-bottom:0; padding-bottom:0;">Username</label><input style="width: 140px;" type="text" name="email" /><br />
+			</li>
+			<li>
+    		<label style="margin-bottom:0; padding-bottom:0;">Password</label><input style="width: 140px;" type="password" name="pass"/>
+    		</li>
+    		<li>&nbsp;</li>
+    		<li>
+    		<input id="_loginbutton" style="color: #fff; background: green;" type="submit" name="submit" value="Login!"/>
+    		<input style="color: #fff; background: blue;" onclick="location.href='http://ipv6.he.net/certification/register.php'" type="button" value="Register!"/>
+    		  </li>
+</ul>
+</form>
+```
+

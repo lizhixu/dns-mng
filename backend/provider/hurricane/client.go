@@ -79,49 +79,25 @@ func NewClient(username, password string) *Client {
 	}
 }
 
-// loginAndGetHTMLLocked performs the actual login or session verification.
-// Caller must hold c.mu.
-func (c *Client) loginAndGetHTMLLocked(ctx context.Context) (string, error) {
-	if c.loggedIn {
-		// Already logged in, fetch the page and verify session is still valid
-		req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
-		if err != nil {
-			return "", fmt.Errorf("create request: %w", err)
-		}
-		req.Header.Set("User-Agent", "Mozilla/5.0")
+// isLoginForm checks if the response is a login page (session expired).
+func isLoginForm(body string) bool {
+	return strings.Contains(body, `name="login"`) || strings.Contains(body, `name="email"`)
+}
 
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			return "", fmt.Errorf("request failed: %w", err)
-		}
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("read response: %w", err)
-		}
-
-		bodyStr := string(body)
-		// Verify the response is actually the logged-in page, not a login form
-		if strings.Contains(bodyStr, "domains_table") {
-			return bodyStr, nil
-		}
-		// Session expired, fall through to re-login
-		c.loggedIn = false
-	}
-
+// doLogin performs the actual login POST. Caller must hold c.mu.
+func (c *Client) doLogin(ctx context.Context) error {
 	baseURLParsed, _ := url.Parse(baseURL)
 
 	// Step 1: Visit homepage to get initial cookie
 	req1, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
 	if err != nil {
-		return "", fmt.Errorf("create homepage request: %w", err)
+		return fmt.Errorf("create homepage request: %w", err)
 	}
 	req1.Header.Set("User-Agent", "Mozilla/5.0")
 
 	resp1, err := c.httpClient.Do(req1)
 	if err != nil {
-		return "", fmt.Errorf("homepage request failed: %w", err)
+		return fmt.Errorf("homepage request failed: %w", err)
 	}
 	io.Copy(io.Discard, resp1.Body)
 	resp1.Body.Close()
@@ -136,45 +112,39 @@ func (c *Client) loginAndGetHTMLLocked(ctx context.Context) (string, error) {
 
 	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/", strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("create login request: %w", err)
+		return fmt.Errorf("create login request: %w", err)
 	}
-
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 	req.Header.Set("Referer", baseURL+"/")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("login request failed: %w", err)
+		return fmt.Errorf("login request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read login response: %w", err)
+		return fmt.Errorf("read login response: %w", err)
 	}
-
 	bodyStr := string(body)
 
 	if strings.Contains(bodyStr, "Incorrect") || strings.Contains(bodyStr, "Invalid") {
-		return "", fmt.Errorf("login failed: invalid credentials")
+		return fmt.Errorf("login failed: invalid credentials")
 	}
-
 	if !strings.Contains(bodyStr, "domains_table") {
-		return "", fmt.Errorf("login failed: unexpected response")
+		return fmt.Errorf("login failed: unexpected response")
 	}
 	c.loggedIn = true
 
 	// If no cookies received, try to fetch the page again to get cookies
-	// Some servers set cookies on the second request
 	if len(cookies) == 0 {
 		time.Sleep(100 * time.Millisecond)
-
 		req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
 		if err == nil {
 			req2.Header.Set("User-Agent", "Mozilla/5.0")
 			req2.Header.Set("Referer", baseURL+"/")
-
 			resp2, err := c.httpClient.Do(req2)
 			if err == nil {
 				io.Copy(io.Discard, resp2.Body)
@@ -182,61 +152,84 @@ func (c *Client) loginAndGetHTMLLocked(ctx context.Context) (string, error) {
 			}
 		}
 	}
+	return nil
+}
+
+// loginAndGetHTML logs in if needed and returns the domains page HTML.
+// Used by ListZones which needs the actual HTML content.
+func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if !c.loggedIn {
+		if err := c.doLogin(ctx); err != nil {
+			return "", err
+		}
+	}
+
+	// Fetch the page
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read response: %w", err)
+	}
+	bodyStr := string(body)
+
+	// If the page is a login form, session expired — re-login and refetch
+	if isLoginForm(bodyStr) {
+		c.loggedIn = false
+		if err := c.doLogin(ctx); err != nil {
+			return "", err
+		}
+
+		req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
+		if err != nil {
+			return "", fmt.Errorf("create request: %w", err)
+		}
+		req2.Header.Set("User-Agent", "Mozilla/5.0")
+
+		resp2, err := c.httpClient.Do(req2)
+		if err != nil {
+			return "", fmt.Errorf("request failed: %w", err)
+		}
+		defer resp2.Body.Close()
+
+		body2, err := io.ReadAll(resp2.Body)
+		if err != nil {
+			return "", fmt.Errorf("read response: %w", err)
+		}
+		return string(body2), nil
+	}
 
 	return bodyStr, nil
 }
 
-// loginAndGetHTML is the public entry point for login+fetch, with mutex protection.
-func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.loginAndGetHTMLLocked(ctx)
-}
-
-// Login authenticates with Hurricane Electric (for backward compatibility).
-// If already logged in, verifies the session is still valid before returning.
+// Login ensures the client has an active session. If already logged in,
+// returns immediately without any HTTP request.
 func (c *Client) Login(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	_, err := c.loginAndGetHTMLLocked(ctx)
-	if err != nil {
-		return err
+	if c.loggedIn {
+		return nil
 	}
+	return c.doLogin(ctx)
+}
 
-	// Ensure we have cookies for subsequent requests
-	baseURLParsed, _ := url.Parse(baseURL)
-	cookies := c.httpClient.Jar.Cookies(baseURLParsed)
-	if len(cookies) == 0 {
-		data := url.Values{}
-		data.Set("email", c.username)
-		data.Set("pass", c.password)
-		data.Set("submit", "Login!")
-
-		req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/", strings.NewReader(data.Encode()))
-		if err != nil {
-			return nil // Don't fail if we can't get cookies
-		}
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("User-Agent", "Mozilla/5.0")
-
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			return nil // Don't fail if we can't get cookies
-		}
-
-		for _, cookie := range resp.Cookies() {
-			if cookie.Domain == "" {
-				cookie.Domain = "dns.he.net"
-			}
-			c.httpClient.Jar.SetCookies(baseURLParsed, []*http.Cookie{cookie})
-		}
-
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-	}
-
-	return nil
+// resetSession marks the session as expired (called when a request detects a login form).
+func (c *Client) resetSession() {
+	c.loggedIn = false
 }
 
 // ListZones lists all DNS zones from login response
@@ -293,38 +286,58 @@ func (c *Client) parseZones(html string) ([]Domain, error) {
 	return domains, nil
 }
 
-// ListRecords lists all DNS records for a zone
+// ListRecords lists all DNS records for a zone.
+// If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) ListRecords(ctx context.Context, zoneID string) ([]Record, error) {
 	if err := c.Login(ctx); err != nil {
 		return nil, err
 	}
 
+	body, err := c.fetchRecordsPage(ctx, zoneID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Session expired — re-login and retry
+	if isLoginForm(body) {
+		c.mu.Lock()
+		c.resetSession()
+		if err := c.doLogin(ctx); err != nil {
+			c.mu.Unlock()
+			return nil, err
+		}
+		c.mu.Unlock()
+
+		body, err = c.fetchRecordsPage(ctx, zoneID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.parseRecords(body, zoneID)
+}
+
+func (c *Client) fetchRecordsPage(ctx context.Context, zoneID string) (string, error) {
 	reqURL := fmt.Sprintf("%s/?hosted_dns_zoneid=%s&menu=edit_zone&hosted_dns_editzone", baseURL, zoneID)
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return "", fmt.Errorf("create request: %w", err)
 	}
-
 	req.Header.Set("User-Agent", "Mozilla/5.0")
-	// Use the index page as Referer since that's where the zones are listed
 	req.Header.Set("Referer", indexCGI)
-	// Set Origin for API requests
 	req.Header.Set("Origin", baseURL)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+		return "", fmt.Errorf("read response: %w", err)
 	}
-
-	records, err := c.parseRecords(string(body), zoneID)
-
-	return records, err
+	return string(body), nil
 }
 
 // parseRecords extracts DNS records from HTML table
@@ -427,9 +440,10 @@ func (c *Client) parseRecords(html string, zoneID string) ([]Record, error) {
 	return records, nil
 }
 
-// CreateRecord creates a new DNS record and returns the new record ID
+// CreateRecord creates a new DNS record and returns the new record ID.
+// If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record) (string, error) {
-	// Check for duplicate records before creating (ListRecords handles login)
+	// Check for duplicate records before creating (ListRecords handles login+retry)
 	existingRecords, err := c.ListRecords(ctx, zoneID)
 	if err == nil {
 		for _, r := range existingRecords {
@@ -439,6 +453,41 @@ func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record)
 		}
 	}
 
+	bodyStr, err := c.postCreateRecord(ctx, zoneID, record)
+	if err != nil {
+		return "", err
+	}
+
+	// Session expired — re-login and retry
+	if isLoginForm(bodyStr) {
+		c.mu.Lock()
+		c.resetSession()
+		if err := c.doLogin(ctx); err != nil {
+			c.mu.Unlock()
+			return "", err
+		}
+		c.mu.Unlock()
+
+		bodyStr, err = c.postCreateRecord(ctx, zoneID, record)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Check for error message in dns_err div
+	errRegex := regexp.MustCompile(`<div id="dns_err"[^>]*>([^<]+)</div>`)
+	if matches := errRegex.FindStringSubmatch(bodyStr); len(matches) > 1 {
+		errMsg := strings.TrimSpace(matches[1])
+		errMsg = strings.ReplaceAll(errMsg, "&amp;", "&")
+		errMsg = strings.ReplaceAll(errMsg, "&lt;", "<")
+		errMsg = strings.ReplaceAll(errMsg, "&gt;", ">")
+		return "", fmt.Errorf("create record failed: %s", errMsg)
+	}
+
+	return "new", nil
+}
+
+func (c *Client) postCreateRecord(ctx context.Context, zoneID string, record Record) (string, error) {
 	data := url.Values{}
 	data.Set("account", "")
 	data.Set("menu", "edit_zone")
@@ -450,22 +499,18 @@ func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record)
 	data.Set("Content", record.Content)
 	data.Set("TTL", strconv.Itoa(record.TTL))
 	data.Set("hosted_dns_editrecord", "Submit")
-
 	if record.Priority > 0 {
 		data.Set("Priority", strconv.Itoa(record.Priority))
 	} else {
 		data.Set("Priority", "")
 	}
 
-
 	req, err := http.NewRequestWithContext(ctx, "POST", indexCGI, strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", fmt.Errorf("create request: %w", err)
 	}
-
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "Mozilla/5.0")
-	// Set Referer to the edit zone page as per documentation
 	req.Header.Set("Referer", fmt.Sprintf("%s/?hosted_dns_zoneid=%s&menu=edit_zone&hosted_dns_editzone", baseURL, zoneID))
 
 	resp, err := c.httpClient.Do(req)
@@ -474,42 +519,59 @@ func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record)
 	}
 	defer resp.Body.Close()
 
-	// Read response body to check for errors
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("read response: %w", err)
 	}
-	bodyStr := string(body)
 
-	// Check for error message in dns_err div as per documentation
-	// <div id="dns_err" onclick="hideThis(this);">Error message</div>
-	errRegex := regexp.MustCompile(`<div id="dns_err"[^>]*>([^<]+)</div>`)
-	if matches := errRegex.FindStringSubmatch(bodyStr); len(matches) > 1 {
-		errMsg := strings.TrimSpace(matches[1])
-		// Unescape HTML entities
-		errMsg = strings.ReplaceAll(errMsg, "&amp;", "&")
-		errMsg = strings.ReplaceAll(errMsg, "&lt;", "<")
-		errMsg = strings.ReplaceAll(errMsg, "&gt;", ">")
-		return "", fmt.Errorf("create record failed: %s", errMsg)
-	}
-
-	// Check if response status is 200 OK
 	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("create record failed: status %d", resp.StatusCode)
 	}
 
-	// Return a placeholder ID since we don't need to parse the response
-	return "new", nil
+	return string(body), nil
 }
 
-// UpdateRecord updates an existing DNS record
+// UpdateRecord updates an existing DNS record.
+// If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) UpdateRecord(ctx context.Context, zoneID string, domainName string, record Record) error {
-
 	if err := c.Login(ctx); err != nil {
 		return err
 	}
 
-	// Build full record name: if record.Name is "os" and domain is "qzz.frii.site", full name is "os.qzz.frii.site"
+	bodyStr, err := c.postUpdateRecord(ctx, zoneID, domainName, record)
+	if err != nil {
+		return err
+	}
+
+	// Session expired — re-login and retry
+	if isLoginForm(bodyStr) {
+		c.mu.Lock()
+		c.resetSession()
+		if err := c.doLogin(ctx); err != nil {
+			c.mu.Unlock()
+			return err
+		}
+		c.mu.Unlock()
+
+		bodyStr, err = c.postUpdateRecord(ctx, zoneID, domainName, record)
+		if err != nil {
+			return err
+		}
+	}
+
+	errRegex := regexp.MustCompile(`<div id="dns_err"[^>]*>([^<]+)</div>`)
+	if matches := errRegex.FindStringSubmatch(bodyStr); len(matches) > 1 {
+		errMsg := strings.TrimSpace(matches[1])
+		errMsg = strings.ReplaceAll(errMsg, "&amp;", "&")
+		errMsg = strings.ReplaceAll(errMsg, "&lt;", "<")
+		errMsg = strings.ReplaceAll(errMsg, "&gt;", ">")
+		return fmt.Errorf("update record failed: %s", errMsg)
+	}
+
+	return nil
+}
+
+func (c *Client) postUpdateRecord(ctx context.Context, zoneID string, domainName string, record Record) (string, error) {
 	fullName := record.Name
 	if fullName != "" && domainName != "" && !strings.HasSuffix(fullName, domainName) {
 		fullName = fullName + "." + domainName
@@ -522,61 +584,78 @@ func (c *Client) UpdateRecord(ctx context.Context, zoneID string, domainName str
 	data.Set("hosted_dns_zoneid", zoneID)
 	data.Set("hosted_dns_recordid", record.ID)
 	data.Set("hosted_dns_editzone", "1")
-	data.Set("Name", fullName)  // Use full domain name as per documentation
+	data.Set("Name", fullName)
 	data.Set("Content", record.Content)
 	data.Set("TTL", strconv.Itoa(record.TTL))
-	data.Set("hosted_dns_editrecord", "Update")  // Use "Update" for edit, not "Submit"
-
+	data.Set("hosted_dns_editrecord", "Update")
 	if record.Priority > 0 {
 		data.Set("Priority", strconv.Itoa(record.Priority))
 	} else {
-		data.Set("Priority", "-")  // Use "-" for no priority as per documentation
+		data.Set("Priority", "-")
 	}
 
 	reqURL := fmt.Sprintf("%s/?hosted_dns_zoneid=%s&menu=edit_zone&hosted_dns_editzone", baseURL, zoneID)
-
 	req, err := http.NewRequestWithContext(ctx, "POST", reqURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return "", fmt.Errorf("create request: %w", err)
 	}
-
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read response: %w", err)
+		return "", fmt.Errorf("read response: %w", err)
+	}
+	return string(body), nil
+}
+
+// DeleteRecord deletes a DNS record.
+// If the response is a login form (session expired), re-logs in and retries once.
+func (c *Client) DeleteRecord(ctx context.Context, zoneID, recordID string) error {
+	if err := c.Login(ctx); err != nil {
+		return err
 	}
 
-	bodyStr := string(body)
+	bodyStr, err := c.postDeleteRecord(ctx, zoneID, recordID)
+	if err != nil {
+		return err
+	}
 
-	// Check for error message in dns_err div as per documentation
+	// Session expired — re-login and retry
+	if isLoginForm(bodyStr) {
+		c.mu.Lock()
+		c.resetSession()
+		if err := c.doLogin(ctx); err != nil {
+			c.mu.Unlock()
+			return err
+		}
+		c.mu.Unlock()
+
+		bodyStr, err = c.postDeleteRecord(ctx, zoneID, recordID)
+		if err != nil {
+			return err
+		}
+	}
+
 	errRegex := regexp.MustCompile(`<div id="dns_err"[^>]*>([^<]+)</div>`)
 	if matches := errRegex.FindStringSubmatch(bodyStr); len(matches) > 1 {
 		errMsg := strings.TrimSpace(matches[1])
-		// Unescape HTML entities
 		errMsg = strings.ReplaceAll(errMsg, "&amp;", "&")
 		errMsg = strings.ReplaceAll(errMsg, "&lt;", "<")
 		errMsg = strings.ReplaceAll(errMsg, "&gt;", ">")
-		return fmt.Errorf("update record failed: %s", errMsg)
+		return fmt.Errorf("delete record failed: %s", errMsg)
 	}
 
 	return nil
 }
 
-// DeleteRecord deletes a DNS record
-func (c *Client) DeleteRecord(ctx context.Context, zoneID, recordID string) error {
-
-	if err := c.Login(ctx); err != nil {
-		return err
-	}
-
+func (c *Client) postDeleteRecord(ctx context.Context, zoneID, recordID string) (string, error) {
 	data := url.Values{}
 	data.Set("hosted_dns_zoneid", zoneID)
 	data.Set("hosted_dns_recordid", recordID)
@@ -585,38 +664,22 @@ func (c *Client) DeleteRecord(ctx context.Context, zoneID, recordID string) erro
 	data.Set("hosted_dns_editzone", "1")
 	data.Set("hosted_dns_delrecord", "1")
 
-
 	req, err := http.NewRequestWithContext(ctx, "POST", indexCGI, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return "", fmt.Errorf("create request: %w", err)
 	}
-
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read response: %w", err)
+		return "", fmt.Errorf("read response: %w", err)
 	}
-
-	bodyStr := string(body)
-
-	// Check for error message in dns_err div as per documentation
-	errRegex := regexp.MustCompile(`<div id="dns_err"[^>]*>([^<]+)</div>`)
-	if matches := errRegex.FindStringSubmatch(bodyStr); len(matches) > 1 {
-		errMsg := strings.TrimSpace(matches[1])
-		// Unescape HTML entities
-		errMsg = strings.ReplaceAll(errMsg, "&amp;", "&")
-		errMsg = strings.ReplaceAll(errMsg, "&lt;", "<")
-		errMsg = strings.ReplaceAll(errMsg, "&gt;", ">")
-		return fmt.Errorf("delete record failed: %s", errMsg)
-	}
-
-	return nil
+	return string(body), nil
 }
