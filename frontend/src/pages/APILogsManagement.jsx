@@ -344,7 +344,7 @@ const APILogsManagement = () => {
                             onClick={handleRefresh}
                             disabled={apiLoading || schedLoading}
                             className="btn btn-secondary"
-                            title={t.logsManagement.refresh}
+                            title={t.common.refresh}
                         >
                             <RefreshCw size={18} className={apiLoading || schedLoading ? "spin" : ""} />
                         </button>
@@ -407,7 +407,7 @@ const APILogsManagement = () => {
                     }}
                 >
                     <Clock size={18} />
-                    {t.logsManagement.schedulerTab} ({schedPagination.total})
+                    {t.logsManagement.schedulerTitle} ({schedPagination.total})
                 </button>
                 <button
                     className={`tab-nav-btn${activeTab === 'login' ? ' active' : ''}`}
@@ -427,7 +427,7 @@ const APILogsManagement = () => {
                     }}
                 >
                     <LogIn size={18} />
-                    {t.logsManagement.loginTab} ({loginPagination.total})
+                    {t.logsManagement.loginTitle} ({loginPagination.total})
                 </button>
             </div>
 
@@ -765,7 +765,7 @@ const APILogsManagement = () => {
                                     cursor: apiPagination.page === 1 ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {t.logsManagement.previous}
+                                {t.common.previousPage}
                             </button>
                             <div style={{ 
                                 display: 'flex', 
@@ -801,7 +801,7 @@ const APILogsManagement = () => {
                                     color: 'var(--text-tertiary)',
                                     fontSize: '0.8125rem'
                                 }}>
-                                    {t.logsManagement.totalItems.replace('{count}', apiPagination.total)}
+                                    {t.common.totalItems.replace('{count}', apiPagination.total)}
                                 </span>
                             </div>
                             <button
@@ -814,7 +814,7 @@ const APILogsManagement = () => {
                                     cursor: apiPagination.page === apiPagination.totalPages ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {t.logsManagement.next}
+                                {t.common.nextPage}
                             </button>
                         </div>
                     )}
@@ -974,7 +974,7 @@ const APILogsManagement = () => {
                                             cursor: schedPagination.page === 1 ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {t.logsManagement.previous}
+                                        {t.common.previousPage}
                                     </button>
                                     <div style={{ 
                                         display: 'flex', 
@@ -1010,7 +1010,7 @@ const APILogsManagement = () => {
                                             color: 'var(--text-tertiary)',
                                             fontSize: '0.8125rem'
                                         }}>
-                                            {t.logsManagement.totalItems.replace('{count}', schedPagination.total)}
+                                            {t.common.totalItems.replace('{count}', schedPagination.total)}
                                         </span>
                                     </div>
                                     <button
@@ -1023,7 +1023,7 @@ const APILogsManagement = () => {
                                             cursor: schedPagination.page === schedPagination.totalPages ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {t.logsManagement.next}
+                                        {t.common.nextPage}
                                     </button>
                                 </div>
                             )}
@@ -1120,7 +1120,7 @@ const APILogsManagement = () => {
                                             cursor: loginPagination.page === 1 ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {t.logsManagement.previous}
+                                        {t.common.previousPage}
                                     </button>
                                     <div style={{ 
                                         display: 'flex', 
@@ -1156,7 +1156,7 @@ const APILogsManagement = () => {
                                             color: 'var(--text-tertiary)',
                                             fontSize: '0.8125rem'
                                         }}>
-                                            {t.logsManagement.totalItems.replace('{count}', loginPagination.total)}
+                                            {t.common.totalItems.replace('{count}', loginPagination.total)}
                                         </span>
                                     </div>
                                     <button
@@ -1169,7 +1169,7 @@ const APILogsManagement = () => {
                                             cursor: loginPagination.page === loginPagination.totalPages ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {t.logsManagement.next}
+                                        {t.common.nextPage}
                                     </button>
                                 </div>
                             )}

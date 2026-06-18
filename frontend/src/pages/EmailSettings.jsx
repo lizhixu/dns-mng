@@ -4,7 +4,7 @@ import { Mail, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 const EmailSettings = () => {
-    const { t } = useLanguage();
+    const { t, languages } = useLanguage();
     const [config, setConfig] = useState({
         smtp_host: '',
         smtp_port: 587,
@@ -213,7 +213,7 @@ const EmailSettings = () => {
                                     className="form-input"
                                     value={config.smtp_password}
                                     onChange={e => setConfig({ ...config, smtp_password: e.target.value })}
-                                    placeholder={t.emailSettings.passwordKeepBlank}
+                                    placeholder={t.common.keepCurrentIfBlank.replace('{field}', t.common.fields.password)}
                                 />
                             </div>
 
@@ -262,8 +262,8 @@ const EmailSettings = () => {
                                     value={config.language || 'zh'}
                                     onChange={e => setConfig({ ...config, language: e.target.value })}
                                 >
-                                    <option value="zh">{t.emailSettings.languageZh}</option>
-                                    <option value="en">{t.emailSettings.languageEn}</option>
+                                    <option value="zh">{languages.zh.name}</option>
+                                    <option value="en">{languages.en.name}</option>
                                 </select>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
                                     {t.emailSettings.languageHint}
@@ -291,7 +291,7 @@ const EmailSettings = () => {
 
                     <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
                         <button type="submit" className="btn btn-primary" disabled={saving}>
-                            {saving ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : t.emailSettings.saveConfig}
+                            {saving ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : t.common.save}
                         </button>
                     </div>
                 </form>

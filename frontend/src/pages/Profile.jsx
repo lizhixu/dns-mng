@@ -19,12 +19,12 @@ export default function Profile() {
         setSuccess('');
 
         if (passwordForm.new_password !== passwordForm.confirm_password) {
-            setError(t.profile.passwords_not_match);
+            setError(t.common.password.mismatch);
             return;
         }
 
         if (passwordForm.new_password.length < 6) {
-            setError(t.profile.password_min_length);
+            setError(t.common.password.tooShort);
             return;
         }
 
@@ -34,7 +34,7 @@ export default function Profile() {
                 old_password: passwordForm.old_password,
                 new_password: passwordForm.new_password
             });
-            setSuccess(t.profile.password_updated);
+            setSuccess(t.common.password.updated);
             setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
         } catch (err) {
             setError(err.message);
@@ -46,7 +46,7 @@ export default function Profile() {
     return (
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                {t.profile.change_password}
+                {t.common.password.change}
             </h1>
 
             {error && (
@@ -79,7 +79,7 @@ export default function Profile() {
 
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                    <label className="form-label">{t.profile.old_password}</label>
+                    <label className="form-label">{t.common.password.current}</label>
                     <input
                         type="password"
                         value={passwordForm.old_password}
@@ -90,7 +90,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                    <label className="form-label">{t.profile.new_password}</label>
+                    <label className="form-label">{t.common.password.new}</label>
                     <input
                         type="password"
                         value={passwordForm.new_password}
@@ -102,7 +102,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                    <label className="form-label">{t.profile.confirm_password}</label>
+                    <label className="form-label">{t.common.password.confirm}</label>
                     <input
                         type="password"
                         value={passwordForm.confirm_password}
@@ -119,7 +119,7 @@ export default function Profile() {
                     className="btn btn-primary"
                     style={{ marginTop: '0.5rem' }}
                 >
-                    {updating ? t.profile.updating : t.profile.update_password}
+                    {updating ? t.common.updating : t.common.password.change}
                 </button>
             </form>
         </div>

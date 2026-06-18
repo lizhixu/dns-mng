@@ -324,7 +324,7 @@ const Domains = () => {
                                                     fontWeight: 'normal'
                                                 }}>
                                                     <Calendar size={12} />
-                                                    {t.allDomains.permanentFree || '永久免费'}
+                                                    {t.allDomains.permanentFree}
                                                 </span>
                                             ) : domain.renewal_date && (() => {
                                                 const expiryInfo = getExpiryInfo(domain.renewal_date);
@@ -372,7 +372,7 @@ const Domains = () => {
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"
-                                        title={t.allDomains.editRenewal || 'Edit Renewal Info'}
+                                        title={t.allDomains.renewalModalTitle}
                                         style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
                                     >
                                         <Edit2 size={14} />
@@ -389,7 +389,7 @@ const Domains = () => {
 
                     {filteredDomains.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                            {searchTerm ? t.domains.noSearchResults : t.domains.noDomains}
+                            {searchTerm ? t.common.noSearchResults : t.domains.noDomains}
                         </div>
                     )}
                 </div>
@@ -399,7 +399,7 @@ const Domains = () => {
             <Modal
                 isOpen={renewalModal.open}
                 onClose={closeRenewalModal}
-                title={t.allDomains.renewalModalTitle || 'Edit Renewal Info'}
+                title={t.allDomains.renewalModalTitle}
             >
                 <form onSubmit={handleRenewalSubmit}>
                     {renewalError && (
@@ -424,7 +424,7 @@ const Domains = () => {
                                 })}
                                 style={{ width: 'auto' }}
                             />
-                            {t.allDomains.permanentFree || '永久免费'}
+                            {t.allDomains.permanentFree}
                         </label>
                         {!renewalForm.is_permanent_free && (
                             <input
@@ -436,7 +436,7 @@ const Domains = () => {
                         )}
                     </div>
                     <div className="form-group">
-                        <label className="form-label">{t.allDomains.renewalUrl || 'Renewal URL'}</label>
+                        <label className="form-label">{t.allDomains.renewalUrl}</label>
                         <input
                             type="url"
                             className="form-input"
@@ -537,7 +537,7 @@ const Domains = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                     <button onClick={handleCancelDelete} className="btn btn-ghost">{t.common.cancel}</button>
-                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.domains.confirmDeleteBtn}</button>
+                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.common.confirmDelete}</button>
                 </div>
             </Modal>
         </div>

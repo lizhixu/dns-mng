@@ -14,10 +14,10 @@ const ConfirmDialog = ({
     danger = true
 }) => {
     const { t } = useLanguage();
-    const resolvedTitle = title ?? t.confirmDialog.deleteTitle;
-    const resolvedMessage = message ?? t.confirmDialog.deleteMessage;
-    const resolvedConfirmText = confirmText ?? t.confirmDialog.delete;
-    const resolvedCancelText = cancelText ?? t.confirmDialog.cancel;
+    const resolvedTitle = title ?? t.common.confirmDelete;
+    const resolvedMessage = message ?? t.common.confirmDeleteMessage;
+    const resolvedConfirmText = confirmText ?? t.common.delete;
+    const resolvedCancelText = cancelText ?? t.common.cancel;
     const dialogRef = useRef(null);
 
     useEffect(() => {

@@ -252,7 +252,7 @@ const AllDomains = () => {
                             {t.allDomains.subtitle}
                             {!loading && domains.length > 0 && (
                                 <span style={{ marginLeft: '0.5rem' }}>
-                                    • {t.allDomains.totalDomains || 'Total'}: {domains.length}
+                                    • {t.allDomains.totalDomains}: {domains.length}
                                 </span>
                             )}
                             {cacheTimestamp && (
@@ -349,7 +349,7 @@ const AllDomains = () => {
                                                         fontWeight: 'normal'
                                                     }}>
                                                         <Calendar size={12} />
-                                                        {t.allDomains.permanentFree || '永久免费'}
+                                                        {t.allDomains.permanentFree}
                                                     </span>
                                                 </>
                                             ) : domain.renewal_date && (() => {
@@ -399,7 +399,7 @@ const AllDomains = () => {
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"
-                                        title={t.allDomains.editRenewal || 'Edit Renewal Info'}
+                                        title={t.allDomains.renewalModalTitle}
                                         style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
                                     >
                                         <Edit2 size={14} />
@@ -421,7 +421,7 @@ const AllDomains = () => {
 
                     {filteredDomains.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                            {searchTerm ? t.allDomains.noSearchResults : t.allDomains.noDomains}
+                            {searchTerm ? t.common.noSearchResults : t.allDomains.noDomains}
                         </div>
                     )}
                 </div>
@@ -431,7 +431,7 @@ const AllDomains = () => {
             <Modal
                 isOpen={renewalModal.open}
                 onClose={closeRenewalModal}
-                title={t.allDomains.renewalModalTitle || 'Edit Renewal Info'}
+                title={t.allDomains.renewalModalTitle}
             >
                 <form onSubmit={handleRenewalSubmit}>
                     {renewalError && (
@@ -456,7 +456,7 @@ const AllDomains = () => {
                                 })}
                                 style={{ width: 'auto' }}
                             />
-                            {t.allDomains.permanentFree || '永久免费'}
+                            {t.allDomains.permanentFree}
                         </label>
                         {!renewalForm.is_permanent_free && (
                             <input
@@ -468,7 +468,7 @@ const AllDomains = () => {
                         )}
                     </div>
                     <div className="form-group">
-                        <label className="form-label">{t.allDomains.renewalUrl || 'Renewal URL'}</label>
+                        <label className="form-label">{t.allDomains.renewalUrl}</label>
                         <input
                             type="url"
                             className="form-input"
@@ -579,7 +579,7 @@ const AllDomains = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                     <button onClick={handleCancelDelete} className="btn btn-ghost">{t.common.cancel}</button>
-                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.domains.confirmDeleteBtn}</button>
+                    <button onClick={handleConfirmDelete} className="btn btn-primary">{t.common.confirmDelete}</button>
                 </div>
             </Modal>
         </div>

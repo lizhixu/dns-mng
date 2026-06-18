@@ -259,7 +259,7 @@ const Accounts = () => {
                     <div className="page-actions-bar" style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={() => openDdnsTokenModal()} className="btn btn-secondary">
                             <Key size={16} />
-                            {!isMobile && t.accounts.manageDDNSToken}
+                            {!isMobile && t.accounts.ddns.label}
                             {isMobile && <span style={{ fontSize: '13px' }}>DDNS</span>}
                         </button>
                         <button onClick={openCreateModal} className="btn btn-primary">
@@ -525,7 +525,7 @@ const Accounts = () => {
                         </div>
                         {modalMode === 'edit' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.apiKeyKeepBlank}
+                                {t.common.keepCurrentIfBlank.replace('{field}', t.common.fields.apiKey)}
                             </p>
                         )}
                         {formData.provider_type === 'tencentcloud' && (
@@ -550,32 +550,32 @@ const Accounts = () => {
                         )}
                         {formData.provider_type === 'ndjp' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.ndjpFormat || 'Bearer Token from NDJP NET dashboard'}
+                                {t.accounts.ndjpFormat}
                             </p>
                         )}
                         {formData.provider_type === 'desec' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.desecFormat || 'Token from deSEC dashboard'}
+                                {t.accounts.desecFormat}
                             </p>
                         )}
                         {formData.provider_type === 'dnshe' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.dnsheFormat || 'Format: API Key,API Secret (comma separated)'}
+                                {t.accounts.dnsheFormat}
                             </p>
                         )}
                         {formData.provider_type === 'ipv64' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.ipv64Format || 'Format: API Token (from IPv64.net Dashboard → API Settings)'}
+                                {t.accounts.ipv64Format}
                             </p>
                         )}
                         {formData.provider_type === 'hurricane' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.hurricaneFormat || 'Format: username,password (comma separated)'}
+                                {t.accounts.hurricaneFormat}
                             </p>
                         )}
                         {formData.provider_type === 'vps8' && (
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', margin: 0 }}>
-                                {t.accounts.vps8Format || 'Format: API Key (from VPS8 Client Area → Profile → API Key)'}
+                                {t.accounts.vps8Format}
                             </p>
                         )}
                     </div>
@@ -588,7 +588,7 @@ const Accounts = () => {
                             {submitting ? (
                                 <div className="spinner"></div>
                             ) : (
-                                modalMode === 'create' ? t.accounts.linkAccount : t.accounts.saveChanges
+                                modalMode === 'create' ? t.accounts.linkAccount : t.common.save
                             )}
                         </button>
                     </div>
@@ -604,7 +604,7 @@ const Accounts = () => {
                 message={
                     deletingAccount
                         ? t.accounts.deleteAccountMessage.replace('{name}', deletingAccount.name)
-                        : t.accounts.deleteAccountMessageDefault
+                        : t.common.confirmDeleteMessage
                 }
                 confirmText={t.common.delete}
                 cancelText={t.common.cancel}
@@ -616,11 +616,11 @@ const Accounts = () => {
             <Modal
                 isOpen={ddnsTokenModalOpen}
                 onClose={() => setDdnsTokenModalOpen(false)}
-                title={t.accounts.ddnsTokenTitle}
+                title={t.accounts.ddns.title}
             >
                 <div style={{ marginBottom: '16px' }}>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-                        {t.accounts.ddnsTokenSubtitle}
+                        {t.accounts.ddns.subtitle}
                     </p>
                 </div>
 
@@ -633,7 +633,7 @@ const Accounts = () => {
                                 <>
                                     <div style={{ marginBottom: '12px', padding: '10px 12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                            {t.accounts.ddnsTokenUsageExample}
+                                            {t.accounts.ddns.usageExample}
                                         </div>
                                         <code style={{ fontSize: '11px', color: '#3b82f6', wordBreak: 'break-all' }}>
                                             {`${getBackendBaseURL()}/api/ddns/update?domains=example.com&token=${ddnsToken.token.token.substring(0, 8)}...`}
@@ -641,11 +641,11 @@ const Accounts = () => {
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                                         <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                                            {t.accounts.ddnsTokenName}
+                                            {t.accounts.ddns.label}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <span className={`badge ${ddnsToken.token.enabled ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: '10px' }}>
-                                                {ddnsToken.token.enabled ? t.accounts.ddnsTokenEnabled : t.accounts.ddnsTokenDisabled}
+                                                {ddnsToken.token.enabled ? t.accounts.ddns.enabled : t.accounts.ddns.disabled}
                                             </span>
                                         </div>
                                     </div>
@@ -695,23 +695,23 @@ const Accounts = () => {
                                             onClick={() => copyDdnsToken(ddnsToken.token.token)}
                                             className="btn btn-ghost"
                                             style={{ fontSize: '11px', padding: '4px 8px' }}
-                                            title={t.accounts.ddnsTokenCopy}
+                                            title={t.accounts.ddns.copy}
                                         >
-                                            <Copy size={12} /> {t.accounts.ddnsTokenCopy}
+                                            <Copy size={12} /> {t.accounts.ddns.copy}
                                         </button>
                                         <button
                                             onClick={() => copyDdnsToken(`${getBackendBaseURL()}/api/ddns/update?domains=<domain>&token=${ddnsToken.token.token}`)}
                                             className="btn btn-ghost"
                                             style={{ fontSize: '11px', padding: '4px 8px' }}
-                                            title={t.accounts.ddnsTokenCopyUrl}
+                                            title={t.accounts.ddns.copyUrl}
                                         >
-                                            <Copy size={12} /> {t.accounts.ddnsTokenCopyUrl}
+                                            <Copy size={12} /> {t.accounts.ddns.copyUrl}
                                         </button>
                                     </div>
 
                                     {ddnsToken.token.last_used_at && (
                                         <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
-                                            {t.accounts.ddnsTokenLastUsed}: {new Date(ddnsToken.token.last_used_at).toLocaleString()} | {t.accounts.ddnsTokenLastIP}: {ddnsToken.token.last_ip || '-'}
+                                            {t.accounts.ddns.lastUsed}: {new Date(ddnsToken.token.last_used_at).toLocaleString()} | {t.accounts.ddns.lastIP}: {ddnsToken.token.last_ip || '-'}
                                         </div>
                                     )}
 
@@ -735,14 +735,14 @@ const Accounts = () => {
                             ) : (
                                 <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-tertiary)' }}>
                                     <Key size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                                    <p style={{ margin: '0 0 8px 0' }}>{t.accounts.ddnsTokenNoTokens}</p>
-                                    <p style={{ fontSize: '13px', margin: '0 0 16px 0' }}>{t.accounts.ddnsTokenCreateHint}</p>
+                                    <p style={{ margin: '0 0 8px 0' }}>{t.accounts.ddns.noTokens}</p>
+                                    <p style={{ fontSize: '13px', margin: '0 0 16px 0' }}>{t.accounts.ddns.createHint}</p>
                                     <button
                                         onClick={openDdnsTokenCreate}
                                         className="btn btn-secondary"
                                         style={{ fontSize: '13px', padding: '6px 12px' }}
                                     >
-                                        <Key size={14} /> {t.accounts.ddnsTokenGenerate}
+                                        <Key size={14} /> {t.accounts.ddns.generate}
                                     </button>
                                 </div>
                             )}
@@ -755,7 +755,7 @@ const Accounts = () => {
             <Modal
                 isOpen={ddnsTokenEditModal}
                 onClose={() => setDdnsTokenEditModal(false)}
-                title={ddnsTokenForm.token ? t.common.edit : t.accounts.ddnsTokenGenerate}
+                title={ddnsTokenForm.token ? t.common.edit : t.accounts.ddns.generate}
             >
                 <form onSubmit={handleDdnsTokenSubmit}>
                     {ddnsTokenFormError && (
@@ -773,12 +773,12 @@ const Accounts = () => {
                     )}
 
                     <div className="form-group">
-                        <label className="form-label">{t.accounts.ddnsTokenValue}</label>
+                        <label className="form-label">{t.accounts.ddns.value}</label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showDdnsTokenValue ? "text" : "password"}
                                 className="form-input"
-                                placeholder={t.accounts.ddnsTokenCustom}
+                                placeholder={t.accounts.ddns.custom}
                                 value={ddnsTokenForm.token}
                                 onChange={e => setDdnsTokenForm({ ...ddnsTokenForm, token: e.target.value })}
                                 style={{ paddingRight: '40px' }}
@@ -813,7 +813,7 @@ const Accounts = () => {
                                 checked={ddnsTokenForm.enabled}
                                 onChange={e => setDdnsTokenForm({ ...ddnsTokenForm, enabled: e.target.checked })}
                             />
-                            <span style={{ fontSize: '14px' }}>{t.accounts.ddnsTokenStatus}</span>
+                            <span style={{ fontSize: '14px' }}>{t.common.status}</span>
                         </label>
                     </div>
 
@@ -825,7 +825,7 @@ const Accounts = () => {
                             {ddnsTokenSubmitting ? (
                                 <div className="spinner"></div>
                             ) : (
-                                t.accounts.saveChanges
+                                t.common.save
                             )}
                         </button>
                     </div>
@@ -837,8 +837,8 @@ const Accounts = () => {
                 isOpen={ddnsTokenDeleteConfirm}
                 onClose={() => setDdnsTokenDeleteConfirm(false)}
                 onConfirm={handleDdnsTokenDelete}
-                title={t.accounts.ddnsTokenConfirmDelete}
-                message={t.accounts.ddnsTokenConfirmDeleteMsg}
+                title={t.accounts.ddns.confirmDelete}
+                message={t.accounts.ddns.confirmDeleteMsg}
                 confirmText={t.common.delete}
                 cancelText={t.common.cancel}
                 loading={ddnsTokenDeleteLoading}

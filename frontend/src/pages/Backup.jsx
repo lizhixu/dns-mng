@@ -197,7 +197,7 @@ export default function Backup() {
                     >
                         <Upload size={16} />
                         {importFile
-                            ? <>{t.backup.fileSelected}: <strong>{importFile.name}</strong></>
+                            ? <>{t.common.selected}: <strong>{importFile.name}</strong></>
                             : t.backup.noFileSelected
                         }
                     </button>
@@ -282,14 +282,14 @@ export default function Backup() {
                                     <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.domain_caches_skipped}</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '0.375rem 0' }}>{t.backup.resultDDNSToken}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_imported ? t.backup.yes : t.backup.no}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_skipped ? t.backup.yes : t.backup.no}</td>
+                                    <td style={{ padding: '0.375rem 0' }}>{t.accounts.ddns.label}</td>
+                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_imported ? t.common.yes : t.common.no}</td>
+                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_skipped ? t.common.yes : t.common.no}</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: '0.375rem 0' }}>{t.backup.resultEmailConfig}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_imported ? t.backup.yes : t.backup.no}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_skipped ? t.backup.yes : t.backup.no}</td>
+                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_imported ? t.common.yes : t.common.no}</td>
+                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_skipped ? t.common.yes : t.common.no}</td>
                                 </tr>
                             </tbody>
                         </table>

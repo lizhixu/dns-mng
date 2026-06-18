@@ -90,12 +90,12 @@ const Layout = () => {
         setSuccess('');
 
         if (passwordForm.new_password !== passwordForm.confirm_password) {
-            setError(t.layout.passwordMismatch);
+            setError(t.common.password.mismatch);
             return;
         }
 
         if (passwordForm.new_password.length < 6) {
-            setError(t.layout.passwordTooShort);
+            setError(t.common.password.tooShort);
             return;
         }
 
@@ -105,7 +105,7 @@ const Layout = () => {
                 old_password: passwordForm.old_password,
                 new_password: passwordForm.new_password
             });
-            setSuccess(t.layout.passwordUpdated);
+            setSuccess(t.common.password.updated);
             setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
             setTimeout(() => resetAndCloseSettings(), 1500);
         } catch (err) {
@@ -128,10 +128,10 @@ const Layout = () => {
 
     const navigationItems = useMemo(() => ([
         { path: '/domains', icon: Globe, label: t.layout.domains },
-        { path: '/accounts', icon: Server, label: t.layout.accounts },
-        { path: '/logs', icon: FileText, label: t.layout.logsManagement || t.layout.logs },
+        { path: '/accounts', icon: Server, label: t.accounts.title },
+        { path: '/logs', icon: FileText, label: t.layout.logsManagement },
         { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications },
-        { path: '/backup', icon: DatabaseBackup, label: t.layout.backup }
+        { path: '/backup', icon: DatabaseBackup, label: t.backup.title }
     ]), [t]);
 
     const sidebar = (
@@ -150,7 +150,7 @@ const Layout = () => {
                         type="button"
                         onClick={() => setSidebarOpen(false)}
                         className="mobile-sidebar-close"
-                        aria-label={t.common.close || 'Close'}
+                        aria-label={t.common.close}
                     >
                         <X size={18} />
                     </button>
@@ -430,7 +430,7 @@ const Layout = () => {
 
                                             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.currentPassword}</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.current}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.old_password}
@@ -442,7 +442,7 @@ const Layout = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.newPassword}</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.new}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.new_password}
@@ -455,7 +455,7 @@ const Layout = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.layout.confirmPassword}</label>
+                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.confirm}</label>
                                                     <input
                                                         type="password"
                                                         value={passwordForm.confirm_password}
@@ -473,7 +473,7 @@ const Layout = () => {
                                                     className="btn btn-primary"
                                                     style={{ marginTop: '0.5rem', height: '36px' }}
                                                 >
-                                                    {updating ? t.layout.updating : t.layout.changePassword}
+                                                    {updating ? t.common.updating : t.common.password.change}
                                                 </button>
                                             </form>
                                         </div>

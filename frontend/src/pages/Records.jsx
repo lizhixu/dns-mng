@@ -225,7 +225,7 @@ const Records = () => {
 
             // Validate node name
             if (!validateNodeName(sanitizedNodeName)) {
-                setFormError(t.records.invalidNodeName || 'Invalid node name. Node name must contain only letters, numbers, and hyphens, and cannot start or end with a hyphen.');
+                setFormError(t.records.invalidNodeName);
                 setSubmitting(false);
                 return;
             }
@@ -337,7 +337,7 @@ const Records = () => {
     const getBackText = () => {
         const from = location.state?.from;
         if (from === '/domains') {
-            return t.records.backToAllDomains || t.records.backToDomains;
+            return t.records.backToAllDomains;
         }
         return t.records.backToDomains;
     };
@@ -381,7 +381,7 @@ const Records = () => {
                     <div className="record-domain-info-layout" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                         <div className="record-domain-main" style={{ flex: 1, minWidth: '200px' }}>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                                {t.records.domainName || 'Domain'}
+                                {t.records.domainName}
                             </div>
                             <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                                 {domain.unicode_name || domain.name}
@@ -525,8 +525,8 @@ const Records = () => {
                                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.type}</th>
                                     <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.nodeName}</th>
-                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.content}</th>
-                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.state}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.contentLabels.default}</th>
+                                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.common.status}</th>
                                     <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t.records.updatedAt}</th>
                                     <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>{t.common.actions}</th>
                                 </tr>
@@ -711,7 +711,7 @@ const Records = () => {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
                         <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-ghost">{t.common.cancel}</button>
                         <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : (modalMode === 'create' ? t.records.addRecord : t.accounts.saveChanges)}
+                            {submitting ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : (modalMode === 'create' ? t.records.addRecord : t.common.save)}
                         </button>
                     </div>
                 </form>
@@ -722,13 +722,13 @@ const Records = () => {
                 isOpen={showDeleteConfirm}
                 onClose={cancelDelete}
                 onConfirm={confirmDelete}
-                title={t.records.deleteRecordTitle}
+                title={t.common.confirmDelete}
                 message={
                     deletingRecord
                         ? t.records.deleteRecordMessage
                             .replace('{name}', deletingRecord.node_name || '@')
                             .replace('{type}', deletingRecord.record_type)
-                        : t.records.deleteRecordMessageDefault
+                        : t.common.confirmDeleteMessage
                 }
                 confirmText={t.common.delete}
                 cancelText={t.common.cancel}
@@ -747,7 +747,7 @@ const Records = () => {
                         onClick={() => setShowCheckResult(false)}
                         className="btn btn-primary"
                     >
-                        {t.records.close}
+                        {t.common.close}
                     </button>
                 }
             >
@@ -797,7 +797,7 @@ const Records = () => {
                         }}>
                             <div>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                                    {t.records.domain}
+                                    {t.records.domainName}
                                 </label>
                                 <div style={{
                                     padding: '0.75rem',

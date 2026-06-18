@@ -19,16 +19,16 @@ const Login = () => {
 
     // 实时验证
     const validateUsername = (value) => {
-        if (!value) return t.login.usernameRequired || '请输入用户名';
-        if (value.length < 3) return t.login.usernameTooShort || '用户名至少需要3个字符';
-        if (value.length > 50) return t.login.usernameTooLong || '用户名不能超过50个字符';
-        if (!/^[a-zA-Z0-9_-]+$/.test(value)) return t.login.usernameInvalid || '用户名只能包含字母、数字、下划线和连字符';
+        if (!value) return t.login.usernamePlaceholder;
+        if (value.length < 3) return t.login.usernameTooShort;
+        if (value.length > 50) return t.login.usernameTooLong;
+        if (!/^[a-zA-Z0-9_-]+$/.test(value)) return t.login.usernameInvalid;
         return '';
     };
 
     const validatePassword = (value) => {
-        if (!value) return t.login.passwordRequired || '请输入密码';
-        if (value.length < 6) return t.login.passwordTooShort || '密码至少需要6个字符';
+        if (!value) return t.login.passwordPlaceholder;
+        if (value.length < 6) return t.login.passwordTooShort;
         return '';
     };
 
@@ -257,7 +257,7 @@ const Login = () => {
                         className="btn btn-primary login-submit-btn"
                         disabled={loading || !isFormValid}
                     >
-                        {loading ? <div className="spinner"></div> : t.login.loginBtn}
+                        {loading ? <div className="spinner"></div> : t.login.title}
                     </button>
                 </form>
             </div>
