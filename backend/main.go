@@ -118,6 +118,9 @@ func main() {
 		// API call logs
 		protected.GET("/api-logs", logHandler.GetAPICallLogs)
 
+		// Login logs
+		protected.GET("/login-logs", logHandler.GetLoginLogs)
+
 		// Scheduler logs
 		protected.GET("/scheduler-logs", schedulerLogHandler.GetSchedulerLogs)
 		protected.GET("/scheduler-logs/:taskName", schedulerLogHandler.GetSchedulerLogsByTask)

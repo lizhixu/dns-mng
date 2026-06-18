@@ -80,6 +80,14 @@ export const api = {
         return handleResponse(response);
     },
 
+    // Login Logs
+    getLoginLogs: async (page = 1, pageSize = 20) => {
+        const response = await fetch(`${API_BASE}/login-logs?page=${page}&page_size=${pageSize}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Scheduler Logs
     getSchedulerLogs: async (page = 1, pageSize = 20) => {
         const response = await fetch(`${API_BASE}/scheduler-logs?page=${page}&page_size=${pageSize}`, {

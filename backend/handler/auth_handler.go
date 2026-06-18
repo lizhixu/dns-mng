@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"dns-mng/models"
@@ -44,18 +45,51 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	ip := c.ClientIP()
+	ua := c.Request.UserAgent()
+	device := service.ParseDevice(ua)
+
 	resp, err := h.userService.Login(&req)
 	if err != nil {
+		// Record failed login
+		loginLog := &models.LoginLog{
+			Username:  req.Username,
+			IPAddress: ip,
+			UserAgent: ua,
+			Device:    device,
+			Status:    "failed",
+			Message:   err.Error(),
+		}
+		go func() {
+			if e := h.logService.CreateLoginLog(loginLog); e != nil {
+				log.Printf("Failed to create login log for %s: %v", req.Username, e)
+			}
+		}()
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Record successful login
+	loginLog := &models.LoginLog{
+		UserID:    resp.User.ID,
+		Username:  req.Username,
+		IPAddress: ip,
+		UserAgent: ua,
+		Device:    device,
+		Status:    "success",
+	}
+	go func() {
+		if e := h.logService.CreateLoginLog(loginLog); e != nil {
+			log.Printf("Failed to create login log for %s: %v", req.Username, e)
+		}
+	}()
 
 	c.JSON(http.StatusOK, resp)
 }
 
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	
+
 	user, err := h.userService.GetUser(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user profile"})
@@ -67,7 +101,7 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 
 func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	
+
 	var req models.UpdatePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

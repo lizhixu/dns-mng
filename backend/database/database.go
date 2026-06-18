@@ -203,6 +203,22 @@ func createTables() {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_ddns_tokens_token ON ddns_tokens(token)`,
+
+		// Login logs table
+		`CREATE TABLE IF NOT EXISTS login_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL DEFAULT 0,
+			username TEXT NOT NULL,
+			ip_address TEXT,
+			user_agent TEXT,
+			device TEXT,
+			status TEXT NOT NULL,
+			message TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_login_logs_user_id ON login_logs(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_login_logs_created_at ON login_logs(created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_login_logs_username ON login_logs(username)`,
 	}
 
 	for _, q := range queries {

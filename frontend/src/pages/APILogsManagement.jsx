@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
-import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Play } from 'lucide-react';
+import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Play, LogIn } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 let initialAPILogsRequest = null;
 let initialSchedulerLogsRequest = null;
+let initialLoginLogsRequest = null;
 const pageSize = 20;
 
 const clearInitialRequestSoon = (clearRequest) => {
@@ -43,35 +44,60 @@ const getSchedulerLogsData = (page, useInitialRequest) => {
     return api.getSchedulerLogs(page, 20);
 };
 
+const getLoginLogsData = (page, useInitialRequest) => {
+    if (useInitialRequest && page === 1) {
+        initialLoginLogsRequest ||= api.getLoginLogs(page, 20).catch(error => {
+            initialLoginLogsRequest = null;
+            throw error;
+        }).finally(() => {
+            clearInitialRequestSoon(() => {
+                initialLoginLogsRequest = null;
+            });
+        });
+        return initialLoginLogsRequest;
+    }
+
+    return api.getLoginLogs(page, 20);
+};
+
 const APILogsManagement = () => {
     const { t, language } = useLanguage();
     const [apiLogs, setApiLogs] = useState([]);
     const [schedulerLogs, setSchedulerLogs] = useState([]);
+    const [loginLogs, setLoginLogs] = useState([]);
     const [apiPagination, setApiPagination] = useState({ total: 0, page: 1, totalPages: 1 });
     const [schedPagination, setSchedPagination] = useState({ total: 0, page: 1, totalPages: 1 });
+    const [loginPagination, setLoginPagination] = useState({ total: 0, page: 1, totalPages: 1 });
     const [apiLoading, setApiLoading] = useState(false);
     const [schedLoading, setSchedLoading] = useState(false);
+    const [loginLoading, setLoginLoading] = useState(false);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState('api'); // 'api' or 'scheduler'
+    const [activeTab, setActiveTab] = useState('api'); // 'api', 'scheduler', or 'login'
     const [expandedLogs, setExpandedLogs] = useState(new Set());
     const [triggering, setTriggering] = useState(false);
     const topRef = useRef(null);
     const initialLoadRef = useRef(false);
     const apiPageEffectReadyRef = useRef(false);
     const schedPageEffectReadyRef = useRef(false);
+    const loginPageEffectReadyRef = useRef(false);
 
     const pageTitle = activeTab === 'api'
-        ? (language === 'zh' ? 'API调用记录' : 'API Call Logs')
-        : (language === 'zh' ? '定时任务日志' : 'Scheduler Logs');
+        ? t.logsManagement.title
+        : activeTab === 'scheduler'
+        ? t.logsManagement.schedulerTitle
+        : t.logsManagement.loginTitle;
     const pageSubtitle = activeTab === 'api'
-        ? (language === 'zh' ? '查看所有API请求和响应的完整记录' : 'View complete records of all API requests and responses')
-        : (language === 'zh' ? '查看定时任务执行状态和检查结果' : 'View scheduler task status and check results');
+        ? t.logsManagement.subtitle
+        : activeTab === 'scheduler'
+        ? t.logsManagement.schedulerSubtitle
+        : t.logsManagement.loginSubtitle;
 
     useEffect(() => {
         if (!initialLoadRef.current) {
             initialLoadRef.current = true;
             loadAPILogs(1, { useInitialRequest: true });
             loadSchedulerLogs(1, { useInitialRequest: true });
+            loadLoginLogs(1, { useInitialRequest: true });
         }
     }, []);
 
@@ -90,10 +116,17 @@ const APILogsManagement = () => {
     }, [schedPagination.page]);
 
     useEffect(() => {
+        if (!loginPageEffectReadyRef.current) {
+            return;
+        }
+        loadLoginLogs(loginPagination.page);
+    }, [loginPagination.page]);
+
+    useEffect(() => {
         if (topRef.current) {
             topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-    }, [apiPagination.page, schedPagination.page]);
+    }, [apiPagination.page, schedPagination.page, loginPagination.page]);
 
     const loadAPILogs = async (page = apiPagination.page, options = {}) => {
         setApiLoading(true);
@@ -145,6 +178,30 @@ const APILogsManagement = () => {
         }
     };
 
+    const loadLoginLogs = async (page = loginPagination.page, options = {}) => {
+        setLoginLoading(true);
+        try {
+            const data = await getLoginLogsData(page, options.useInitialRequest);
+            setLoginLogs(data.logs || []);
+            setLoginPagination(prev => ({
+                ...prev,
+                page: data.page || page,
+                total: data.total || 0,
+                totalPages: data.total_pages || 1
+            }));    
+            setError('');
+            
+            if (options.useInitialRequest && !loginPageEffectReadyRef.current) {
+                loginPageEffectReadyRef.current = true;
+            }
+        } catch (err) {
+            console.error('Failed to load login logs:', err);
+            setError(err.message);
+        } finally {
+            setLoginLoading(false);
+        }
+    };
+
     const handleTriggerCheck = async () => {
         setTriggering(true);
         try {
@@ -166,11 +223,17 @@ const APILogsManagement = () => {
             } else {
                 setApiPagination(prev => ({ ...prev, page: 1 }));
             }
-        } else {
+        } else if (activeTab === 'scheduler') {
             if (schedPagination.page === 1) {
                 await loadSchedulerLogs(1);
             } else {
                 setSchedPagination(prev => ({ ...prev, page: 1 }));
+            }
+        } else {
+            if (loginPagination.page === 1) {
+                await loadLoginLogs(1);
+            } else {
+                setLoginPagination(prev => ({ ...prev, page: 1 }));
             }
         }
     };
@@ -253,9 +316,13 @@ const APILogsManagement = () => {
             if (newPage >= 1 && newPage <= apiPagination.totalPages) {
                 setApiPagination(prev => ({ ...prev, page: newPage }));
             }
-        } else {
+        } else if (activeTab === 'scheduler') {
             if (newPage >= 1 && newPage <= schedPagination.totalPages) {
                 setSchedPagination(prev => ({ ...prev, page: newPage }));
+            }
+        } else {
+            if (newPage >= 1 && newPage <= loginPagination.totalPages) {
+                setLoginPagination(prev => ({ ...prev, page: newPage }));
             }
         }
     };
@@ -277,7 +344,7 @@ const APILogsManagement = () => {
                             onClick={handleRefresh}
                             disabled={apiLoading || schedLoading}
                             className="btn btn-secondary"
-                            title={language === 'zh' ? '刷新' : 'Refresh'}
+                            title={t.logsManagement.refresh}
                         >
                             <RefreshCw size={18} className={apiLoading || schedLoading ? "spin" : ""} />
                         </button>
@@ -286,7 +353,7 @@ const APILogsManagement = () => {
                                 onClick={handleTriggerCheck}
                                 disabled={triggering}
                                 className="btn btn-primary"
-                                title={t.logsManagement?.triggerCheck || (language === 'zh' ? '手动执行检查' : 'Run Check')}
+                                title={t.logsManagement.triggerCheck}
                             >
                                 <Play size={18} />
                             </button>
@@ -320,7 +387,7 @@ const APILogsManagement = () => {
                     }}
                 >
                     <Activity size={18} />
-                    {t.logsManagement?.operationTab || (language === 'zh' ? 'API调用' : 'API Calls')} ({apiPagination.total})
+                    {t.logsManagement.operationTab} ({apiPagination.total})
                 </button>
                 <button
                     className={`tab-nav-btn${activeTab === 'scheduler' ? ' active' : ''}`}
@@ -340,7 +407,27 @@ const APILogsManagement = () => {
                     }}
                 >
                     <Clock size={18} />
-                    {t.logsManagement?.schedulerTab || (language === 'zh' ? '定时任务日志' : 'Scheduler Logs')} ({schedPagination.total})
+                    {t.logsManagement.schedulerTab} ({schedPagination.total})
+                </button>
+                <button
+                    className={`tab-nav-btn${activeTab === 'login' ? ' active' : ''}`}
+                    onClick={() => setActiveTab('login')}
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: activeTab === 'login' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                        color: activeTab === 'login' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'login' ? '600' : '400',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}
+                >
+                    <LogIn size={18} />
+                    {t.logsManagement.loginTab} ({loginPagination.total})
                 </button>
             </div>
 
@@ -356,7 +443,7 @@ const APILogsManagement = () => {
                 </div>
             )}
 
-            {(activeTab === 'api' ? apiLoading : schedLoading) ? (
+            {((activeTab === 'api' && apiLoading) || (activeTab === 'scheduler' && schedLoading) || (activeTab === 'login' && loginLoading)) ? (
                 <div style={{ textAlign: 'center', padding: '4rem' }}>
                     <div className="spinner" style={{ margin: '0 auto' }}></div>
                 </div>
@@ -531,7 +618,7 @@ const APILogsManagement = () => {
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
-                                                        {language === 'zh' ? '请求头' : 'Request Headers'}
+                                                        {t.logsManagement.requestHeaders}
                                                     </div>
                                                     <pre style={{ 
                                                         fontSize: '0.75rem',
@@ -564,7 +651,7 @@ const APILogsManagement = () => {
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
-                                                        {language === 'zh' ? '请求体' : 'Request Body'}
+                                                        {t.logsManagement.requestBody}
                                                     </div>
                                                     <pre style={{ 
                                                         fontSize: '0.75rem',
@@ -597,7 +684,7 @@ const APILogsManagement = () => {
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
-                                                        {language === 'zh' ? '响应体' : 'Response Body'}
+                                                        {t.logsManagement.responseBody}
                                                     </div>
                                                     <pre style={{ 
                                                         fontSize: '0.75rem',
@@ -652,7 +739,7 @@ const APILogsManagement = () => {
                         })}
                         {apiLogs.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                                {language === 'zh' ? '暂无API调用记录' : 'No API call logs'}
+                                {t.logsManagement.noOperationLogs}
                             </div>
                         )}
                     </div>
@@ -678,7 +765,7 @@ const APILogsManagement = () => {
                                     cursor: apiPagination.page === 1 ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {language === 'zh' ? '上一页' : 'Previous'}
+                                {t.logsManagement.previous}
                             </button>
                             <div style={{ 
                                 display: 'flex', 
@@ -690,7 +777,7 @@ const APILogsManagement = () => {
                                 fontSize: '0.875rem'
                             }}>
                                 <span style={{ color: 'var(--text-secondary)' }}>
-                                    {language === 'zh' ? '第' : 'Page'}
+                                    {t.logsManagement.page}
                                 </span>
                                 <span style={{ 
                                     color: 'var(--accent-primary)', 
@@ -705,7 +792,7 @@ const APILogsManagement = () => {
                                     {apiPagination.totalPages}
                                 </span>
                                 <span style={{ color: 'var(--text-secondary)' }}>
-                                    {language === 'zh' ? '页' : ''}
+                                    {t.logsManagement.pages}
                                 </span>
                                 <span style={{ 
                                     marginLeft: '0.5rem', 
@@ -714,7 +801,7 @@ const APILogsManagement = () => {
                                     color: 'var(--text-tertiary)',
                                     fontSize: '0.8125rem'
                                 }}>
-                                    {language === 'zh' ? `共 ${apiPagination.total} 条` : `Total ${apiPagination.total}`}
+                                    {t.logsManagement.totalItems.replace('{count}', apiPagination.total)}
                                 </span>
                             </div>
                             <button
@@ -727,7 +814,7 @@ const APILogsManagement = () => {
                                     cursor: apiPagination.page === apiPagination.totalPages ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {language === 'zh' ? '下一页' : 'Next'}
+                                {t.logsManagement.next}
                             </button>
                         </div>
                     )}
@@ -800,15 +887,15 @@ const APILogsManagement = () => {
                                                         }}>
                                                             {details.total_domains !== undefined && (
                                                                 <div style={{ marginBottom: '0.25rem' }}>
-                                                                    📊 {t.logsManagement?.schedulerDetails?.totalDomains || (language === 'zh' ? '总计' : 'Total')}: {details.total_domains} {t.logsManagement?.schedulerDetails?.domainsUnit || (language === 'zh' ? '个域名' : 'domains')}
+                                                                    📊 {t.logsManagement.schedulerDetails.totalDomains}: {details.total_domains} {t.logsManagement.schedulerDetails.domainsUnit}
                                                                     {details.success_count !== undefined && (
                                                                         <span style={{ marginLeft: '1rem', color: '#10b981' }}>
-                                                                            ✓ {t.logsManagement?.schedulerDetails?.success || (language === 'zh' ? '成功' : 'Success')}: {details.success_count}
+                                                                            ✓ {t.logsManagement.schedulerDetails.success}: {details.success_count}
                                                                         </span>
                                                                     )}
                                                                     {details.error_count !== undefined && details.error_count > 0 && (
                                                                         <span style={{ marginLeft: '1rem', color: '#ef4444' }}>
-                                                                            ✗ {t.logsManagement?.schedulerDetails?.failed || (language === 'zh' ? '失败' : 'Failed')}: {details.error_count}
+                                                                            ✗ {t.logsManagement.schedulerDetails.failed}: {details.error_count}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -822,7 +909,7 @@ const APILogsManagement = () => {
                                                                 }}>
                                                                     {Object.entries(details.user_domains).map(([userId, domains]) => (
                                                                         <div key={userId} style={{ marginBottom: '0.25rem' }}>
-                                                                            👤 {t.logsManagement?.schedulerDetails?.user || (language === 'zh' ? '用户' : 'User')} {userId}: {domains.join(', ')}
+                                                                            👤 {t.logsManagement.schedulerDetails.user} {userId}: {domains.join(', ')}
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -861,7 +948,7 @@ const APILogsManagement = () => {
                                 })}
                                 {schedulerLogs.length === 0 && (
                                     <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                                        {t.logsManagement?.noSchedulerLogs || (language === 'zh' ? '暂无定时任务日志' : 'No scheduler logs')}
+                                        {t.logsManagement.noSchedulerLogs}
                                     </div>
                                 )}
                             </div>
@@ -887,7 +974,7 @@ const APILogsManagement = () => {
                                             cursor: schedPagination.page === 1 ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {language === 'zh' ? '上一页' : 'Previous'}
+                                        {t.logsManagement.previous}
                                     </button>
                                     <div style={{ 
                                         display: 'flex', 
@@ -899,7 +986,7 @@ const APILogsManagement = () => {
                                         fontSize: '0.875rem'
                                     }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>
-                                            {language === 'zh' ? '第' : 'Page'}
+                                            {t.logsManagement.page}
                                         </span>
                                         <span style={{ 
                                             color: 'var(--accent-primary)', 
@@ -914,7 +1001,7 @@ const APILogsManagement = () => {
                                             {schedPagination.totalPages}
                                         </span>
                                         <span style={{ color: 'var(--text-secondary)' }}>
-                                            {language === 'zh' ? '页' : ''}
+                                            {t.logsManagement.pages}
                                         </span>
                                         <span style={{ 
                                             marginLeft: '0.5rem', 
@@ -923,7 +1010,7 @@ const APILogsManagement = () => {
                                             color: 'var(--text-tertiary)',
                                             fontSize: '0.8125rem'
                                         }}>
-                                            {language === 'zh' ? `共 ${schedPagination.total} 条` : `Total ${schedPagination.total}`}
+                                            {t.logsManagement.totalItems.replace('{count}', schedPagination.total)}
                                         </span>
                                     </div>
                                     <button
@@ -936,7 +1023,153 @@ const APILogsManagement = () => {
                                             cursor: schedPagination.page === schedPagination.totalPages ? 'not-allowed' : 'pointer'
                                         }}
                                     >
-                                        {language === 'zh' ? '下一页' : 'Next'}
+                                        {t.logsManagement.next}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Login Logs */}
+                    {activeTab === 'login' && (
+                        <>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
+                                {loginLogs.map(log => (
+                                    <div key={log.id} className="glass-panel" style={{
+                                        padding: '1rem',
+                                        transition: 'all 0.2s'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <LogIn size={20} style={{ 
+                                                color: log.status === 'success' ? '#10b981' : '#ef4444',
+                                                flexShrink: 0
+                                            }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.375rem' }}>
+                                                    <span style={{ 
+                                                        fontSize: '0.875rem', 
+                                                        fontWeight: '600',
+                                                        color: log.status === 'success' ? '#10b981' : '#ef4444',
+                                                        padding: '0.25rem 0.625rem',
+                                                        backgroundColor: log.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                                        borderRadius: 'var(--radius-sm)'
+                                                    }}>
+                                                        {log.status === 'success' 
+                                                            ? t.logsManagement.loginSuccess
+                                                            : t.logsManagement.loginFailed}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.9375rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                        {log.username}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                                                    {log.ip_address && (
+                                                        <span style={{ fontFamily: 'monospace' }}>
+                                                            {log.ip_address}
+                                                        </span>
+                                                    )}
+                                                    {log.device && (
+                                                        <span style={{ color: 'var(--text-tertiary)' }}>
+                                                            {log.device}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {log.message && log.status === 'failed' && (
+                                                    <div style={{ 
+                                                        fontSize: '0.75rem', 
+                                                        color: '#ef4444',
+                                                        marginTop: '0.25rem'
+                                                    }}>
+                                                        {log.message}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                    {formatDate(log.created_at)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {loginLogs.length === 0 && (
+                                    <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                                        {t.logsManagement.noLoginLogs}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Login Logs Pagination */}
+                            {loginPagination.totalPages > 1 && (
+                                <div className="pagination-controls" style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    marginTop: '2rem',
+                                    padding: '1rem',
+                                    borderTop: '1px solid var(--border-color)'
+                                }}>
+                                    <button
+                                        onClick={() => handlePageChange(loginPagination.page - 1)}
+                                        disabled={loginPagination.page === 1}
+                                        className="btn btn-secondary"
+                                        style={{ 
+                                            minWidth: '80px',
+                                            opacity: loginPagination.page === 1 ? 0.5 : 1,
+                                            cursor: loginPagination.page === 1 ? 'not-allowed' : 'pointer'
+                                        }}
+                                    >
+                                        {t.logsManagement.previous}
+                                    </button>
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '0.5rem',
+                                        padding: '0.5rem 1rem',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        <span style={{ color: 'var(--text-secondary)' }}>
+                                            {t.logsManagement.page}
+                                        </span>
+                                        <span style={{ 
+                                            color: 'var(--accent-primary)', 
+                                            fontWeight: '600',
+                                            minWidth: '2ch',
+                                            textAlign: 'center'
+                                        }}>
+                                            {loginPagination.page}
+                                        </span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>/</span>
+                                        <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                                            {loginPagination.totalPages}
+                                        </span>
+                                        <span style={{ color: 'var(--text-secondary)' }}>
+                                            {t.logsManagement.pages}
+                                        </span>
+                                        <span style={{ 
+                                            marginLeft: '0.5rem', 
+                                            paddingLeft: '0.5rem', 
+                                            borderLeft: '1px solid var(--border-color)',
+                                            color: 'var(--text-tertiary)',
+                                            fontSize: '0.8125rem'
+                                        }}>
+                                            {t.logsManagement.totalItems.replace('{count}', loginPagination.total)}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => handlePageChange(loginPagination.page + 1)}
+                                        disabled={loginPagination.page === loginPagination.totalPages}
+                                        className="btn btn-secondary"
+                                        style={{ 
+                                            minWidth: '80px',
+                                            opacity: loginPagination.page === loginPagination.totalPages ? 0.5 : 1,
+                                            cursor: loginPagination.page === loginPagination.totalPages ? 'not-allowed' : 'pointer'
+                                        }}
+                                    >
+                                        {t.logsManagement.next}
                                     </button>
                                 </div>
                             )}

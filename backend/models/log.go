@@ -52,6 +52,28 @@ type SchedulerLogListResponse struct {
 	TotalPages int            `json:"total_pages"`
 }
 
+// LoginLog represents a login attempt log entry
+type LoginLog struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	Username  string    `json:"username"`
+	IPAddress string    `json:"ip_address"`
+	UserAgent string    `json:"user_agent,omitempty"`
+	Device    string    `json:"device"`
+	Status    string    `json:"status"` // success, failed
+	Message   string    `json:"message,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// LoginLogListResponse represents a paginated list of login logs
+type LoginLogListResponse struct {
+	Logs       []LoginLog `json:"logs"`
+	Total      int        `json:"total"`
+	Page       int        `json:"page"`
+	PageSize   int        `json:"page_size"`
+	TotalPages int        `json:"total_pages"`
+}
+
 // LogsResponse combines API call logs and scheduler logs
 type LogsResponse struct {
 	APICallLogs    []APICallLog   `json:"api_call_logs"`
