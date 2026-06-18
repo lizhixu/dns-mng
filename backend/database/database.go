@@ -219,6 +219,8 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_login_logs_user_id ON login_logs(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_login_logs_created_at ON login_logs(created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_login_logs_username ON login_logs(username)`,
+		// Add IP location column to login_logs
+		`ALTER TABLE login_logs ADD COLUMN ip_location TEXT DEFAULT ''`,
 	}
 
 	for _, q := range queries {

@@ -61,6 +61,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			Message:   err.Error(),
 		}
 		go func() {
+			if geoInfo := service.IPLookup(ip); geoInfo != nil {
+				loginLog.IPLocation = service.FormatLocation(geoInfo)
+			}
 			if e := h.logService.CreateLoginLog(loginLog); e != nil {
 				log.Printf("Failed to create login log for %s: %v", req.Username, e)
 			}
@@ -79,6 +82,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Status:    "success",
 	}
 	go func() {
+		if geoInfo := service.IPLookup(ip); geoInfo != nil {
+			loginLog.IPLocation = service.FormatLocation(geoInfo)
+		}
 		if e := h.logService.CreateLoginLog(loginLog); e != nil {
 			log.Printf("Failed to create login log for %s: %v", req.Username, e)
 		}

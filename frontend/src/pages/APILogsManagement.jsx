@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
-import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Play, LogIn } from 'lucide-react';
+import { Clock, User, Activity, RefreshCw, ChevronDown, ChevronUp, Globe, Play, LogIn, MapPin } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 let initialAPILogsRequest = null;
@@ -1062,10 +1062,17 @@ const APILogsManagement = () => {
                                                         {log.username}
                                                     </span>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                                                     {log.ip_address && (
-                                                        <span style={{ fontFamily: 'monospace' }}>
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                                                            <Globe size={12} style={{ flexShrink: 0 }} />
                                                             {log.ip_address}
+                                                        </span>
+                                                    )}
+                                                    {log.ip_location && (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-tertiary)' }}>
+                                                            <MapPin size={12} style={{ flexShrink: 0 }} />
+                                                            {log.ip_location}
                                                         </span>
                                                     )}
                                                     {log.device && (

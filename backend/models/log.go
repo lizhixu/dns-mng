@@ -54,15 +54,16 @@ type SchedulerLogListResponse struct {
 
 // LoginLog represents a login attempt log entry
 type LoginLog struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	Username  string    `json:"username"`
-	IPAddress string    `json:"ip_address"`
-	UserAgent string    `json:"user_agent,omitempty"`
-	Device    string    `json:"device"`
-	Status    string    `json:"status"` // success, failed
-	Message   string    `json:"message,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         int64     `json:"id"`
+	UserID     int64     `json:"user_id"`
+	Username   string    `json:"username"`
+	IPAddress  string    `json:"ip_address"`
+	IPLocation string    `json:"ip_location,omitempty"`
+	UserAgent  string    `json:"user_agent,omitempty"`
+	Device     string    `json:"device"`
+	Status     string    `json:"status"` // success, failed
+	Message    string    `json:"message,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // LoginLogListResponse represents a paginated list of login logs

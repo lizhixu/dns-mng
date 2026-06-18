@@ -97,8 +97,8 @@ func (s *LogService) GetAPICallLogs(userID int64, page, pageSize int) (*models.A
 // CreateLoginLog creates a new login log entry
 func (s *LogService) CreateLoginLog(log *models.LoginLog) error {
 	_, err := database.DB.Exec(
-		`INSERT INTO login_logs (user_id, username, ip_address, user_agent, device, status, message) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		log.UserID, log.Username, log.IPAddress, log.UserAgent, log.Device, log.Status, log.Message,
+		`INSERT INTO login_logs (user_id, username, ip_address, ip_location, user_agent, device, status, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		log.UserID, log.Username, log.IPAddress, log.IPLocation, log.UserAgent, log.Device, log.Status, log.Message,
 	)
 	return err
 }
@@ -125,6 +125,7 @@ func (s *LogService) GetLoginLogs(userID int64, page, pageSize int) (*models.Log
 
 	rows, err := database.DB.Query(
 		`SELECT id, user_id, username, COALESCE(ip_address, '') as ip_address,
+		        COALESCE(ip_location, '') as ip_location,
 		        COALESCE(user_agent, '') as user_agent, COALESCE(device, '') as device,
 		        status, COALESCE(message, '') as message, created_at
 		 FROM login_logs
@@ -143,7 +144,7 @@ func (s *LogService) GetLoginLogs(userID int64, page, pageSize int) (*models.Log
 		var log models.LoginLog
 		err := rows.Scan(
 			&log.ID, &log.UserID, &log.Username, &log.IPAddress,
-			&log.UserAgent, &log.Device, &log.Status, &log.Message, &log.CreatedAt,
+			&log.IPLocation, &log.UserAgent, &log.Device, &log.Status, &log.Message, &log.CreatedAt,
 		)
 		if err != nil {
 			continue
