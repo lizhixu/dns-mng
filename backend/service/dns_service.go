@@ -317,6 +317,31 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 }
 
 func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, domainID string) (*models.Domain, error) {
+	// 优先从缓存读取
+	if s.domainCacheService != nil {
+		cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
+		if err == nil && cache != nil {
+			domain := &models.Domain{
+				ID:          cache.DomainID,
+				Name:        cache.DomainName,
+				AccountID:   cache.AccountID,
+				RenewalDate: cache.RenewalDate,
+				RenewalURL:  cache.RenewalURL,
+				CacheSynced: true,
+			}
+			if cache.ProviderUpdatedOn != nil {
+				domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
+			}
+			// 补充账户名称
+			account, err := s.accountService.Get(userID, accountID)
+			if err == nil {
+				domain.AccountName = account.Name
+			}
+			return domain, nil
+		}
+	}
+
+	// 缓存未命中，从供应商获取
 	account, err := s.accountService.Get(userID, accountID)
 	if err != nil {
 		return nil, err

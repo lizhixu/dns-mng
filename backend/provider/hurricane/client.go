@@ -35,16 +35,12 @@ func cleanHTML(s string) string {
 	return s
 }
 
-const htmlCacheTTL = 30 * time.Second // reuse fetched HTML within this window
-
 type Client struct {
 	httpClient *http.Client
 	username   string
 	password   string
 	mu         sync.Mutex
 	loggedIn   bool
-	cachedHTML string
-	cacheTime  time.Time
 }
 
 func NewClient(username, password string) *Client {
@@ -141,9 +137,6 @@ func (c *Client) doLogin(ctx context.Context) error {
 		return fmt.Errorf("login failed: unexpected response")
 	}
 	c.loggedIn = true
-	// Login response already contains the domains page — cache it
-	c.cachedHTML = bodyStr
-	c.cacheTime = time.Now()
 
 	// If no cookies received, try to fetch the page again to get cookies
 	if len(cookies) == 0 {
@@ -162,69 +155,8 @@ func (c *Client) doLogin(ctx context.Context) error {
 	return nil
 }
 
-// loginAndGetHTML logs in if needed and returns the domains page HTML.
-// Used by ListZones which needs the actual HTML content.
-func (c *Client) loginAndGetHTML(ctx context.Context) (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if !c.loggedIn {
-		if err := c.doLogin(ctx); err != nil {
-			return "", err
-		}
-	}
-
-	// Fetch the page
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
-	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
-	}
-	req.Header.Set("User-Agent", "Mozilla/5.0")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("read response: %w", err)
-	}
-	bodyStr := string(body)
-
-	// If the page is a login form, session expired — re-login and refetch
-	if isLoginForm(bodyStr) {
-		c.loggedIn = false
-		if err := c.doLogin(ctx); err != nil {
-			return "", err
-		}
-
-		req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
-		if err != nil {
-			return "", fmt.Errorf("create request: %w", err)
-		}
-		req2.Header.Set("User-Agent", "Mozilla/5.0")
-
-		resp2, err := c.httpClient.Do(req2)
-		if err != nil {
-			return "", fmt.Errorf("request failed: %w", err)
-		}
-		defer resp2.Body.Close()
-
-		body2, err := io.ReadAll(resp2.Body)
-		if err != nil {
-			return "", fmt.Errorf("read response: %w", err)
-		}
-		return string(body2), nil
-	}
-
-	return bodyStr, nil
-}
-
-// Login ensures the client has an active session. If already logged in,
-// returns immediately without any HTTP request.
-func (c *Client) Login(ctx context.Context) error {
+// login ensures the session is active. Uses cookie jar to persist session.
+func (c *Client) login(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -239,17 +171,61 @@ func (c *Client) resetSession() {
 	c.loggedIn = false
 }
 
-// ListZones lists all DNS zones from login response
+// ListZones lists all DNS zones by fetching the domains page after login.
+// Note: Domain listing is now primarily served from database cache.
+// This method is kept as a fallback for refresh scenarios.
 func (c *Client) ListZones(ctx context.Context) ([]Domain, error) {
-	// Login and get HTML which contains the domains table
-	html, err := c.loginAndGetHTML(ctx)
-	if err != nil {
+	if err := c.login(ctx); err != nil {
 		return nil, err
 	}
 
-	domains, err := c.parseZones(html)
+	// Fetch the domains page
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0")
 
-	return domains, err
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+	html := string(body)
+
+	// Session expired — re-login and retry
+	if isLoginForm(html) {
+		c.mu.Lock()
+		c.resetSession()
+		if err := c.doLogin(ctx); err != nil {
+			c.mu.Unlock()
+			return nil, err
+		}
+		c.mu.Unlock()
+
+		req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/", nil)
+		if err != nil {
+			return nil, fmt.Errorf("create retry request: %w", err)
+		}
+		req2.Header.Set("User-Agent", "Mozilla/5.0")
+		resp2, err := c.httpClient.Do(req2)
+		if err != nil {
+			return nil, fmt.Errorf("retry request failed: %w", err)
+		}
+		defer resp2.Body.Close()
+		body2, err := io.ReadAll(resp2.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read retry response: %w", err)
+		}
+		html = string(body2)
+	}
+
+	return c.parseZones(html)
 }
 
 // parseZones extracts zone information from HTML
@@ -296,7 +272,7 @@ func (c *Client) parseZones(html string) ([]Domain, error) {
 // ListRecords lists all DNS records for a zone.
 // If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) ListRecords(ctx context.Context, zoneID string) ([]Record, error) {
-	if err := c.Login(ctx); err != nil {
+	if err := c.login(ctx); err != nil {
 		return nil, err
 	}
 
@@ -350,13 +326,15 @@ func (c *Client) fetchRecordsPage(ctx context.Context, zoneID string) (string, e
 // parseRecords extracts DNS records from HTML table
 // HTML structure per documentation:
 // <tr class="dns_tr" id="9119194957">
-//   <td class="hidden">1303724</td>           <- Zone ID
-//   <td class="hidden">9119194957</td>        <- Record ID
-//   <td class="dns_view">qzz.frii.site</td>   <- Name
-//   <td align="center"><span class="rrlabel NS">NS</span></td> <- Type
-//   <td align="left">172800</td>              <- TTL
-//   <td align="center">-</td>                 <- Priority
-//   <td align="left" data="ns1.he.net">ns1.he.net</td> <- Content
+//
+//	<td class="hidden">1303724</td>           <- Zone ID
+//	<td class="hidden">9119194957</td>        <- Record ID
+//	<td class="dns_view">qzz.frii.site</td>   <- Name
+//	<td align="center"><span class="rrlabel NS">NS</span></td> <- Type
+//	<td align="left">172800</td>              <- TTL
+//	<td align="center">-</td>                 <- Priority
+//	<td align="left" data="ns1.he.net">ns1.he.net</td> <- Content
+//
 // </tr>
 func (c *Client) parseRecords(html string, zoneID string) ([]Record, error) {
 	var records []Record
@@ -450,7 +428,7 @@ func (c *Client) parseRecords(html string, zoneID string) ([]Record, error) {
 // CreateRecord creates a new DNS record and returns the new record ID.
 // If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) CreateRecord(ctx context.Context, zoneID string, record Record) (string, error) {
-	// Check for duplicate records before creating (ListRecords handles login+retry)
+	// Check for duplicate records before creating
 	existingRecords, err := c.ListRecords(ctx, zoneID)
 	if err == nil {
 		for _, r := range existingRecords {
@@ -541,7 +519,7 @@ func (c *Client) postCreateRecord(ctx context.Context, zoneID string, record Rec
 // UpdateRecord updates an existing DNS record.
 // If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) UpdateRecord(ctx context.Context, zoneID string, domainName string, record Record) error {
-	if err := c.Login(ctx); err != nil {
+	if err := c.login(ctx); err != nil {
 		return err
 	}
 
@@ -625,7 +603,7 @@ func (c *Client) postUpdateRecord(ctx context.Context, zoneID string, domainName
 // DeleteRecord deletes a DNS record.
 // If the response is a login form (session expired), re-logs in and retries once.
 func (c *Client) DeleteRecord(ctx context.Context, zoneID, recordID string) error {
-	if err := c.Login(ctx); err != nil {
+	if err := c.login(ctx); err != nil {
 		return err
 	}
 
