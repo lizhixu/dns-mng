@@ -35,12 +35,16 @@ func cleanHTML(s string) string {
 	return s
 }
 
+const htmlCacheTTL = 30 * time.Second // reuse fetched HTML within this window
+
 type Client struct {
 	httpClient *http.Client
 	username   string
 	password   string
 	mu         sync.Mutex
 	loggedIn   bool
+	cachedHTML string
+	cacheTime  time.Time
 }
 
 func NewClient(username, password string) *Client {
@@ -137,6 +141,9 @@ func (c *Client) doLogin(ctx context.Context) error {
 		return fmt.Errorf("login failed: unexpected response")
 	}
 	c.loggedIn = true
+	// Login response already contains the domains page — cache it
+	c.cachedHTML = bodyStr
+	c.cacheTime = time.Now()
 
 	// If no cookies received, try to fetch the page again to get cookies
 	if len(cookies) == 0 {

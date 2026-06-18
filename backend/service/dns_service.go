@@ -197,22 +197,31 @@ func cacheKey(accountID int64, domainID string) string {
 }
 
 func (s *DNSService) ListDomains(ctx context.Context, userID, accountID int64) ([]models.Domain, error) {
-	// 优先从缓存读取
-	return s.ListDomainsFromCache(ctx, userID, accountID)
+	domains, err := s.ListDomainsFromCache(ctx, userID, accountID)
+	if err != nil {
+		return nil, err
+	}
+	// 缓存为空时自动从服务商同步一次（首次访问新账户）
+	if len(domains) == 0 {
+		domains, _, err = s.ListDomainsFromProvider(ctx, userID, accountID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return domains, nil
 }
 
-// ListDomainsFromCache returns domains from cache for a specific account
+// ListDomainsFromCache returns domains from cache for a specific account.
+// Returns empty list when cache is empty — does NOT call the provider.
+// Use ListDomainsFromProvider (via refresh endpoint) to populate the cache.
 func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID int64) ([]models.Domain, error) {
 	if s.domainCacheService == nil {
-		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
-		return domains, err
+		return []models.Domain{}, nil
 	}
 
 	caches, err := s.domainCacheService.GetCacheByUser(userID)
-	if err != nil || len(caches) == 0 {
-		// 如果缓存为空，从服务商获取
-		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
-		return domains, err
+	if err != nil {
+		return nil, err
 	}
 
 	// 过滤出指定账户的域名
@@ -233,12 +242,6 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 			}
 			domains = append(domains, domain)
 		}
-	}
-
-	if len(domains) == 0 {
-		// 如果该账户没有缓存，从服务商获取
-		domains, _, err := s.ListDomainsFromProvider(ctx, userID, accountID)
-		return domains, err
 	}
 
 	return domains, nil
