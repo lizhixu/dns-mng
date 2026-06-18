@@ -5,19 +5,35 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"dns-mng/models"
 )
 
 type Provider struct {
-	client *Client
+	mu      sync.Mutex
+	clients map[string]*Client // per-account clients, keyed by apiKey
 }
 
 func New() *Provider {
 	return &Provider{
-		client: NewClient(),
+		clients: make(map[string]*Client),
 	}
+}
+
+// getClient returns a client for the given apiKey, creating one if needed.
+// Each account gets its own rate limiter so they don't block each other.
+func (p *Provider) getClient(apiKey string) *Client {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if c, ok := p.clients[apiKey]; ok {
+		return c
+	}
+	c := NewClient()
+	p.clients[apiKey] = c
+	return c
 }
 
 func (p *Provider) Name() string {
@@ -55,7 +71,8 @@ func parseTime(ipv64Time string) string {
 }
 
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
-	resp, err := p.client.GetDomains(ctx, apiKey)
+	client := p.getClient(apiKey)
+	resp, err := client.GetDomains(ctx, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +111,8 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 }
 
 func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string) (*models.Domain, error) {
-	resp, err := p.client.GetDomains(ctx, apiKey)
+	client := p.getClient(apiKey)
+	resp, err := client.GetDomains(ctx, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +133,8 @@ func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string
 }
 
 func (p *Provider) ListRecords(ctx context.Context, apiKey, domainID string) ([]models.Record, error) {
-	resp, err := p.client.GetDomains(ctx, apiKey)
+	client := p.getClient(apiKey)
+	resp, err := client.GetDomains(ctx, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -156,14 +175,15 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey, domainID string, re
 		praefix = ""
 	}
 
-	err := p.client.AddRecord(ctx, apiKey, domainID, praefix, record.RecordType, record.Content)
+	client := p.getClient(apiKey)
+	err := client.AddRecord(ctx, apiKey, domainID, praefix, record.RecordType, record.Content)
 	if err != nil {
 		return nil, err
 	}
 
 	// IPv64 API doesn't return the created record, so we need to fetch all records
 	// and find the one we just created
-	resp, err := p.client.GetDomains(ctx, apiKey)
+	resp, err := client.GetDomains(ctx, apiKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch created record: %w", err)
 	}
@@ -217,8 +237,9 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey, domainID string, re
 		return nil, fmt.Errorf("invalid record ID: %s", record.ID)
 	}
 
+	client := p.getClient(apiKey)
 	// Delete the old record
-	err = p.client.DeleteRecordByID(ctx, apiKey, recordID)
+	err = client.DeleteRecordByID(ctx, apiKey, recordID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete old record: %w", err)
 	}
@@ -229,7 +250,7 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey, domainID string, re
 		praefix = ""
 	}
 
-	err = p.client.AddRecord(ctx, apiKey, domainID, praefix, record.RecordType, record.Content)
+	err = client.AddRecord(ctx, apiKey, domainID, praefix, record.RecordType, record.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new record: %w", err)
 	}
@@ -238,16 +259,17 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey, domainID string, re
 }
 
 func (p *Provider) DeleteRecord(ctx context.Context, apiKey, domainID, recordID string) error {
+	client := p.getClient(apiKey)
 	// Try to parse as integer ID first
 	id, err := strconv.Atoi(recordID)
 	if err == nil {
-		return p.client.DeleteRecordByID(ctx, apiKey, id)
+		return client.DeleteRecordByID(ctx, apiKey, id)
 	}
 
 	// If not an integer, it might be a composite ID (domain:praefix:type:content)
 	parts := strings.Split(recordID, ":")
 	if len(parts) >= 4 {
-		return p.client.DeleteRecord(ctx, apiKey, parts[0], parts[1], parts[2], parts[3])
+		return client.DeleteRecord(ctx, apiKey, parts[0], parts[1], parts[2], parts[3])
 	}
 
 	return fmt.Errorf("invalid record ID format: %s", recordID)
