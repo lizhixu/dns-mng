@@ -1095,14 +1095,14 @@ pre {
 }
 
 /* View Transition circular reveal rules */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
 ::view-transition-old(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
   z-index: 1;
 }
 ::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
   z-index: 9999;
 }
