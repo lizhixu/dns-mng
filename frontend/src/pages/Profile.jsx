@@ -45,19 +45,24 @@ export default function Profile() {
 
     return (
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                {t.common.password.change}
-            </h1>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>
+                    {t.common.password.change}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '0.25rem', marginBottom: 0 }}>
+                    Update your account login password.
+                </p>
+            </div>
 
             {error && (
                 <div style={{
-                    padding: '0.75rem',
+                    padding: '0.75rem 1rem',
                     marginBottom: '1rem',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    background: 'rgba(255, 0, 0, 0.05)',
+                    border: '1px solid rgba(255, 0, 0, 0.15)',
                     borderRadius: 'var(--radius-sm)',
                     color: 'var(--danger)',
-                    fontSize: '0.875rem'
+                    fontSize: '14px'
                 }}>
                     {error}
                 </div>
@@ -65,63 +70,65 @@ export default function Profile() {
 
             {success && (
                 <div style={{
-                    padding: '0.75rem',
+                    padding: '0.75rem 1rem',
                     marginBottom: '1rem',
-                    background: 'rgba(0, 112, 243, 0.1)',
-                    border: '1px solid rgba(0, 112, 243, 0.2)',
+                    background: 'rgba(16, 185, 129, 0.05)',
+                    border: '1px solid rgba(16, 185, 129, 0.15)',
                     borderRadius: 'var(--radius-sm)',
                     color: 'var(--success)',
-                    fontSize: '0.875rem'
+                    fontSize: '14px'
                 }}>
                     {success}
                 </div>
             )}
 
-            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                    <label className="form-label">{t.common.password.current}</label>
-                    <input
-                        type="password"
-                        value={passwordForm.old_password}
-                        onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
-                        className="form-input"
-                        required
-                    />
-                </div>
+            <div className="domain-list-card" style={{ padding: '1.25rem', cursor: 'default' }}>
+                <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label className="form-label">{t.common.password.current}</label>
+                        <input
+                            type="password"
+                            value={passwordForm.old_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
+                            className="form-input"
+                            required
+                        />
+                    </div>
 
-                <div>
-                    <label className="form-label">{t.common.password.new}</label>
-                    <input
-                        type="password"
-                        value={passwordForm.new_password}
-                        onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                        className="form-input"
-                        required
-                        minLength={6}
-                    />
-                </div>
+                    <div>
+                        <label className="form-label">{t.common.password.new}</label>
+                        <input
+                            type="password"
+                            value={passwordForm.new_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                            className="form-input"
+                            required
+                            minLength={6}
+                        />
+                    </div>
 
-                <div>
-                    <label className="form-label">{t.common.password.confirm}</label>
-                    <input
-                        type="password"
-                        value={passwordForm.confirm_password}
-                        onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                        className="form-input"
-                        required
-                        minLength={6}
-                    />
-                </div>
+                    <div>
+                        <label className="form-label">{t.common.password.confirm}</label>
+                        <input
+                            type="password"
+                            value={passwordForm.confirm_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                            className="form-input"
+                            required
+                            minLength={6}
+                        />
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={updating}
-                    className="btn btn-primary"
-                    style={{ marginTop: '0.5rem' }}
-                >
-                    {updating ? t.common.updating : t.common.password.change}
-                </button>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={updating}
+                        className="btn btn-primary"
+                        style={{ marginTop: '0.5rem', height: '34px', fontSize: '13px' }}
+                    >
+                        {updating ? t.common.updating : t.common.password.change}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }

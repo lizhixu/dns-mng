@@ -82,12 +82,11 @@ export default function Backup() {
     return (
         <div>
             {/* ── 页面标题 ──────────────────────────────────────── */}
-            <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Download size={24} />
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>
                     {t.backup.title}
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '0.25rem', marginBottom: 0 }}>
                     {t.backup.subtitle}
                 </p>
             </div>
@@ -99,44 +98,47 @@ export default function Backup() {
                 gap: '0.5rem',
                 color: 'var(--danger)',
                 marginBottom: '1.5rem',
-                padding: '1rem',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.875rem',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'rgba(255, 0, 0, 0.05)',
+                border: '1px solid rgba(255, 0, 0, 0.15)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '14px',
             }}>
-                <AlertCircle size={18} />
+                <AlertCircle size={16} />
                 {t.backup.sensitiveWarning}
             </div>
 
             {/* ── 备份（导出）────────────────────────────────────── */}
-            <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Download size={18} />
+            <div className="domain-list-card" style={{ padding: '1.25rem', marginBottom: '1.25rem', cursor: 'default' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 1rem 0' }}>
+                    <Download size={16} />
                     {t.backup.exportCard}
                 </h3>
 
                 {exportSuccess && (
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        color: 'var(--success)', marginBottom: '1rem', padding: '1rem',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius-md)',
+                        color: 'var(--success)', marginBottom: '1rem', padding: '0.75rem 1rem',
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: 'var(--radius-sm)',
+                        fontSize: '14px'
                     }}>
-                        <CheckCircle size={18} />
+                        <CheckCircle size={16} />
                         {exportSuccess}
                     </div>
                 )}
                 {exportError && (
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        color: 'var(--danger)', marginBottom: '1rem', padding: '1rem',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)',
+                        color: 'var(--danger)', marginBottom: '1rem', padding: '0.75rem 1rem',
+                        backgroundColor: 'rgba(255, 0, 0, 0.05)', border: '1px solid rgba(255, 0, 0, 0.15)', borderRadius: 'var(--radius-sm)',
+                        fontSize: '14px'
                     }}>
-                        <AlertCircle size={18} />
+                        <AlertCircle size={16} />
                         {exportError}
                     </div>
                 )}
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">{t.backup.encryptionPassword}</label>
                     <input
                         type="password"
@@ -145,36 +147,37 @@ export default function Backup() {
                         value={exportPassword}
                         onChange={(e) => setExportPassword(e.target.value)}
                     />
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.375rem' }}>
                         {t.backup.encryptionPasswordHint}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-                    <button className="btn btn-primary" onClick={handleExport} disabled={exporting}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                    <button className="btn btn-primary" style={{ height: '34px', fontSize: '13px' }} onClick={handleExport} disabled={exporting}>
                         {exporting ? (
                             <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div>
                         ) : (
-                            <><Download size={16} />{t.backup.exportButton}</>
+                            <><Download size={14} style={{ marginRight: '4px' }} />{t.backup.exportButton}</>
                         )}
                     </button>
                 </div>
             </div>
 
             {/* ── 还原（导入）────────────────────────────────────── */}
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Upload size={18} />
+            <div className="domain-list-card" style={{ padding: '1.25rem', cursor: 'default' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 1rem 0' }}>
+                    <Upload size={16} />
                     {t.backup.importCard}
                 </h3>
 
                 {importError && (
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        color: 'var(--danger)', marginBottom: '1rem', padding: '1rem',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)',
+                        color: 'var(--danger)', marginBottom: '1rem', padding: '0.75rem 1rem',
+                        backgroundColor: 'rgba(255, 0, 0, 0.05)', border: '1px solid rgba(255, 0, 0, 0.15)', borderRadius: 'var(--radius-sm)',
+                        fontSize: '14px'
                     }}>
-                        <AlertCircle size={18} />
+                        <AlertCircle size={16} />
                         {importError}
                     </div>
                 )}
@@ -193,12 +196,12 @@ export default function Backup() {
                         type="button"
                         className="btn btn-secondary"
                         onClick={() => fileInputRef.current?.click()}
-                        style={{ width: '100%', justifyContent: 'flex-start' }}
+                        style={{ width: '100%', justifyContent: 'flex-start', height: '34px', fontSize: '13px' }}
                     >
-                        <Upload size={16} />
+                        <Upload size={14} style={{ marginRight: '6px' }} />
                         {importFile
-                            ? <>{t.common.selected}: <strong>{importFile.name}</strong></>
-                            : t.backup.noFileSelected
+                            ? <span style={{ fontSize: '13px' }}>{t.common.selected}: <strong>{importFile.name}</strong></span>
+                            : <span style={{ fontSize: '13px' }}>{t.backup.noFileSelected}</span>
                         }
                     </button>
                 </div>
@@ -216,32 +219,33 @@ export default function Backup() {
                 </div>
 
                 {/* 覆盖开关 */}
-                <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
                         <input
                             type="checkbox"
                             checked={importOverwrite}
                             onChange={(e) => setImportOverwrite(e.target.checked)}
-                            style={{ width: 'auto' }}
+                            style={{ width: 'auto', cursor: 'pointer' }}
                         />
                         {t.backup.overwrite}
                     </label>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.375rem' }}>
                         {t.backup.overwriteHint}
                     </div>
                 </div>
 
                 {/* 还原按钮 */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
                     <button
                         className="btn btn-primary"
+                        style={{ height: '34px', fontSize: '13px' }}
                         onClick={handleImport}
                         disabled={importing || !importContent}
                     >
                         {importing ? (
                             <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div>
                         ) : (
-                            <><Upload size={16} />{t.backup.restoreButton}</>
+                            <><Upload size={14} style={{ marginRight: '4px' }} />{t.backup.restoreButton}</>
                         )}
                     </button>
                 </div>
@@ -249,17 +253,19 @@ export default function Backup() {
                 {/* 还原结果 */}
                 {importResult && (
                     <div style={{
-                        marginTop: '1.5rem',
+                        marginTop: '1.25rem',
                         backgroundColor: 'var(--bg-secondary)',
                         padding: '1rem',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.875rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '13px',
+                        border: '1px solid var(--border-color)'
                     }}>
                         <h4 style={{
-                            fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem',
+                            fontSize: '14px', fontWeight: '600', marginBottom: '0.75rem',
                             display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)',
+                            margin: '0 0 0.75rem 0'
                         }}>
-                            <CheckCircle size={16} />
+                            <CheckCircle size={14} />
                             {t.backup.resultTitle}
                         </h4>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

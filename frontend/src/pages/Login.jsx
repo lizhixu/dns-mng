@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
-import { useTheme } from '../ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, Eye, EyeOff, Github } from 'lucide-react';
+import { Eye, EyeOff, Github } from 'lucide-react';
+import ThemeSwitcher from '../components/ThemeSwitcher';
+import LanguageSelect from '../components/LanguageSelect';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
-    const { t, language, changeLanguage, languages } = useLanguage();
-    const { themeMode, changeTheme } = useTheme();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -140,40 +140,10 @@ const Login = () => {
                 </a>
 
                 {/* Theme Switcher */}
-                <div className="login-theme-switcher">
-                    <button
-                        onClick={() => changeTheme('light')}
-                        title="Light Mode"
-                        className={`login-theme-btn ${themeMode === 'light' ? 'active' : ''}`}
-                    >
-                        <Sun size={13} />
-                    </button>
-                    <button
-                        onClick={() => changeTheme('system')}
-                        title="System Theme"
-                        className={`login-theme-btn ${themeMode === 'system' ? 'active' : ''}`}
-                    >
-                        <Monitor size={13} />
-                    </button>
-                    <button
-                        onClick={() => changeTheme('dark')}
-                        title="Dark Mode"
-                        className={`login-theme-btn ${themeMode === 'dark' ? 'active' : ''}`}
-                    >
-                        <Moon size={13} />
-                    </button>
-                </div>
+                <ThemeSwitcher />
 
                 {/* Language Switcher */}
-                <select
-                    value={language}
-                    onChange={(e) => changeLanguage(e.target.value)}
-                    className="form-input login-lang-select"
-                >
-                    {Object.entries(languages).map(([code, lang]) => (
-                        <option key={code} value={code}>{lang.name}</option>
-                    ))}
-                </select>
+                <LanguageSelect className="form-input login-lang-select" />
             </div>
 
             {/* 登录卡片 */}

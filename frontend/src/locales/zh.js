@@ -66,6 +66,8 @@ export const zh = {
     settings: '个人设置',
     logsManagement: '日志管理',
     emailNotifications: '邮件通知',
+    theme: '主题模式',
+    language: '界面语言',
   },
 
   accounts: {

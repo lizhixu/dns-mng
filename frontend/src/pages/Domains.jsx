@@ -227,120 +227,83 @@ const Domains = () => {
 
     return (
         <div>
-            <div style={{ marginBottom: '2rem' }}>
-                <Link to="/accounts" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem', transition: 'color 0.2s', ':hover': { color: 'var(--text-primary)' } }}>
-                    <ArrowLeft size={16} />
+            <div style={{ marginBottom: '1.5rem' }}>
+                <Link to="/accounts" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem', transition: 'color 0.15s' }} className="hover-text-primary">
+                    <ArrowLeft size={14} />
                     {t.domains.backToAccounts}
                 </Link>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: '1 1 0' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.domains.title}</h2>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>{t.domains.title}</h2>
                         {cacheTimestamp && (
-                            <div style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.8125rem',
-                                color: 'var(--accent-primary)',
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                padding: '0.25rem 0.625rem',
-                                borderRadius: 'var(--radius-md)',
-                                maxWidth: '100%',
-                                overflow: 'hidden'
-                            }}>
-                                <Clock size={12} style={{ flexShrink: 0 }} />
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
+                            <div className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                                <Clock size={11} />
+                                <span>{t.common.cacheTime}: {new Date(cacheTimestamp).toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}</span>
                             </div>
                         )}
                     </div>
                     <div className="page-actions-bar domains-toolbar" style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
                         <div style={{ position: 'relative' }} className="search-box-fixed">
-                            <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
+                            <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
                             <input
                                 type="text"
                                 className="form-input domains-search-input"
                                 placeholder={t.domains.searchPlaceholder}
-                                style={{ paddingLeft: '2.5rem', width: '220px' }}
+                                style={{ paddingLeft: '2.25rem', width: '220px', height: '34px' }}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <button onClick={() => loadDomains(true)} className="btn btn-secondary" title={t.common.refresh}>
-                            <RefreshCw size={18} className={loading ? "spin" : ""} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                        <button onClick={() => loadDomains(true)} className="btn btn-secondary" style={{ height: '34px', padding: '0 10px' }} title={t.common.refresh}>
+                            <RefreshCw size={15} className={loading ? "spin" : ""} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-md)' }}>{t.common.error}: {error}</div>}
+            {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(255, 0, 0, 0.05)', border: '1px solid rgba(255, 0, 0, 0.15)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}>{t.common.error}: {error}</div>}
 
             {restoredDomains.length > 0 && (
                 <div style={{
                     color: 'var(--success)',
                     marginBottom: '1rem',
-                    padding: '1rem',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                    padding: '0.75rem 1rem',
+                    backgroundColor: 'rgba(0, 224, 84, 0.05)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid rgba(0, 224, 84, 0.15)',
+                    fontSize: '14px'
                 }}>
-                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>✓ {t.domains.restoredDomainsTitle}</div>
-                    <div style={{ fontSize: '0.875rem' }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>✓ {t.domains.restoredDomainsTitle}</div>
+                    <div className="font-mono">
                         {restoredDomains.join(', ')}
                     </div>
                 </div>
             )}
 
             {loading && !domains.length ? (
-                <div className="spinner" style={{ margin: '4rem auto' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                    <div className="spinner"></div>
+                </div>
             ) : (
-                <div className="domains-list" style={{ display: 'grid', gap: '1rem' }}>
+                <div className="domains-list" style={{ display: 'grid', gap: '0.75rem' }}>
                     {filteredDomains.map(domain => (
-                        <div key={domain.id} className="glass-panel domain-list-card" style={{
-                            padding: '1rem 1.25rem',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'none';
-                        }}>
+                        <div key={domain.id} className="domain-list-card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/accounts/${accountId}/domains/${domain.id}/records`)}>
                             <div className="domain-card-layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                                 <div className="domain-card-main" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                    <Globe size={20} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
-                                    <div>
-                                        <h3 style={{ fontSize: '1rem', fontWeight: '500', margin: 0, marginBottom: '0.25rem' }}>{domain.name}</h3>
+                                    <Globe size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+                                    <div style={{ minWidth: 0 }}>
+                                        <h3 className="font-mono" style={{ fontSize: '15px', fontWeight: '600', margin: 0, marginBottom: '0.25rem', color: 'var(--text-primary)', wordBreak: 'break-all' }}>{domain.name}</h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                             {domain.renewal_date === 'permanent' ? (
-                                                <span style={{ 
-                                                    display: 'inline-flex', 
-                                                    alignItems: 'center', 
-                                                    gap: '0.25rem', 
-                                                    fontSize: '0.75rem', 
-                                                    color: 'var(--text-tertiary)',
-                                                    fontWeight: 'normal'
-                                                }}>
-                                                    <Calendar size={12} />
+                                                <span className="badge badge-neutral" style={{ gap: '0.25rem' }}>
+                                                    <Calendar size={11} />
                                                     {t.allDomains.permanentFree}
                                                 </span>
                                             ) : domain.renewal_date && (() => {
                                                 const expiryInfo = getExpiryInfo(domain.renewal_date);
                                                 return (
-                                                    <span style={{ 
-                                                        display: 'inline-flex', 
-                                                        alignItems: 'center', 
-                                                        gap: '0.25rem', 
-                                                        fontSize: '0.75rem',
-                                                        color: expiryInfo?.color || 'var(--text-tertiary)',
-                                                        backgroundColor: expiryInfo?.bgColor || 'transparent',
-                                                        padding: expiryInfo?.bgColor !== 'transparent' ? '0.15rem 0.5rem' : '0',
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        fontWeight: expiryInfo?.fontWeight || 'normal'
-                                                    }}>
-                                                        <Calendar size={12} />
+                                                    <span className={`badge ${expiryInfo?.bgColor !== 'transparent' ? 'badge-warning' : 'badge-neutral'}`} style={{ gap: '0.25rem' }}>
+                                                        <Calendar size={11} />
                                                         {expiryInfo?.text || domain.renewal_date}
                                                     </span>
                                                 );
@@ -351,7 +314,7 @@ const Domains = () => {
                                                         <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
                                                     )}
                                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', maxWidth: '200px', minWidth: 0 }}>
-                                                        <LinkIcon size={12} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                                                        <LinkIcon size={11} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
                                                         <a
                                                             href={domain.renewal_url}
                                                             target="_blank"
@@ -368,19 +331,19 @@ const Domains = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="domain-card-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                <div className="domain-card-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"
                                         title={t.allDomains.renewalModalTitle}
-                                        style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                                        style={{ fontSize: '13px', padding: '0 10px', height: '32px' }}
                                     >
-                                        <Edit2 size={14} />
+                                        <Edit2 size={13} />
                                         {t.common.edit}
                                     </button>
-                                    <Link to={`/accounts/${accountId}/domains/${domain.id}/records`} className="btn btn-secondary" style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}>
+                                    <Link to={`/accounts/${accountId}/domains/${domain.id}/records`} className="btn btn-secondary" style={{ fontSize: '13px', padding: '0 10px', height: '32px' }}>
                                         {t.domains.manageRecords}
-                                        <ExternalLink size={14} />
+                                        <ExternalLink size={13} />
                                     </Link>
                                 </div>
                             </div>
@@ -388,7 +351,7 @@ const Domains = () => {
                     ))}
 
                     {filteredDomains.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
                             {searchTerm ? t.common.noSearchResults : t.domains.noDomains}
                         </div>
                     )}

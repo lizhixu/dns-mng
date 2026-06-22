@@ -246,64 +246,60 @@ const Accounts = () => {
         navigator.clipboard.writeText(token);
     };
 
-    if (loading) return <div className="spinner" style={{ margin: '2rem auto' }}></div>;
-    if (error) return <div style={{ color: 'var(--danger)', padding: '1rem' }}>{t.common.error}: {error}</div>;
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+            <div className="spinner"></div>
+        </div>
+    );
+    if (error) return <div style={{ color: 'var(--danger)', padding: '0.75rem 1rem', backgroundColor: 'rgba(255, 0, 0, 0.05)', border: '1px solid rgba(255, 0, 0, 0.15)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}>{t.common.error}: {error}</div>;
 
     return (
         <div>
-            <div style={{ marginBottom: '32px' }}>
-                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h1 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '600', margin: 0 }}>{t.accounts.title}</h1>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>{t.accounts.title}</h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t.accounts.subtitle}</p>
                     </div>
-                    <div className="page-actions-bar" style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => openDdnsTokenModal()} className="btn btn-secondary">
-                            <Key size={16} />
+                    <div className="page-actions-bar" style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+                        <button onClick={() => openDdnsTokenModal()} className="btn btn-secondary" style={{ height: '34px', fontSize: '13px' }}>
+                            <Key size={14} />
                             {!isMobile && t.accounts.ddns.label}
-                            {isMobile && <span style={{ fontSize: '13px' }}>DDNS</span>}
+                            {isMobile && <span>DDNS</span>}
                         </button>
-                        <button onClick={openCreateModal} className="btn btn-primary">
-                            <Plus size={16} />
+                        <button onClick={openCreateModal} className="btn btn-primary" style={{ height: '34px', fontSize: '13px' }}>
+                            <Plus size={14} />
                             {t.accounts.addAccount}
                         </button>
                     </div>
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>{t.accounts.subtitle}</p>
             </div>
 
             <div className="accounts-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: '16px'
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '0.75rem'
             }}>
                 {accounts.map(account => (
-                    <div key={account.id} className="glass-panel account-list-card" style={{
-                        padding: '20px',
+                    <div key={account.id} className="domain-list-card" style={{
+                        padding: '1.25rem',
                         display: 'flex',
                         flexDirection: 'column',
                         height: '100%',
-                        transition: 'all 0.2s',
-                        cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
+                        cursor: 'default'
                     }}>
                         <div style={{ flex: 1 }}>
-                            <div className="account-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div className="account-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                                 <div className="account-card-main" style={{ flex: 1, minWidth: 0 }}>
                                     <h3 style={{ 
-                                        fontSize: '16px', 
-                                        fontWeight: '500', 
+                                        fontSize: '15px', 
+                                        fontWeight: '600', 
                                         margin: 0,
-                                        marginBottom: '6px',
+                                        marginBottom: '0.25rem',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
+                                        whiteSpace: 'nowrap',
+                                        color: 'var(--text-primary)'
                                     }}>
                                         {account.name}
                                     </h3>
@@ -316,9 +312,9 @@ const Accounts = () => {
                                         onClick={() => openEditModal(account)} 
                                         className="btn btn-ghost" 
                                         title={t.accounts.editAccount} 
-                                        style={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                                        style={{ padding: '4px', minWidth: 'auto', height: 'auto', color: 'var(--text-secondary)' }}
                                     >
-                                        <Settings size={14} />
+                                        <Settings size={13} />
                                     </button>
                                     <button 
                                         onClick={() => handleDelete(account.id)} 
@@ -326,12 +322,12 @@ const Accounts = () => {
                                         style={{ color: 'var(--danger)', padding: '4px', minWidth: 'auto', height: 'auto' }} 
                                         title={t.accounts.deleteAccount}
                                     >
-                                        <Trash2 size={14} />
+                                        <Trash2 size={13} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '0.75rem' }}>
                                 {t.accounts.addedOn} {new Date(account.created_at).toLocaleDateString()}
                             </div>
 
@@ -339,11 +335,11 @@ const Accounts = () => {
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: '6px',
-                                padding: '8px 10px',
-                                background: 'var(--bg-tertiary)',
+                                padding: '6px 10px',
+                                background: 'var(--bg-secondary)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: 'var(--radius-sm)',
-                                marginBottom: '16px'
+                                marginBottom: '1rem'
                             }}>
                                 <div style={{
                                     flex: 1,
@@ -359,18 +355,18 @@ const Accounts = () => {
                                 <button
                                     onClick={() => toggleKeyVisibility(account.id)}
                                     className="btn btn-ghost"
-                                    style={{ padding: '3px', minWidth: 'auto', height: 'auto' }}
+                                    style={{ padding: '3px', minWidth: 'auto', height: 'auto', color: 'var(--text-tertiary)' }}
                                     title={visibleKeys[account.id] ? t.common.hide : t.common.show}
                                 >
-                                    {visibleKeys[account.id] ? <EyeOff size={13} /> : <Eye size={13} />}
+                                    {visibleKeys[account.id] ? <EyeOff size={12} /> : <Eye size={12} />}
                                 </button>
                                 <button
                                     onClick={() => navigator.clipboard.writeText(account.api_key)}
                                     className="btn btn-ghost"
-                                    style={{ padding: '3px', minWidth: 'auto', height: 'auto' }}
+                                    style={{ padding: '3px', minWidth: 'auto', height: 'auto', color: 'var(--text-tertiary)' }}
                                     title={t.common.copy}
                                 >
-                                    <Copy size={13} />
+                                    <Copy size={12} />
                                 </button>
                             </div>
                         </div>
@@ -382,11 +378,13 @@ const Accounts = () => {
                                 fontSize: '13px',
                                 width: '100%',
                                 justifyContent: 'center',
-                                marginBottom: providers.find(p => p.name === account.provider_type)?.website_url ? '8px' : '0'
+                                height: '32px',
+                                padding: '0 10px',
+                                marginBottom: providers.find(p => p.name === account.provider_type)?.website_url ? '6px' : '0'
                             }}
                         >
                             {t.accounts.viewDomains}
-                            <ExternalLink size={13} />
+                            <ExternalLink size={12} />
                         </Link>
 
                         {providers.find(p => p.name === account.provider_type)?.website_url && (
@@ -396,30 +394,35 @@ const Accounts = () => {
                                 rel="noopener noreferrer"
                                 className="btn btn-ghost"
                                 style={{
-                                    fontSize: '13px',
+                                    fontSize: '12px',
                                     width: '100%',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    height: '32px',
+                                    padding: '0 10px',
+                                    border: '1px solid var(--border-color)',
+                                    color: 'var(--text-secondary)'
                                 }}
                             >
                                 {t.accounts.goToProvider}
-                                <ExternalLink size={13} />
+                                <ExternalLink size={12} />
                             </a>
                         )}
                     </div>
                 ))}
 
                 {accounts.length === 0 && (
-                    <div className="glass-panel" style={{ 
+                    <div className="domain-list-card" style={{ 
                         textAlign: 'center', 
-                        padding: '64px 32px',
+                        padding: '48px 24px',
                         borderStyle: 'dashed',
-                        gridColumn: '1 / -1'
+                        gridColumn: '1 / -1',
+                        cursor: 'default'
                     }}>
                         <div style={{ color: 'var(--text-tertiary)', marginBottom: '16px', fontSize: '14px' }}>
                             {t.accounts.noAccounts}
                         </div>
-                        <button onClick={openCreateModal} className="btn btn-primary">
-                            <Plus size={16} />
+                        <button onClick={openCreateModal} className="btn btn-primary" style={{ height: '34px', fontSize: '13px' }}>
+                            <Plus size={14} />
                             {t.accounts.linkFirst}
                         </button>
                     </div>
@@ -628,7 +631,7 @@ const Accounts = () => {
                     <div className="spinner" style={{ margin: '2rem auto' }}></div>
                 ) : (
                     <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                            <div className="glass-panel" style={{ padding: '16px' }}>
+                            <div className="domain-list-card" style={{ cursor: 'default' }}>
                             {ddnsToken?.has_token ? (
                                 <>
                                     <div style={{ marginBottom: '12px', padding: '10px 12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>

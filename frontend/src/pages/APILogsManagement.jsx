@@ -329,33 +329,35 @@ const APILogsManagement = () => {
 
     return (
         <div>
-            <div ref={topRef} style={{ marginBottom: '2rem' }}>
+            <div ref={topRef} style={{ marginBottom: '1.5rem' }}>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>
                             {pageTitle}
                         </h2>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '0.25rem', marginBottom: 0 }}>
                             {pageSubtitle}
                         </p>
                     </div>
-                    <div className="page-actions-bar" style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div className="page-actions-bar" style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                             onClick={handleRefresh}
                             disabled={apiLoading || schedLoading}
                             className="btn btn-secondary"
+                            style={{ height: '34px', padding: '0 10px' }}
                             title={t.common.refresh}
                         >
-                            <RefreshCw size={18} className={apiLoading || schedLoading ? "spin" : ""} />
+                            <RefreshCw size={14} className={apiLoading || schedLoading ? "spin" : ""} />
                         </button>
                         {activeTab === 'scheduler' && (
                             <button
                                 onClick={handleTriggerCheck}
                                 disabled={triggering}
                                 className="btn btn-primary"
+                                style={{ height: '34px', fontSize: '13px' }}
                                 title={t.logsManagement.triggerCheck}
                             >
-                                <Play size={18} />
+                                <Play size={14} />
                             </button>
                         )}
                     </div>
@@ -365,7 +367,7 @@ const APILogsManagement = () => {
             {/* Tab Navigation */}
             <div className="tab-nav" style={{
                 display: 'flex',
-                gap: '0.5rem',
+                gap: '1.5rem',
                 marginBottom: '1.5rem',
                 borderBottom: '1px solid var(--border-color)'
             }}>
@@ -373,61 +375,64 @@ const APILogsManagement = () => {
                     className={`tab-nav-btn${activeTab === 'api' ? ' active' : ''}`}
                     onClick={() => setActiveTab('api')}
                     style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.625rem 0',
                         background: 'none',
                         border: 'none',
-                        borderBottom: activeTab === 'api' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                        color: activeTab === 'api' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        fontWeight: activeTab === 'api' ? '600' : '400',
+                        borderBottom: activeTab === 'api' ? '2px solid var(--text-primary)' : '2px solid transparent',
+                        color: activeTab === 'api' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'api' ? '500' : '400',
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        transition: 'all 0.15s',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.375rem',
+                        fontSize: '14px'
                     }}
                 >
-                    <Activity size={18} />
-                    {t.logsManagement.operationTab} ({apiPagination.total})
+                    <Activity size={14} />
+                    {t.logsManagement.operationTab} <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{apiPagination.total}</span>
                 </button>
                 <button
                     className={`tab-nav-btn${activeTab === 'scheduler' ? ' active' : ''}`}
                     onClick={() => setActiveTab('scheduler')}
                     style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.625rem 0',
                         background: 'none',
                         border: 'none',
-                        borderBottom: activeTab === 'scheduler' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                        color: activeTab === 'scheduler' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        fontWeight: activeTab === 'scheduler' ? '600' : '400',
+                        borderBottom: activeTab === 'scheduler' ? '2px solid var(--text-primary)' : '2px solid transparent',
+                        color: activeTab === 'scheduler' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'scheduler' ? '500' : '400',
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        transition: 'all 0.15s',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.375rem',
+                        fontSize: '14px'
                     }}
                 >
-                    <Clock size={18} />
-                    {t.logsManagement.schedulerTitle} ({schedPagination.total})
+                    <Clock size={14} />
+                    {t.logsManagement.schedulerTitle} <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{schedPagination.total}</span>
                 </button>
                 <button
                     className={`tab-nav-btn${activeTab === 'login' ? ' active' : ''}`}
                     onClick={() => setActiveTab('login')}
                     style={{
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.625rem 0',
                         background: 'none',
                         border: 'none',
-                        borderBottom: activeTab === 'login' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                        color: activeTab === 'login' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        fontWeight: activeTab === 'login' ? '600' : '400',
+                        borderBottom: activeTab === 'login' ? '2px solid var(--text-primary)' : '2px solid transparent',
+                        color: activeTab === 'login' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'login' ? '500' : '400',
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        transition: 'all 0.15s',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.375rem',
+                        fontSize: '14px'
                     }}
                 >
-                    <LogIn size={18} />
-                    {t.logsManagement.loginTitle} ({loginPagination.total})
+                    <LogIn size={14} />
+                    {t.logsManagement.loginTitle} <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{loginPagination.total}</span>
                 </button>
             </div>
 
@@ -435,47 +440,49 @@ const APILogsManagement = () => {
                 <div style={{ 
                     color: 'var(--danger)', 
                     marginBottom: '1rem', 
-                    padding: '1rem', 
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                    borderRadius: 'var(--radius-md)' 
+                    padding: '0.75rem 1rem', 
+                    backgroundColor: 'rgba(255, 0, 0, 0.05)', 
+                    border: '1px solid rgba(255, 0, 0, 0.15)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px'
                 }}>
                     {error}
                 </div>
             )}
 
             {((activeTab === 'api' && apiLoading) || (activeTab === 'scheduler' && schedLoading) || (activeTab === 'login' && loginLoading)) ? (
-                <div style={{ textAlign: 'center', padding: '4rem' }}>
-                    <div className="spinner" style={{ margin: '0 auto' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                    <div className="spinner"></div>
                 </div>
             ) : (
                 <>
                     {/* API Logs */}
                     {activeTab === 'api' && (
                         <>
-                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.5rem' }}>
                                 {apiLogs.map(log => {
                             const isExpanded = expandedLogs.has(log.id);
                             const hasRequestBody = log.request_body && log.request_body.trim();
                             const hasResponseBody = log.response_body && log.response_body.trim();
                             
                             return (
-                                <div key={log.id} className="glass-panel" style={{
-                                    padding: '1rem',
-                                    transition: 'all 0.2s'
+                                <div key={log.id} className="domain-list-card" style={{
+                                    padding: '0.875rem 1rem',
+                                    cursor: 'default'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flexDirection: 'column' }}>
                                         {/* Top Row: Status + Method + Path */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', flexWrap: 'wrap' }}>
                                             {/* Status Code */}
                                             <span style={{ 
-                                                fontSize: '0.75rem', 
+                                                fontSize: '11px', 
                                                 fontWeight: '700',
                                                 color: getStatusCodeColor(log.status_code),
-                                                padding: '0.25rem 0.5rem',
+                                                padding: '2px 6px',
                                                 backgroundColor: `${getStatusCodeColor(log.status_code)}15`,
                                                 borderRadius: 'var(--radius-sm)',
                                                 fontFamily: 'monospace',
-                                                minWidth: '50px',
+                                                minWidth: '40px',
                                                 textAlign: 'center',
                                                 flexShrink: 0
                                             }}>
@@ -484,11 +491,11 @@ const APILogsManagement = () => {
 
                                             {/* Method */}
                                             <span style={{ 
-                                                fontSize: '0.75rem', 
+                                                fontSize: '11px', 
                                                 fontWeight: '700',
                                                 color: getMethodColor(log.method),
-                                                padding: '0.125rem 0.5rem',
-                                                backgroundColor: `${getMethodColor(log.method)}20`,
+                                                padding: '2px 6px',
+                                                backgroundColor: `${getMethodColor(log.method)}15`,
                                                 borderRadius: 'var(--radius-sm)',
                                                 fontFamily: 'monospace',
                                                 textTransform: 'uppercase',
@@ -499,11 +506,10 @@ const APILogsManagement = () => {
                                             </span>
 
                                             {/* Path - takes remaining space */}
-                                            <span style={{ 
-                                                fontSize: '0.875rem', 
+                                            <span className="font-mono" style={{ 
+                                                fontSize: '13px', 
                                                 fontWeight: '600',
                                                 color: 'var(--text-primary)',
-                                                fontFamily: 'monospace',
                                                 flex: 1,
                                                 minWidth: 0,
                                                 wordBreak: 'break-all'
@@ -528,17 +534,17 @@ const APILogsManagement = () => {
                                                     marginLeft: 'auto'
                                                 }}
                                             >
-                                                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </button>
                                         </div>
 
                                         {/* Bottom Row: Meta Info */}
                                         <div style={{ 
-                                            fontSize: '0.75rem', 
+                                            fontSize: '12px', 
                                             color: 'var(--text-tertiary)',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.5rem',
+                                            gap: '0.75rem',
                                             flexWrap: 'wrap',
                                             width: '100%',
                                             paddingLeft: '0.25rem'
@@ -564,11 +570,10 @@ const APILogsManagement = () => {
 
                                             {/* IP Address */}
                                             {log.ip_address && (
-                                                <div style={{ 
+                                                <div className="font-mono" style={{ 
                                                     display: 'flex', 
                                                     alignItems: 'center', 
                                                     gap: '0.25rem',
-                                                    fontFamily: 'monospace',
                                                     whiteSpace: 'nowrap'
                                                 }}>
                                                     <Globe size={12} />
@@ -578,8 +583,7 @@ const APILogsManagement = () => {
 
                                             {/* Query - can wrap to new line if needed */}
                                             {log.query && (
-                                                <div style={{ 
-                                                    fontFamily: 'monospace',
+                                                <div className="font-mono" style={{ 
                                                     color: 'var(--text-secondary)',
                                                     wordBreak: 'break-all',
                                                     flex: '1 1 100%'
@@ -606,24 +610,24 @@ const APILogsManagement = () => {
 
                                     {/* Expanded Details */}
                                     {isExpanded && (
-                                        <div style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}>
+                                        <div style={{ marginTop: '0.75rem', display: 'grid', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
                                             {/* Request Headers */}
                                             {log.request_headers && (
                                                 <div>
                                                     <div style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '11px', 
                                                         fontWeight: '600', 
                                                         color: 'var(--text-secondary)',
-                                                        marginBottom: '0.5rem',
+                                                        marginBottom: '0.25rem',
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
                                                         {t.logsManagement.requestHeaders}
                                                     </div>
                                                     <pre style={{ 
-                                                        fontSize: '0.75rem',
+                                                        fontSize: '12px',
                                                         backgroundColor: 'var(--bg-secondary)',
-                                                        padding: '0.75rem',
+                                                        padding: '0.5rem 0.75rem',
                                                         borderRadius: 'var(--radius-sm)',
                                                         overflow: 'auto',
                                                         overflowWrap: 'break-word',
@@ -633,7 +637,8 @@ const APILogsManagement = () => {
                                                         fontFamily: 'monospace',
                                                         color: 'var(--text-primary)',
                                                         maxHeight: '200px',
-                                                        lineHeight: '1.5'
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid var(--border-color)'
                                                     }}>
                                                         {formatJSON(log.request_headers)}
                                                     </pre>
@@ -644,19 +649,19 @@ const APILogsManagement = () => {
                                             {hasRequestBody && (
                                                 <div>
                                                     <div style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '11px', 
                                                         fontWeight: '600', 
                                                         color: 'var(--text-secondary)',
-                                                        marginBottom: '0.5rem',
+                                                        marginBottom: '0.25rem',
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
                                                         {t.logsManagement.requestBody}
                                                     </div>
                                                     <pre style={{ 
-                                                        fontSize: '0.75rem',
+                                                        fontSize: '12px',
                                                         backgroundColor: 'var(--bg-secondary)',
-                                                        padding: '0.75rem',
+                                                        padding: '0.5rem 0.75rem',
                                                         borderRadius: 'var(--radius-sm)',
                                                         overflow: 'auto',
                                                         overflowWrap: 'break-word',
@@ -666,7 +671,8 @@ const APILogsManagement = () => {
                                                         fontFamily: 'monospace',
                                                         color: 'var(--text-primary)',
                                                         maxHeight: '300px',
-                                                        lineHeight: '1.5'
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid var(--border-color)'
                                                     }}>
                                                         {formatJSON(log.request_body)}
                                                     </pre>
@@ -677,19 +683,19 @@ const APILogsManagement = () => {
                                             {hasResponseBody && (
                                                 <div>
                                                     <div style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '11px', 
                                                         fontWeight: '600', 
                                                         color: 'var(--text-secondary)',
-                                                        marginBottom: '0.5rem',
+                                                        marginBottom: '0.25rem',
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
                                                         {t.logsManagement.responseBody}
                                                     </div>
                                                     <pre style={{ 
-                                                        fontSize: '0.75rem',
+                                                        fontSize: '12px',
                                                         backgroundColor: 'var(--bg-secondary)',
-                                                        padding: '0.75rem',
+                                                        padding: '0.5rem 0.75rem',
                                                         borderRadius: 'var(--radius-sm)',
                                                         overflow: 'auto',
                                                         overflowWrap: 'break-word',
@@ -699,7 +705,8 @@ const APILogsManagement = () => {
                                                         fontFamily: 'monospace',
                                                         color: 'var(--text-primary)',
                                                         maxHeight: '300px',
-                                                        lineHeight: '1.5'
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid var(--border-color)'
                                                     }}>
                                                         {formatJSON(log.response_body)}
                                                     </pre>
@@ -710,23 +717,23 @@ const APILogsManagement = () => {
                                             {log.user_agent && (
                                                 <div>
                                                     <div style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '11px', 
                                                         fontWeight: '600', 
                                                         color: 'var(--text-secondary)',
-                                                        marginBottom: '0.5rem',
+                                                        marginBottom: '0.25rem',
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.05em'
                                                     }}>
                                                         User Agent
                                                     </div>
-                                                    <div style={{ 
-                                                        fontSize: '0.75rem',
+                                                    <div className="font-mono" style={{ 
+                                                        fontSize: '12px',
                                                         backgroundColor: 'var(--bg-secondary)',
-                                                        padding: '0.75rem',
+                                                        padding: '0.5rem 0.75rem',
                                                         borderRadius: 'var(--radius-sm)',
-                                                        fontFamily: 'monospace',
                                                         color: 'var(--text-tertiary)',
-                                                        wordBreak: 'break-all'
+                                                        wordBreak: 'break-all',
+                                                        border: '1px solid var(--border-color)'
                                                     }}>
                                                         {log.user_agent}
                                                     </div>
@@ -738,7 +745,7 @@ const APILogsManagement = () => {
                             );
                         })}
                         {apiLogs.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                            <div className="domain-list-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', cursor: 'default' }}>
                                 {t.logsManagement.noOperationLogs}
                             </div>
                         )}
@@ -751,8 +758,8 @@ const APILogsManagement = () => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             gap: '0.75rem',
-                            marginTop: '2rem',
-                            padding: '1rem',
+                            marginTop: '1.5rem',
+                            padding: '1rem 0 0 0',
                             borderTop: '1px solid var(--border-color)'
                         }}>
                             <button
@@ -761,6 +768,8 @@ const APILogsManagement = () => {
                                 className="btn btn-secondary"
                                 style={{ 
                                     minWidth: '80px',
+                                    height: '34px',
+                                    fontSize: '13px',
                                     opacity: apiPagination.page === 1 ? 0.5 : 1,
                                     cursor: apiPagination.page === 1 ? 'not-allowed' : 'pointer'
                                 }}
@@ -771,16 +780,18 @@ const APILogsManagement = () => {
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: '0.5rem',
-                                padding: '0.5rem 1rem',
+                                padding: '0 0.75rem',
+                                height: '34px',
                                 backgroundColor: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
                                 borderRadius: 'var(--radius-sm)',
-                                fontSize: '0.875rem'
+                                fontSize: '13px'
                             }}>
                                 <span style={{ color: 'var(--text-secondary)' }}>
                                     {t.logsManagement.page}
                                 </span>
                                 <span style={{ 
-                                    color: 'var(--accent-primary)', 
+                                    color: 'var(--text-primary)', 
                                     fontWeight: '600',
                                     minWidth: '2ch',
                                     textAlign: 'center'
@@ -799,7 +810,7 @@ const APILogsManagement = () => {
                                     paddingLeft: '0.5rem', 
                                     borderLeft: '1px solid var(--border-color)',
                                     color: 'var(--text-tertiary)',
-                                    fontSize: '0.8125rem'
+                                    fontSize: '11px'
                                 }}>
                                     {t.common.totalItems.replace('{count}', apiPagination.total)}
                                 </span>
@@ -810,6 +821,8 @@ const APILogsManagement = () => {
                                 className="btn btn-secondary"
                                 style={{ 
                                     minWidth: '80px',
+                                    height: '34px',
+                                    fontSize: '13px',
                                     opacity: apiPagination.page === apiPagination.totalPages ? 0.5 : 1,
                                     cursor: apiPagination.page === apiPagination.totalPages ? 'not-allowed' : 'pointer'
                                 }}
@@ -824,7 +837,7 @@ const APILogsManagement = () => {
                     {/* Scheduler Logs */}
                     {activeTab === 'scheduler' && (
                         <>
-                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.5rem' }}>
                                 {schedulerLogs.map(log => {
                                     let details = {};
                                     try {
@@ -834,36 +847,34 @@ const APILogsManagement = () => {
                                     }
 
                                     return (
-                                        <div key={log.id} className="glass-panel" style={{
-                                            padding: '1rem',
-                                            transition: 'all 0.2s'
+                                        <div key={log.id} className="domain-list-card" style={{
+                                            padding: '0.875rem 1rem',
+                                            cursor: 'default'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                 <span style={{ 
-                                                    fontSize: '1.25rem',
-                                                    color: getStatusColor(log.status),
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: getStatusColor(log.status),
                                                     flexShrink: 0
-                                                }}>
-                                                    {getStatusIcon(log.status)}
-                                                </span>
+                                                }} />
                                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
                                                         <span style={{ 
-                                                            fontSize: '0.875rem', 
+                                                            fontSize: '14px', 
                                                             fontWeight: '600',
                                                             color: 'var(--text-primary)'
                                                         }}>
                                                             {t.logsManagement?.taskNames?.[log.task_name] || log.task_name}
                                                         </span>
-                                                        <span style={{ 
-                                                            fontSize: '0.75rem', 
+                                                        <span className="badge" style={{ 
+                                                            fontSize: '11px', 
                                                             fontWeight: '600',
                                                             color: getStatusColor(log.status),
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.05em',
-                                                            padding: '0.125rem 0.5rem',
-                                                            backgroundColor: `${getStatusColor(log.status)}20`,
-                                                            borderRadius: 'var(--radius-sm)'
+                                                            backgroundColor: `${getStatusColor(log.status)}15`,
+                                                            height: '20px',
+                                                            padding: '1px 6px'
                                                         }}>
                                                             {log.status}
                                                         </span>
@@ -871,7 +882,7 @@ const APILogsManagement = () => {
                                                     
                                                     {log.message && (
                                                         <div style={{ 
-                                                            fontSize: '0.875rem', 
+                                                            fontSize: '13px', 
                                                             color: 'var(--text-secondary)',
                                                             marginBottom: '0.25rem'
                                                         }}>
@@ -881,7 +892,7 @@ const APILogsManagement = () => {
 
                                                     {details && Object.keys(details).length > 0 && (
                                                         <div style={{ 
-                                                            fontSize: '0.75rem', 
+                                                            fontSize: '12px', 
                                                             color: 'var(--text-tertiary)',
                                                             marginTop: '0.5rem'
                                                         }}>
@@ -918,9 +929,10 @@ const APILogsManagement = () => {
                                                                 <div style={{ 
                                                                     marginTop: '0.5rem',
                                                                     padding: '0.5rem',
-                                                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                                                    backgroundColor: 'rgba(255, 0, 0, 0.05)',
                                                                     borderRadius: 'var(--radius-sm)',
-                                                                    color: '#ef4444'
+                                                                    color: '#ef4444',
+                                                                    border: '1px solid rgba(255, 0, 0, 0.1)'
                                                                 }}>
                                                                     {details.errors.map((err, idx) => (
                                                                         <div key={idx} style={{ marginBottom: '0.25rem' }}>
@@ -933,11 +945,11 @@ const APILogsManagement = () => {
                                                     )}
                                                 </div>
                                                 <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                                                         {formatDate(log.started_at)}
                                                     </div>
                                                     {log.duration_ms && (
-                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                                                             ⏱ {log.duration_ms}ms
                                                         </div>
                                                     )}
@@ -947,7 +959,7 @@ const APILogsManagement = () => {
                                     );
                                 })}
                                 {schedulerLogs.length === 0 && (
-                                    <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                                    <div className="domain-list-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', cursor: 'default' }}>
                                         {t.logsManagement.noSchedulerLogs}
                                     </div>
                                 )}
@@ -960,8 +972,8 @@ const APILogsManagement = () => {
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     gap: '0.75rem',
-                                    marginTop: '2rem',
-                                    padding: '1rem',
+                                    marginTop: '1.5rem',
+                                    padding: '1rem 0 0 0',
                                     borderTop: '1px solid var(--border-color)'
                                 }}>
                                     <button
@@ -970,6 +982,8 @@ const APILogsManagement = () => {
                                         className="btn btn-secondary"
                                         style={{ 
                                             minWidth: '80px',
+                                            height: '34px',
+                                            fontSize: '13px',
                                             opacity: schedPagination.page === 1 ? 0.5 : 1,
                                             cursor: schedPagination.page === 1 ? 'not-allowed' : 'pointer'
                                         }}
@@ -980,16 +994,18 @@ const APILogsManagement = () => {
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         gap: '0.5rem',
-                                        padding: '0.5rem 1rem',
+                                        padding: '0 0.75rem',
+                                        height: '34px',
                                         backgroundColor: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-color)',
                                         borderRadius: 'var(--radius-sm)',
-                                        fontSize: '0.875rem'
+                                        fontSize: '13px'
                                     }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>
                                             {t.logsManagement.page}
                                         </span>
                                         <span style={{ 
-                                            color: 'var(--accent-primary)', 
+                                            color: 'var(--text-primary)', 
                                             fontWeight: '600',
                                             minWidth: '2ch',
                                             textAlign: 'center'
@@ -1008,7 +1024,7 @@ const APILogsManagement = () => {
                                             paddingLeft: '0.5rem', 
                                             borderLeft: '1px solid var(--border-color)',
                                             color: 'var(--text-tertiary)',
-                                            fontSize: '0.8125rem'
+                                            fontSize: '11px'
                                         }}>
                                             {t.common.totalItems.replace('{count}', schedPagination.total)}
                                         </span>
@@ -1019,6 +1035,8 @@ const APILogsManagement = () => {
                                         className="btn btn-secondary"
                                         style={{ 
                                             minWidth: '80px',
+                                            height: '34px',
+                                            fontSize: '13px',
                                             opacity: schedPagination.page === schedPagination.totalPages ? 0.5 : 1,
                                             cursor: schedPagination.page === schedPagination.totalPages ? 'not-allowed' : 'pointer'
                                         }}
@@ -1033,38 +1051,38 @@ const APILogsManagement = () => {
                     {/* Login Logs */}
                     {activeTab === 'login' && (
                         <>
-                            <div className="logs-list" style={{ display: 'grid', gap: '0.75rem' }}>
+                            <div className="logs-list" style={{ display: 'grid', gap: '0.5rem' }}>
                                 {loginLogs.map(log => (
-                                    <div key={log.id} className="glass-panel" style={{
-                                        padding: '1rem',
-                                        transition: 'all 0.2s'
+                                    <div key={log.id} className="domain-list-card" style={{
+                                        padding: '0.875rem 1rem',
+                                        cursor: 'default'
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <LogIn size={20} style={{ 
+                                            <LogIn size={16} style={{ 
                                                 color: log.status === 'success' ? '#10b981' : '#ef4444',
                                                 flexShrink: 0
                                             }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.375rem' }}>
-                                                    <span style={{ 
-                                                        fontSize: '0.875rem', 
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+                                                    <span className="badge" style={{ 
+                                                        fontSize: '11px', 
                                                         fontWeight: '600',
                                                         color: log.status === 'success' ? '#10b981' : '#ef4444',
-                                                        padding: '0.25rem 0.625rem',
                                                         backgroundColor: log.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                                        borderRadius: 'var(--radius-sm)'
+                                                        height: '20px',
+                                                        padding: '1px 6px'
                                                     }}>
                                                         {log.status === 'success' 
                                                             ? t.logsManagement.loginSuccess
                                                             : t.logsManagement.loginFailed}
                                                     </span>
-                                                    <span style={{ fontSize: '0.9375rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '600' }}>
                                                         {log.username}
                                                     </span>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                                     {log.ip_address && (
-                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                                                        <span className="font-mono" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                                                             <Globe size={12} style={{ flexShrink: 0 }} />
                                                             {log.ip_address}
                                                         </span>
@@ -1083,7 +1101,7 @@ const APILogsManagement = () => {
                                                 </div>
                                                 {log.message && log.status === 'failed' && (
                                                     <div style={{ 
-                                                        fontSize: '0.75rem', 
+                                                        fontSize: '11px', 
                                                         color: '#ef4444',
                                                         marginTop: '0.25rem'
                                                     }}>
@@ -1092,7 +1110,7 @@ const APILogsManagement = () => {
                                                 )}
                                             </div>
                                             <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                                                     {formatDate(log.created_at)}
                                                 </div>
                                             </div>
@@ -1100,7 +1118,7 @@ const APILogsManagement = () => {
                                     </div>
                                 ))}
                                 {loginLogs.length === 0 && (
-                                    <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                                    <div className="domain-list-card" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', cursor: 'default' }}>
                                         {t.logsManagement.noLoginLogs}
                                     </div>
                                 )}
@@ -1113,8 +1131,8 @@ const APILogsManagement = () => {
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     gap: '0.75rem',
-                                    marginTop: '2rem',
-                                    padding: '1rem',
+                                    marginTop: '1.5rem',
+                                    padding: '1rem 0 0 0',
                                     borderTop: '1px solid var(--border-color)'
                                 }}>
                                     <button
@@ -1123,6 +1141,8 @@ const APILogsManagement = () => {
                                         className="btn btn-secondary"
                                         style={{ 
                                             minWidth: '80px',
+                                            height: '34px',
+                                            fontSize: '13px',
                                             opacity: loginPagination.page === 1 ? 0.5 : 1,
                                             cursor: loginPagination.page === 1 ? 'not-allowed' : 'pointer'
                                         }}
@@ -1133,16 +1153,18 @@ const APILogsManagement = () => {
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         gap: '0.5rem',
-                                        padding: '0.5rem 1rem',
+                                        padding: '0 0.75rem',
+                                        height: '34px',
                                         backgroundColor: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-color)',
                                         borderRadius: 'var(--radius-sm)',
-                                        fontSize: '0.875rem'
+                                        fontSize: '13px'
                                     }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>
                                             {t.logsManagement.page}
                                         </span>
                                         <span style={{ 
-                                            color: 'var(--accent-primary)', 
+                                            color: 'var(--text-primary)', 
                                             fontWeight: '600',
                                             minWidth: '2ch',
                                             textAlign: 'center'
@@ -1161,7 +1183,7 @@ const APILogsManagement = () => {
                                             paddingLeft: '0.5rem', 
                                             borderLeft: '1px solid var(--border-color)',
                                             color: 'var(--text-tertiary)',
-                                            fontSize: '0.8125rem'
+                                            fontSize: '11px'
                                         }}>
                                             {t.common.totalItems.replace('{count}', loginPagination.total)}
                                         </span>
@@ -1172,6 +1194,8 @@ const APILogsManagement = () => {
                                         className="btn btn-secondary"
                                         style={{ 
                                             minWidth: '80px',
+                                            height: '34px',
+                                            fontSize: '13px',
                                             opacity: loginPagination.page === loginPagination.totalPages ? 0.5 : 1,
                                             cursor: loginPagination.page === loginPagination.totalPages ? 'not-allowed' : 'pointer'
                                         }}

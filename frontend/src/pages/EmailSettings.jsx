@@ -111,12 +111,11 @@ const EmailSettings = () => {
 
     return (
         <div>
-            <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Mail size={24} />
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>
                     {t.emailSettings.title}
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '0.25rem', marginBottom: 0 }}>
                     {t.emailSettings.subtitle}
                 </p>
             </div>
@@ -128,11 +127,13 @@ const EmailSettings = () => {
                     gap: '0.5rem',
                     color: 'var(--danger)', 
                     marginBottom: '1rem', 
-                    padding: '1rem', 
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                    borderRadius: 'var(--radius-md)' 
+                    padding: '0.75rem 1rem', 
+                    backgroundColor: 'rgba(255, 0, 0, 0.05)', 
+                    border: '1px solid rgba(255, 0, 0, 0.15)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px'
                 }}>
-                    <AlertCircle size={18} />
+                    <AlertCircle size={16} />
                     {error}
                 </div>
             )}
@@ -144,24 +145,26 @@ const EmailSettings = () => {
                     gap: '0.5rem',
                     color: 'var(--success)', 
                     marginBottom: '1rem', 
-                    padding: '1rem', 
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)', 
-                    borderRadius: 'var(--radius-md)' 
+                    padding: '0.75rem 1rem', 
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)', 
+                    border: '1px solid rgba(16, 185, 129, 0.15)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px'
                 }}>
-                    <CheckCircle size={18} />
+                    <CheckCircle size={16} />
                     {success}
                 </div>
             )}
 
-            <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <div className="domain-list-card" style={{ padding: '1.25rem', cursor: 'default' }}>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="form-group" style={{ marginBottom: config.enabled ? '1rem' : 0 }}>
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
                             <input
                                 type="checkbox"
                                 checked={config.enabled}
                                 onChange={e => setConfig({ ...config, enabled: e.target.checked })}
-                                style={{ width: 'auto' }}
+                                style={{ width: 'auto', cursor: 'pointer' }}
                             />
                             {t.emailSettings.enabled}
                         </label>
@@ -250,7 +253,7 @@ const EmailSettings = () => {
                                     placeholder="your-email@example.com"
                                     required
                                 />
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.375rem' }}>
                                     {t.emailSettings.toEmailHint}
                                 </div>
                             </div>
@@ -261,11 +264,12 @@ const EmailSettings = () => {
                                     className="form-input"
                                     value={config.language || 'zh'}
                                     onChange={e => setConfig({ ...config, language: e.target.value })}
+                                    style={{ height: '34px', fontSize: '13px' }}
                                 >
                                     <option value="zh">{languages.zh.name}</option>
                                     <option value="en">{languages.en.name}</option>
                                 </select>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.375rem' }}>
                                     {t.emailSettings.languageHint}
                                 </div>
                             </div>
@@ -273,24 +277,25 @@ const EmailSettings = () => {
                             <div style={{ 
                                 backgroundColor: 'var(--bg-secondary)', 
                                 padding: '1rem', 
-                                borderRadius: 'var(--radius-md)', 
+                                border: '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-sm)', 
                                 marginTop: '1rem',
-                                fontSize: '0.875rem',
+                                fontSize: '13px',
                                 color: 'var(--text-secondary)'
                             }}>
                                 <strong>{t.emailSettings.commonSmtp}</strong>
-                                <ul style={{ marginTop: '0.5rem', marginLeft: '1.5rem' }}>
-                                    <li>{t.emailSettings.providers.gmail}</li>
-                                    <li>{t.emailSettings.providers.outlook}</li>
-                                    <li>{t.emailSettings.providers.qq}</li>
-                                    <li>{t.emailSettings.providers.mail163}</li>
+                                <ul style={{ marginTop: '0.5rem', marginLeft: '1.25rem', padding: 0 }}>
+                                    <li style={{ marginBottom: '0.25rem' }}>{t.emailSettings.providers.gmail}</li>
+                                    <li style={{ marginBottom: '0.25rem' }}>{t.emailSettings.providers.outlook}</li>
+                                    <li style={{ marginBottom: '0.25rem' }}>{t.emailSettings.providers.qq}</li>
+                                    <li style={{ marginBottom: 0 }}>{t.emailSettings.providers.mail163}</li>
                                 </ul>
                             </div>
                         </>
                     )}
 
-                    <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
-                        <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                        <button type="submit" className="btn btn-primary" style={{ height: '34px', fontSize: '13px' }} disabled={saving}>
                             {saving ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : t.common.save}
                         </button>
                     </div>
@@ -298,9 +303,9 @@ const EmailSettings = () => {
             </div>
 
             {config.enabled && config.smtp_host && config.to_email && (
-                <div className="glass-panel" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>{t.emailSettings.testTitle}</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                <div className="domain-list-card" style={{ padding: '1.25rem', marginTop: '1.25rem', cursor: 'default' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '0.75rem', margin: '0 0 0.75rem 0' }}>{t.emailSettings.testTitle}</h3>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '1rem', margin: '0 0 1rem 0' }}>
                         {t.emailSettings.testDesc.replace('{email}', config.to_email).split(config.to_email).map((part, idx, arr) => (
                             <span key={idx}>
                                 {part}
@@ -312,13 +317,14 @@ const EmailSettings = () => {
                         type="button" 
                         onClick={handleTest} 
                         className="btn btn-secondary"
+                        style={{ height: '34px', fontSize: '13px' }}
                         disabled={testing}
                     >
                         {testing ? (
                             <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div>
                         ) : (
                             <>
-                                <Send size={16} />
+                                <Send size={14} style={{ marginRight: '6px' }} />
                                 {t.emailSettings.sendTest}
                             </>
                         )}

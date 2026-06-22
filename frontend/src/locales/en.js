@@ -66,6 +66,8 @@ export const en = {
     settings: 'Settings',
     logsManagement: 'Logs',
     emailNotifications: 'Email Notifications',
+    theme: 'Theme Mode',
+    language: 'Language',
   },
 
   accounts: {

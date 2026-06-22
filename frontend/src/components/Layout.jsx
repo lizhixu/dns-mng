@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
-import { useTheme } from '../ThemeContext';
 import { api } from '../api';
-import { Sun, Moon, Monitor, FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup } from 'lucide-react';
+import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup } from 'lucide-react';
+import ThemeSwitcher from './ThemeSwitcher';
+import LanguageSelect from './LanguageSelect';
 import BackToTop from './BackToTop';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -12,7 +13,7 @@ const Layout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const { themeMode, changeTheme } = useTheme();
+
     const [showSettings, setShowSettings] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState('');
@@ -26,7 +27,7 @@ const Layout = () => {
         confirm_password: ''
     });
 
-    const { language, changeLanguage, languages, t } = useLanguage();
+    const { t } = useLanguage();
 
     useEffect(() => {
         if (!isMobile) {
@@ -69,20 +70,6 @@ const Layout = () => {
         if (location.pathname === path) return true;
         return location.pathname.startsWith(path + '/');
     };
-
-    const menuItemStyle = (path) => ({
-        display: 'block',
-        padding: '8px',
-        marginBottom: '4px',
-        borderRadius: 'var(--radius-sm)',
-        background: isActive(path) ? 'var(--bg-tertiary)' : 'transparent',
-        color: isActive(path) ? 'var(--text-primary)' : 'var(--text-secondary)',
-        fontSize: '14px',
-        fontWeight: isActive(path) ? '500' : '400',
-        transition: 'var(--transition)',
-        textDecoration: 'none',
-        cursor: 'pointer'
-    });
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
@@ -136,15 +123,15 @@ const Layout = () => {
 
     const sidebar = (
         <aside className={`app-sidebar ${isMobile ? 'mobile' : 'desktop'} ${sidebarOpen ? 'open' : ''}`}>
-            <div className="app-sidebar-header">
-                <h1 style={{
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    padding: '0 8px',
-                    margin: 0
+            <div className="app-sidebar-header" style={{ paddingLeft: '12px', paddingRight: '12px', marginBottom: '28px' }}>
+                <span className="app-sidebar-title" style={{ 
+                    fontSize: '16px', 
+                    fontWeight: '700', 
+                    letterSpacing: '-0.02em',
+                    color: 'var(--text-primary)'
                 }}>
                     {t.layout.title}
-                </h1>
+                </span>
                 {isMobile && (
                     <button
                         type="button"
@@ -152,25 +139,35 @@ const Layout = () => {
                         className="mobile-sidebar-close"
                         aria-label={t.common.close}
                     >
-                        <X size={18} />
+                        <X size={16} />
                     </button>
                 )}
             </div>
-            <nav style={{ flex: 1, minHeight: 0 }}>
+            <nav className="sidebar-nav">
                 {navigationItems.map(({ path, icon: Icon, label }) => (
-                    <Link key={path} to={path} style={menuItemStyle(path)}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Icon size={14} />
-                            {label}
-                        </div>
+                    <Link key={path} to={path} className={`nav-link ${isActive(path) ? 'active' : ''}`}>
+                        <Icon size={15} />
+                        <span>{label}</span>
                     </Link>
                 ))}
             </nav>
+            {isMobile && (
+                <div className="sidebar-footer">
+                    <div className="sidebar-footer-row">
+                        <span className="sidebar-footer-label">{t.layout.theme}</span>
+                        <ThemeSwitcher style={{ margin: 0 }} />
+                    </div>
+                    <div className="sidebar-footer-row">
+                        <span className="sidebar-footer-label">{t.layout.language}</span>
+                        <LanguageSelect style={{ height: '30px' }} />
+                    </div>
+                </div>
+            )}
         </aside>
     );
 
     return (
-        <div className="app-shell" style={{ display: 'flex', height: '100vh' }}>
+        <div className="app-shell">
             {!isMobile && sidebar}
 
             {isMobile && (
@@ -183,25 +180,8 @@ const Layout = () => {
                 </>
             )}
 
-            <main style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                minWidth: 0
-            }}>
-                <header className="app-header" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: isMobile ? '0 16px' : '0 24px',
-                    height: '64px',
-                    background: 'var(--bg-primary)',
-                    borderBottom: '1px solid var(--border-color)',
-                    flexShrink: 0,
-                    gap: '12px',
-                    position: 'relative',
-                    zIndex: 50
-                }}>
+            <main className="app-main">
+                <header className="app-header">
                     <div className="app-header-left" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                         {isMobile && (
                             <button
@@ -215,85 +195,21 @@ const Layout = () => {
                         )}
                         {isMobile && (
                             <div className="app-header-title" style={{ minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', lineHeight: 1.1 }}>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', lineHeight: 1.1 }}>
                                     DNS Manager
                                 </span>
-                                <span style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {t.layout.title}
                                 </span>
                             </div>
                         )}
                     </div>
-                    <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', minWidth: 0, flexShrink: 0 }}>
-                        <div className="header-theme-switcher" style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '2px', flexShrink: 0 }}>
-                            <button
-                                onClick={() => changeTheme('light')}
-                                title={t.layout.themeLight}
-                                style={{
-                                    padding: '6px',
-                                    borderRadius: '3px',
-                                    background: themeMode === 'light' ? 'var(--bg-primary)' : 'transparent',
-                                    color: themeMode === 'light' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                    border: themeMode === 'light' ? '1px solid var(--border-color)' : '1px solid transparent',
-                                    transition: 'var(--transition)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <Sun size={14} />
-                            </button>
-                            <button
-                                onClick={() => changeTheme('system')}
-                                title={t.layout.themeSystem}
-                                style={{
-                                    padding: '6px',
-                                    borderRadius: '3px',
-                                    background: themeMode === 'system' ? 'var(--bg-primary)' : 'transparent',
-                                    color: themeMode === 'system' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                    border: themeMode === 'system' ? '1px solid var(--border-color)' : '1px solid transparent',
-                                    transition: 'var(--transition)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <Monitor size={14} />
-                            </button>
-                            <button
-                                onClick={() => changeTheme('dark')}
-                                title={t.layout.themeDark}
-                                style={{
-                                    padding: '6px',
-                                    borderRadius: '3px',
-                                    background: themeMode === 'dark' ? 'var(--bg-primary)' : 'transparent',
-                                    color: themeMode === 'dark' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                    border: themeMode === 'dark' ? '1px solid var(--border-color)' : '1px solid transparent',
-                                    transition: 'var(--transition)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <Moon size={14} />
-                            </button>
-                        </div>
+                    <div className="app-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flexShrink: 0 }}>
+                        {/* Theme Switcher */}
+                        {!isMobile && <ThemeSwitcher />}
 
-                        <select
-                            value={language}
-                            onChange={(e) => changeLanguage(e.target.value)}
-                            className={`form-input header-language-select ${isMobile ? 'mobile' : 'desktop'}`}
-                            style={{
-                                width: isMobile ? '72px' : 'auto',
-                                height: '32px',
-                                padding: isMobile ? '0 6px' : '0 8px',
-                                fontSize: '13px'
-                            }}
-                        >
-                            {Object.entries(languages).map(([code, lang]) => (
-                                <option key={code} value={code}>{isMobile ? code.toUpperCase() : lang.name}</option>
-                            ))}
-                        </select>
+                        {/* Language Select */}
+                        {!isMobile && <LanguageSelect />}
 
                         {!isMobile && (
                             <a
@@ -301,39 +217,22 @@ const Layout = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="GitHub"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '6px',
-                                    background: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    color: 'var(--text-secondary)',
-                                    transition: 'var(--transition)',
-                                    textDecoration: 'none'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.color = 'var(--text-primary)';
-                                    e.currentTarget.style.borderColor = 'var(--text-tertiary)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.color = 'var(--text-secondary)';
-                                    e.currentTarget.style.borderColor = 'var(--border-color)';
-                                }}
+                                className="login-toolbar-btn"
+                                style={{ width: '32px', height: '32px' }}
                             >
-                                <Github size={16} />
+                                <Github size={14} />
                             </a>
                         )}
 
                         {!isMobile && (
                             <div style={{
-                                height: '20px',
+                                height: '16px',
                                 width: '1px',
                                 background: 'var(--border-color)'
                             }}></div>
                         )}
 
+                        {/* User Settings Dropdown */}
                         <div ref={settingsRef} style={{ position: 'relative', minWidth: 0 }}>
                             <button
                                 className="header-user-btn"
@@ -341,25 +240,26 @@ const Layout = () => {
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: isMobile ? '0.35rem' : '0.5rem',
-                                    padding: isMobile ? '6px 8px' : '6px 10px',
+                                    gap: '6px',
+                                    padding: '6px 10px',
                                     background: 'var(--bg-secondary)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: 'var(--radius-sm)',
                                     color: 'var(--text-primary)',
-                                    fontSize: '14px',
+                                    fontSize: '13px',
                                     cursor: 'pointer',
                                     transition: 'var(--transition)',
+                                    height: '32px',
                                     maxWidth: isMobile ? '120px' : 'none'
                                 }}
                             >
-                                <Settings size={14} />
+                                <Settings size={13} />
                                 <span className="header-user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {user?.username}
                                 </span>
-                                <ChevronDown size={14} style={{
+                                <ChevronDown size={13} style={{
                                     transform: showSettings ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s',
+                                    transition: 'transform 0.15s',
                                     flexShrink: 0
                                 }} />
                             </button>
@@ -369,149 +269,148 @@ const Layout = () => {
                                     position: 'absolute',
                                     top: '100%',
                                     right: 0,
-                                    marginTop: '8px',
-                                    width: isMobile ? 'min(320px, calc(100vw - 32px))' : '320px',
+                                    marginTop: '6px',
+                                    width: isMobile ? 'min(300px, calc(100vw - 32px))' : '300px',
                                     maxWidth: 'calc(100vw - 32px)',
-                                    background: 'var(--bg-primary)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-md)',
-                                    boxShadow: 'var(--shadow-lg)',
                                     overflow: 'hidden'
                                 }}>
-                                        <div style={{
-                                            padding: '16px',
-                                            borderBottom: '1px solid var(--border-color)',
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }}>
-                                            <span style={{ fontWeight: '500', fontSize: '14px' }}>{t.layout.settings}</span>
-                                            <button
-                                                onClick={resetAndCloseSettings}
-                                                style={{
-                                                    padding: '4px',
-                                                    borderRadius: '4px',
-                                                    color: 'var(--text-tertiary)',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-
-                                        <div style={{ padding: '16px' }}>
-                                            {error && (
-                                                <div style={{
-                                                    padding: '0.75rem',
-                                                    marginBottom: '1rem',
-                                                    background: 'rgba(239, 68, 68, 0.1)',
-                                                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    color: 'var(--danger)',
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    {error}
-                                                </div>
-                                            )}
-
-                                            {success && (
-                                                <div style={{
-                                                    padding: '0.75rem',
-                                                    marginBottom: '1rem',
-                                                    background: 'rgba(0, 112, 243, 0.1)',
-                                                    border: '1px solid rgba(0, 112, 243, 0.2)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    color: 'var(--success)',
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    {success}
-                                                </div>
-                                            )}
-
-                                            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.current}</label>
-                                                    <input
-                                                        type="password"
-                                                        value={passwordForm.old_password}
-                                                        onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
-                                                        className="form-input"
-                                                        style={{ height: '36px', fontSize: '13px' }}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.new}</label>
-                                                    <input
-                                                        type="password"
-                                                        value={passwordForm.new_password}
-                                                        onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                                                        className="form-input"
-                                                        style={{ height: '36px', fontSize: '13px' }}
-                                                        required
-                                                        minLength={6}
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="form-label" style={{ fontSize: '13px' }}>{t.common.password.confirm}</label>
-                                                    <input
-                                                        type="password"
-                                                        value={passwordForm.confirm_password}
-                                                        onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                                                        className="form-input"
-                                                        style={{ height: '36px', fontSize: '13px' }}
-                                                        required
-                                                        minLength={6}
-                                                    />
-                                                </div>
-
-                                                <button
-                                                    type="submit"
-                                                    disabled={updating}
-                                                    className="btn btn-primary"
-                                                    style={{ marginTop: '0.5rem', height: '36px' }}
-                                                >
-                                                    {updating ? t.common.updating : t.common.password.change}
-                                                </button>
-                                            </form>
-                                        </div>
-
-                                        <div style={{
-                                            padding: '12px 16px',
-                                            borderTop: '1px solid var(--border-color)',
-                                            background: 'var(--bg-secondary)'
-                                        }}>
-                                            <button
-                                                onClick={handleLogout}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '8px 12px',
-                                                    background: 'transparent',
-                                                    border: '1px solid var(--border-color)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    color: 'var(--text-secondary)',
-                                                    fontSize: '13px',
-                                                    cursor: 'pointer',
-                                                    transition: 'var(--transition)'
-                                                }}
-                                            >
-                                                {t.layout.logout}
-                                            </button>
-                                        </div>
+                                    <div style={{
+                                        padding: '12px 16px',
+                                        borderBottom: '1px solid var(--border-color)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ fontWeight: '500', fontSize: '13px' }}>{t.layout.settings}</span>
+                                        <button
+                                            onClick={resetAndCloseSettings}
+                                            style={{
+                                                padding: '2px',
+                                                borderRadius: '4px',
+                                                color: 'var(--text-tertiary)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <X size={15} />
+                                        </button>
                                     </div>
+
+                                    <div style={{ padding: '16px' }}>
+                                        {error && (
+                                            <div style={{
+                                                padding: '8px 10px',
+                                                marginBottom: '12px',
+                                                background: 'rgba(255, 0, 0, 0.05)',
+                                                border: '1px solid rgba(255, 0, 0, 0.15)',
+                                                borderRadius: 'var(--radius-sm)',
+                                                color: 'var(--danger)',
+                                                fontSize: '13px'
+                                            }}>
+                                                {error}
+                                            </div>
+                                        )}
+
+                                        {success && (
+                                            <div style={{
+                                                padding: '8px 10px',
+                                                marginBottom: '12px',
+                                                background: 'rgba(0, 224, 84, 0.05)',
+                                                border: '1px solid rgba(0, 224, 84, 0.15)',
+                                                borderRadius: 'var(--radius-sm)',
+                                                color: 'var(--success)',
+                                                fontSize: '13px'
+                                            }}>
+                                                {success}
+                                            </div>
+                                        )}
+
+                                        <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t.common.password.current}</label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.old_password}
+                                                    onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
+                                                    className="form-input"
+                                                    style={{ height: '34px', fontSize: '13px' }}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t.common.password.new}</label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.new_password}
+                                                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                                                    className="form-input"
+                                                    style={{ height: '34px', fontSize: '13px' }}
+                                                    required
+                                                    minLength={6}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t.common.password.confirm}</label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.confirm_password}
+                                                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                                                    className="form-input"
+                                                    style={{ height: '34px', fontSize: '13px' }}
+                                                    required
+                                                    minLength={6}
+                                                />
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={updating}
+                                                className="btn btn-primary"
+                                                style={{ marginTop: '4px', height: '34px', fontSize: '13px' }}
+                                            >
+                                                {updating ? t.common.updating : t.common.password.change}
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div style={{
+                                        padding: '10px 16px',
+                                        borderTop: '1px solid var(--border-color)',
+                                        background: 'var(--bg-secondary)'
+                                    }}>
+                                        <button
+                                            onClick={handleLogout}
+                                            style={{
+                                                width: '100%',
+                                                padding: '6px 12px',
+                                                background: 'transparent',
+                                                border: '1px solid var(--border-color)',
+                                                borderRadius: 'var(--radius-sm)',
+                                                color: 'var(--text-secondary)',
+                                                fontSize: '12px',
+                                                cursor: 'pointer',
+                                                transition: 'var(--transition)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.color = 'var(--text-primary)';
+                                                e.target.style.borderColor = 'var(--text-tertiary)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.color = 'var(--text-secondary)';
+                                                e.target.style.borderColor = 'var(--border-color)';
+                                            }}
+                                        >
+                                            {t.layout.logout}
+                                        </button>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
                 </header>
 
-                <div className="app-content" style={{
-                    flex: 1,
-                    overflow: 'auto',
-                    padding: isMobile ? '16px' : '24px',
-                    background: 'var(--bg-primary)'
-                }}>
+                <div className="app-content">
                     <Outlet />
                 </div>
             </main>
