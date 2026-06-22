@@ -316,23 +316,23 @@ const AllDomains = () => {
             ) : (
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {filteredDomains.map(domain => (
-                        <div key={`${domain.account_id}-${domain.id}`} className="domain-list-card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/accounts/${domain.account_id}/domains/${domain.id}/records`, { state: { from: '/domains' } })}>
+                        <div key={`${domain.account_id}-${domain.id}`} className="domain-list-card">
                             <div className="domain-card-layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                                 <div className="domain-card-main" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                     <Globe size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <h3 className="font-mono" style={{ fontSize: '15px', fontWeight: '600', margin: 0, marginBottom: '0.25rem', color: 'var(--text-primary)', wordBreak: 'break-all' }}>{domain.name}</h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                            <span className="badge badge-neutral" style={{ gap: '0.25rem', padding: '1px 6px', height: '20px' }}>
+                                            <span className="badge badge-neutral" style={{ gap: '0.25rem' }}>
                                                 <Server size={11} />
-                                                {domain.account_name}
+                                                <span>{domain.account_name}</span>
                                             </span>
                                             {domain.renewal_date === 'permanent' ? (
                                                 <>
                                                     <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                    <span className="badge badge-neutral" style={{ gap: '0.25rem', padding: '1px 6px', height: '20px' }}>
+                                                    <span className="badge badge-neutral" style={{ gap: '0.25rem' }}>
                                                         <Calendar size={11} />
-                                                        {t.allDomains.permanentFree}
+                                                        <span>{t.allDomains.permanentFree}</span>
                                                     </span>
                                                 </>
                                             ) : domain.renewal_date && (() => {
@@ -340,9 +340,9 @@ const AllDomains = () => {
                                                 return (
                                                     <>
                                                         <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                        <span className={`badge ${expiryInfo?.bgColor !== 'transparent' ? 'badge-warning' : 'badge-neutral'}`} style={{ gap: '0.25rem', padding: '1px 6px', height: '20px' }}>
+                                                        <span className={`badge ${expiryInfo?.bgColor !== 'transparent' ? 'badge-warning' : 'badge-neutral'}`} style={{ gap: '0.25rem' }}>
                                                             <Calendar size={11} />
-                                                            {expiryInfo?.text || domain.renewal_date}
+                                                            <span>{expiryInfo?.text || domain.renewal_date}</span>
                                                         </span>
                                                     </>
                                                 );

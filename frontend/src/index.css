@@ -273,19 +273,24 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  height: 22px;
+  justify-content: center;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
   border: 1px solid var(--border-color);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
+  line-height: 12px;
+}
+
+.badge svg {
+  display: block;
+  margin: 0;
+  width: 12px;
+  height: 12px;
 }
 
 .badge-success {
@@ -320,10 +325,21 @@ input[type="checkbox"] {
   border-radius: 50%;
 }
 
-.status-dot-success { background-color: var(--success); }
-.status-dot-warning { background-color: var(--warning); }
-.status-dot-danger { background-color: var(--danger); }
-.status-dot-neutral { background-color: var(--text-tertiary); }
+.status-dot-success {
+  background-color: var(--success);
+}
+
+.status-dot-warning {
+  background-color: var(--warning);
+}
+
+.status-dot-danger {
+  background-color: var(--danger);
+}
+
+.status-dot-neutral {
+  background-color: var(--text-tertiary);
+}
 
 /* Spinner */
 .spinner {
@@ -336,7 +352,9 @@ input[type="checkbox"] {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Modal */
@@ -406,13 +424,25 @@ input[type="checkbox"] {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.97); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Tab Navigation - Vercel Underline Style */
@@ -592,8 +622,15 @@ table tr:hover td {
 
 /* Settings dropdown animation */
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .settings-dropdown {
@@ -649,10 +686,21 @@ table tr:hover td {
 }
 
 @keyframes shakeIn {
-  0% { transform: translateX(-6px); }
-  25% { transform: translateX(5px); }
-  50% { transform: translateX(-3px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(-6px);
+  }
+
+  25% {
+    transform: translateX(5px);
+  }
+
+  50% {
+    transform: translateX(-3px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .login-field-error {
@@ -794,7 +842,7 @@ pre {
   .app-sidebar.desktop {
     display: none;
   }
-  
+
   .app-sidebar.mobile {
     position: fixed;
     top: 0;
@@ -895,7 +943,9 @@ pre {
     gap: 12px;
   }
 
-  .domains-toolbar, .logs-toolbar, .alldomain-toolbar {
+  .domains-toolbar,
+  .logs-toolbar,
+  .alldomain-toolbar {
     width: 100%;
   }
 
@@ -918,7 +968,7 @@ pre {
     width: 100%;
   }
 
-  .domain-card-actions > * {
+  .domain-card-actions>* {
     flex: 1;
     justify-content: center;
   }
@@ -949,7 +999,8 @@ pre {
   }
 
   .btn {
-    height: 40px; /* touch friendly */
+    height: 40px;
+    /* touch friendly */
   }
 }
 
@@ -958,6 +1009,7 @@ pre {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -969,6 +1021,7 @@ pre {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

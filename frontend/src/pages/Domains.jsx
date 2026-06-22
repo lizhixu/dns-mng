@@ -287,7 +287,7 @@ const Domains = () => {
             ) : (
                 <div className="domains-list" style={{ display: 'grid', gap: '0.75rem' }}>
                     {filteredDomains.map(domain => (
-                        <div key={domain.id} className="domain-list-card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/accounts/${accountId}/domains/${domain.id}/records`)}>
+                        <div key={domain.id} className="domain-list-card">
                             <div className="domain-card-layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                                 <div className="domain-card-main" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                     <Globe size={18} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
@@ -297,14 +297,14 @@ const Domains = () => {
                                             {domain.renewal_date === 'permanent' ? (
                                                 <span className="badge badge-neutral" style={{ gap: '0.25rem' }}>
                                                     <Calendar size={11} />
-                                                    {t.allDomains.permanentFree}
+                                                    <span>{t.allDomains.permanentFree}</span>
                                                 </span>
                                             ) : domain.renewal_date && (() => {
                                                 const expiryInfo = getExpiryInfo(domain.renewal_date);
                                                 return (
                                                     <span className={`badge ${expiryInfo?.bgColor !== 'transparent' ? 'badge-warning' : 'badge-neutral'}`} style={{ gap: '0.25rem' }}>
                                                         <Calendar size={11} />
-                                                        {expiryInfo?.text || domain.renewal_date}
+                                                        <span>{expiryInfo?.text || domain.renewal_date}</span>
                                                     </span>
                                                 );
                                             })()}
