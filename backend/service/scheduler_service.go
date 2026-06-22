@@ -26,9 +26,6 @@ func NewSchedulerService(notificationService *NotificationService, emailService 
 func (s *SchedulerService) Start() {
 	log.Println("Starting domain expiry notification scheduler...")
 
-	// Run immediately on start
-	go s.checkExpiringDomains()
-
 	// Schedule to run daily at 9:00 AM
 	s.scheduleDaily()
 }
