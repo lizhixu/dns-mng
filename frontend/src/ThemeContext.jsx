@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 
 const ThemeContext = createContext();
 
@@ -30,33 +31,98 @@ export const ThemeProvider = ({ children }) => {
 
     useEffect(() => {
         const root = document.documentElement;
+        let timer;
         
+        const applyThemeWithTransition = (newTheme) => {
+            const currentTheme = root.getAttribute('data-theme');
+            if (currentTheme && currentTheme !== newTheme) {
+                root.classList.add('theme-transitioning');
+                root.setAttribute('data-theme', newTheme);
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => {
+                    root.classList.remove('theme-transitioning');
+                }, 300);
+            } else {
+                root.setAttribute('data-theme', newTheme);
+            }
+        };
+
         if (themeMode === 'system') {
             // Listen to system theme changes
             const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
             const handleChange = (e) => {
                 const newTheme = e.matches ? 'light' : 'dark';
                 setTheme(newTheme);
-                root.setAttribute('data-theme', newTheme);
+                applyThemeWithTransition(newTheme);
             };
 
             // Set initial theme
             const systemTheme = mediaQuery.matches ? 'light' : 'dark';
             setTheme(systemTheme);
-            root.setAttribute('data-theme', systemTheme);
+            applyThemeWithTransition(systemTheme);
 
             // Add listener
             mediaQuery.addEventListener('change', handleChange);
-            return () => mediaQuery.removeEventListener('change', handleChange);
+            return () => {
+                mediaQuery.removeEventListener('change', handleChange);
+                if (timer) clearTimeout(timer);
+            };
         } else {
             // Use manual theme
-            root.setAttribute('data-theme', themeMode);
             setTheme(themeMode);
+            applyThemeWithTransition(themeMode);
+            return () => {
+                if (timer) clearTimeout(timer);
+            };
         }
     }, [themeMode]);
 
     const changeTheme = (newMode) => {
-        setThemeMode(newMode);
+        // Fallback for browsers that don't support View Transitions
+        if (!document.startViewTransition) {
+            setThemeMode(newMode);
+            localStorage.setItem('theme', newMode);
+            return;
+        }
+
+        // Target theme determines coordinates: dark theme starts from bottom-left, light theme from top-right
+        const targetTheme = newMode === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+            : newMode;
+
+        const x = targetTheme === 'dark' ? 0 : window.innerWidth;
+        const y = targetTheme === 'dark' ? window.innerHeight : 0;
+        
+        // Calculate radius to the furthest corner (top-right: x = window.innerWidth, y = 0)
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        const transition = document.startViewTransition(() => {
+            flushSync(() => {
+                setThemeMode(newMode);
+            });
+        });
+
+        transition.ready.then(() => {
+            const clipPath = [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${endRadius}px at ${x}px ${y}px)`
+            ];
+            
+            document.documentElement.animate(
+                {
+                    clipPath: clipPath,
+                },
+                {
+                    duration: 700,
+                    easing: 'cubic-bezier(0.85, 0, 0.15, 1)',
+                    pseudoElement: '::view-transition-new(root)',
+                }
+            );
+        });
+
         localStorage.setItem('theme', newMode);
     };
 

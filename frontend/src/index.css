@@ -1087,3 +1087,22 @@ pre {
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+/* Theme transition */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, fill 0.25s ease, stroke 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+/* View Transition circular reveal rules */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
