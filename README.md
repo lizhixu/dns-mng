@@ -1,5 +1,7 @@
 # DNS Manager
 
+[中文](README.md) | [English](README_EN.md)
+
 一个现代化的 DNS 记录管理系统，支持多个 DNS 服务提供商。
 
 ## 功能特性
