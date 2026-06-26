@@ -324,6 +324,15 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 - **DNSHE**: API Key + API Secret
 - **VPS8**: API Key
 
+## 供应商接口文档
+
+各 DNS 供应商的接口文档已归档到 [doc](doc/) 目录，包括：
+
+- 各供应商 API 接口说明（IPv64、DNSHE、Hurricane Electric、VPS8、腾讯云、NDJP NET 等）
+- 优化与实现说明
+
+详见 [doc/README.md](doc/README.md)
+
 ## 添加新的 DNS 提供商
 
 查看 [PROVIDER_GUIDE.md](PROVIDER_GUIDE.md) 了解如何添加新的 DNS 提供商支持。
@@ -400,7 +409,7 @@ MIT License
 - 🔍 搜索和过滤功能
 - 🐳 Docker 一键部署
 
-查看 [OPTIMIZATION_NOTES.md](OPTIMIZATION_NOTES.md) 了解详细的功能更新和优化。
+查看 [OPTIMIZATION_NOTES.md](doc/OPTIMIZATION_NOTES.md) 了解详细的功能更新和优化。
 
 ## 链接
 
