@@ -63,6 +63,7 @@ func main() {
 
 	ddnsTokenService := service.NewDDNSTokenService()
 	backupService := service.NewBackupService(accountService, domainCacheService, ddnsTokenService, emailService, notificationService)
+	cfOptimizeService := service.NewCFOptimizeService()
 
 	// Init handlers
 	authHandler := handler.NewAuthHandler(userService, logService)
@@ -78,6 +79,7 @@ func main() {
 	ddnsHandler := handler.NewDDNSHandler(dnsService, accountService, logService, ddnsTokenService)
 	ddnsTokenHandler := handler.NewDDNSTokenHandler(ddnsTokenService, logService)
 	backupHandler := handler.NewBackupHandler(backupService)
+	cfOptimizeHandler := handler.NewCFOptimizeHandler(cfOptimizeService)
 
 	// Setup router
 	r := gin.Default()
@@ -175,6 +177,12 @@ func main() {
 		// Backup & Restore
 		protected.GET("/backup/export", backupHandler.Export)
 		protected.POST("/backup/import", backupHandler.Import)
+
+		// CF Optimize (CDN优选)
+		protected.POST("/cf-optimize", cfOptimizeHandler.Create)
+		protected.GET("/cf-optimize", cfOptimizeHandler.List)
+		protected.GET("/cf-optimize/:id/refresh", cfOptimizeHandler.Refresh)
+		protected.DELETE("/cf-optimize/:id", cfOptimizeHandler.Delete)
 	}
 
 	log.Printf("Server starting on :%s", cfg.ServerPort)

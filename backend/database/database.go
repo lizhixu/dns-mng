@@ -221,6 +221,30 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_login_logs_username ON login_logs(username)`,
 		// Add IP location column to login_logs
 		`ALTER TABLE login_logs ADD COLUMN ip_location TEXT DEFAULT ''`,
+
+		// CF Optimize (CDN优选) table
+		`CREATE TABLE IF NOT EXISTS cf_optimize (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			account_id INTEGER NOT NULL,
+			zone_id TEXT NOT NULL,
+			zone_name TEXT NOT NULL,
+			origin_ip TEXT NOT NULL,
+			origin_record_name TEXT NOT NULL DEFAULT 'origin',
+			origin_record_id TEXT DEFAULT '',
+			cname_target TEXT NOT NULL DEFAULT 'cloudflare.468123.xyz',
+			cname_record_name TEXT NOT NULL,
+			cname_record_id TEXT DEFAULT '',
+			custom_hostname TEXT NOT NULL,
+			custom_hostname_id TEXT DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'pending',
+			ssl_status TEXT NOT NULL DEFAULT 'pending',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_cf_optimize_user_id ON cf_optimize(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_cf_optimize_account_id ON cf_optimize(account_id)`,
 	}
 
 	for _, q := range queries {

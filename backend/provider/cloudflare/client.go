@@ -371,6 +371,222 @@ func (c *Client) GetRecordByID(ctx context.Context, apiToken, zoneID, recordID s
 	return &record, nil
 }
 
+// CreateRecordWithProxied creates a DNS record with explicit proxied flag
+func (c *Client) CreateRecordWithProxied(ctx context.Context, apiToken, zoneID string, recordType, name, content string, ttl int, proxied bool) (*Record, error) {
+	path := "/zones/" + zoneID + "/dns_records"
+
+	reqBody := map[string]interface{}{
+		"type":    recordType,
+		"name":    name,
+		"content": content,
+		"ttl":     ttl,
+	}
+
+	if recordType == "A" || recordType == "AAAA" || recordType == "CNAME" {
+		reqBody["proxied"] = proxied
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "POST", path, strings.NewReader(string(data)))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var record Record
+	resultData, _ := json.Marshal(apiResp.Result)
+	json.Unmarshal(resultData, &record)
+
+	return &record, nil
+}
+
+// CreateCustomHostname creates a custom hostname (Cloudflare for SaaS)
+func (c *Client) CreateCustomHostname(ctx context.Context, apiToken, zoneID, hostname, originServer string) (*CustomHostname, error) {
+	path := "/zones/" + zoneID + "/custom_hostnames"
+
+	reqBody := map[string]interface{}{
+		"hostname":     hostname,
+		"ssl": map[string]interface{}{
+			"method": "http",
+			"type":   "dv",
+			"settings": map[string]interface{}{
+				"http2":     "on",
+				"min_tls_version": "1.2",
+			},
+		},
+	}
+
+	if originServer != "" {
+		reqBody["custom_origin_server"] = originServer
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "POST", path, strings.NewReader(string(data)))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var ch CustomHostname
+	resultData, _ := json.Marshal(apiResp.Result)
+	json.Unmarshal(resultData, &ch)
+
+	return &ch, nil
+}
+
+// ListCustomHostnames lists all custom hostnames for a zone
+func (c *Client) ListCustomHostnames(ctx context.Context, apiToken, zoneID string) ([]CustomHostname, error) {
+	path := "/zones/" + zoneID + "/custom_hostnames"
+	resp, err := c.doRequest(ctx, apiToken, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var chs []CustomHostname
+	data, _ := json.Marshal(apiResp.Result)
+	json.Unmarshal(data, &chs)
+
+	return chs, nil
+}
+
+// GetCustomHostname gets a single custom hostname by ID
+func (c *Client) GetCustomHostname(ctx context.Context, apiToken, zoneID, chID string) (*CustomHostname, error) {
+	path := "/zones/" + zoneID + "/custom_hostnames/" + chID
+	resp, err := c.doRequest(ctx, apiToken, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var ch CustomHostname
+	resultData, _ := json.Marshal(apiResp.Result)
+	json.Unmarshal(resultData, &ch)
+
+	return &ch, nil
+}
+
+// DeleteCustomHostname deletes a custom hostname by ID
+func (c *Client) DeleteCustomHostname(ctx context.Context, apiToken, zoneID, chID string) error {
+	path := "/zones/" + zoneID + "/custom_hostnames/" + chID
+	resp, err := c.doRequest(ctx, apiToken, "DELETE", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	return nil
+}
+
+// CustomHostname represents a Cloudflare custom hostname (for SaaS)
+type CustomHostname struct {
+	ID             string                    `json:"id"`
+	Hostname       string                    `json:"hostname"`
+	Status         string                    `json:"status"`
+	SSL            *CustomHostnameSSL        `json:"ssl,omitempty"`
+	OwnershipVerification *CustomHostnameVerification `json:"ownership_verification,omitempty"`
+	VerificationErrors    []string                   `json:"verification_errors,omitempty"`
+	CreatedOn      string                    `json:"created_on,omitempty"`
+}
+
+// CustomHostnameSSL represents SSL config of a custom hostname
+type CustomHostnameSSL struct {
+	Status            string `json:"status"`
+	Method            string `json:"method,omitempty"`
+	Type              string `json:"type,omitempty"`
+	CnameTarget       string `json:"cname_target,omitempty"`
+	CnameName         string `json:"cname_name,omitempty"`
+}
+
+// CustomHostnameVerification represents ownership verification info
+type CustomHostnameVerification struct {
+	Status string `json:"status"`
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+}
+
+// CustomHostnameVerificationInfo holds the TXT records needed for verification
+type CustomHostnameVerificationInfo struct {
+	HostnameTXTName  string `json:"hostname_txt_name"`
+	HostnameTXTValue string `json:"hostname_txt_value"`
+	SSLTXTName       string `json:"ssl_txt_name"`
+	SSLTXTValue      string `json:"ssl_txt_value"`
+}
+
 // TTL constants for Cloudflare
 const (
 	TTLAuto     = 1

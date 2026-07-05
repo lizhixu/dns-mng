@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { api } from '../api';
-import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup } from 'lucide-react';
+import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup, Zap } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
 import LanguageSelect from './LanguageSelect';
 import BackToTop from './BackToTop';
@@ -116,6 +116,7 @@ const Layout = () => {
     const navigationItems = useMemo(() => ([
         { path: '/domains', icon: Globe, label: t.layout.domains },
         { path: '/accounts', icon: Server, label: t.accounts.title },
+        { path: '/cf-optimize', icon: Zap, label: t.cfOptimize.title },
         { path: '/logs', icon: FileText, label: t.layout.logsManagement },
         { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications },
         { path: '/backup', icon: DatabaseBackup, label: t.backup.title }

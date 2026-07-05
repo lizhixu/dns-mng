@@ -397,4 +397,36 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // CF Optimize (CDN优选)
+    cfOptimizeCreate: async (data) => {
+        const response = await fetch(`${API_BASE}/cf-optimize`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    cfOptimizeList: async () => {
+        const response = await fetch(`${API_BASE}/cf-optimize`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    cfOptimizeRefresh: async (id) => {
+        const response = await fetch(`${API_BASE}/cf-optimize/${id}/refresh`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    cfOptimizeDelete: async (id, cleanup = true) => {
+        const response = await fetch(`${API_BASE}/cf-optimize/${id}?cleanup=${cleanup}`, {
+            method: 'DELETE',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
 };
