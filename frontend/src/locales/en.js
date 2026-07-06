@@ -307,8 +307,14 @@ export const en = {
       hostnameHint: 'Subdomain prefix to optimize. Enter "www" for www.example.com',
       originIP: 'Origin IP',
       originIPPlaceholder: 'e.g. 1.2.3.4',
-      cnameTarget: 'Optimized CNAME (optional)',
-      cnameTargetPlaceholder: 'Default: cloudflare.468123.xyz',
+      cnameTarget: 'Optimized CNAME',
+      cnameTargetPlaceholder: 'Custom optimized domain',
+      cnameCustom: 'Custom...',
+    },
+    cnamePresets: {
+      cloudflare: 'Asia-Pacific optimized, best for page acceleration',
+      cf: 'Dual-stack IPv4/IPv6, general purpose',
+      dl: 'Download optimized, stable US-bound nodes',
     },
     table: {
       customHostname: 'Custom Hostname',

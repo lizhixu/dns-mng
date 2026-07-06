@@ -307,8 +307,14 @@ export const zh = {
       hostnameHint: '要优选的子域名前缀，输入 www 表示 www.example.com',
       originIP: '源站 IP',
       originIPPlaceholder: '例如 1.2.3.4',
-      cnameTarget: '优选 CNAME（可选）',
-      cnameTargetPlaceholder: '默认 cloudflare.468123.xyz',
+      cnameTarget: '优选 CNAME',
+      cnameTargetPlaceholder: '自定义优选域名',
+      cnameCustom: '自定义...',
+    },
+    cnamePresets: {
+      cloudflare: '亚太节点优选，适合页面加速',
+      cf: '双栈 IPv4/IPv6，通用场景',
+      dl: '大文件下载优选，去美方向稳定节点',
     },
     table: {
       customHostname: '自定义主机名',

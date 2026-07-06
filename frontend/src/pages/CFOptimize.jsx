@@ -15,10 +15,9 @@ const CFOptimize = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Accounts state
+    // Accounts & domains state
     const [cfAccounts, setCfAccounts] = useState([]);
-    const [zones, setZones] = useState([]);
-    const [zonesLoading, setZonesLoading] = useState(false);
+    const [allDomains, setAllDomains] = useState([]);
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +31,19 @@ const CFOptimize = () => {
     const [formError, setFormError] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // Derived: filter zones by selected account
+    const zones = formData.account_id
+        ? allDomains.filter(d => String(d.account_id) === String(formData.account_id))
+        : [];
+
+    // CNAME target presets
+    const cnamePresets = [
+        { value: 'cloudflare.468123.xyz', label: 'cloudflare.468123.xyz', desc: t.cfOptimize.cnamePresets.cloudflare },
+        { value: 'cf.468123.xyz', label: 'cf.468123.xyz', desc: t.cfOptimize.cnamePresets.cf },
+        { value: 'cloudflare-dl.468123.xyz', label: 'cloudflare-dl.468123.xyz', desc: t.cfOptimize.cnamePresets.dl },
+    ];
+    const [cnameMode, setCnameMode] = useState('preset');
+
     // Delete confirmation
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deletingConfig, setDeletingConfig] = useState(null);
@@ -44,13 +56,15 @@ const CFOptimize = () => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [configsData, accountsData] = await Promise.all([
+            const [configsData, accountsData, domainsRes] = await Promise.all([
                 api.cfOptimizeList(),
                 api.getAccounts(),
+                api.getAllDomains(),
             ]);
             setConfigs(configsData);
             const cfOnly = accountsData.filter(a => a.provider_type === 'cloudflare');
             setCfAccounts(cfOnly);
+            setAllDomains(Array.isArray(domainsRes) ? domainsRes : (domainsRes.domains || []));
             setError('');
         } catch (err) {
             setError(err.message);
@@ -65,29 +79,10 @@ const CFOptimize = () => {
         loadData();
     }, [loadData]);
 
-    // Load zones when account changes
-    useEffect(() => {
-        const loadZones = async () => {
-            if (!formData.account_id) {
-                setZones([]);
-                return;
-            }
-            setZonesLoading(true);
-            try {
-                const domainsData = await api.getDomains(formData.account_id);
-                setZones(domainsData);
-            } catch {
-                setZones([]);
-            } finally {
-                setZonesLoading(false);
-            }
-        };
-        loadZones();
-    }, [formData.account_id]);
-
     const openModal = () => {
-        setFormData({ account_id: '', zone_name: '', hostname: '', origin_ip: '', cname_target: '' });
+        setFormData({ account_id: '', zone_name: '', hostname: '', origin_ip: '', cname_target: cnamePresets[0].value });
         setFormError('');
+        setCnameMode('preset');
         setIsModalOpen(true);
     };
 
@@ -377,9 +372,9 @@ const CFOptimize = () => {
                             className="form-input"
                             value={formData.zone_name}
                             onChange={e => setFormData(prev => ({ ...prev, zone_name: e.target.value }))}
-                            disabled={!formData.account_id || zonesLoading}
+                            disabled={!formData.account_id}
                         >
-                            <option value="">{zonesLoading ? t.cfOptimize.form.zoneLoading : t.cfOptimize.form.zonePlaceholder}</option>
+                            <option value="">{t.cfOptimize.form.zonePlaceholder}</option>
                             {zones.map(z => (
                                 <option key={z.id} value={z.name}>{z.name}</option>
                             ))}
@@ -416,13 +411,34 @@ const CFOptimize = () => {
                     {/* CNAME Target */}
                     <div className="form-group">
                         <label className="form-label">{t.cfOptimize.form.cnameTarget}</label>
-                        <input
+                        <select
                             className="form-input"
-                            type="text"
-                            placeholder={t.cfOptimize.form.cnameTargetPlaceholder}
-                            value={formData.cname_target}
-                            onChange={e => setFormData(prev => ({ ...prev, cname_target: e.target.value }))}
-                        />
+                            value={cnameMode === 'custom' ? '__custom__' : formData.cname_target}
+                            onChange={e => {
+                                if (e.target.value === '__custom__') {
+                                    setCnameMode('custom');
+                                    setFormData(prev => ({ ...prev, cname_target: '' }));
+                                } else {
+                                    setCnameMode('preset');
+                                    setFormData(prev => ({ ...prev, cname_target: e.target.value }));
+                                }
+                            }}
+                        >
+                            {cnamePresets.map(p => (
+                                <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>
+                            ))}
+                            <option value="__custom__">{t.cfOptimize.form.cnameCustom}</option>
+                        </select>
+                        {cnameMode === 'custom' && (
+                            <input
+                                className="form-input"
+                                type="text"
+                                placeholder={t.cfOptimize.form.cnameTargetPlaceholder}
+                                value={formData.cname_target}
+                                onChange={e => setFormData(prev => ({ ...prev, cname_target: e.target.value }))}
+                                style={{ marginTop: '0.5rem' }}
+                            />
+                        )}
                     </div>
 
                     {/* Actions */}
