@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { Zap, RefreshCw, Trash2, AlertCircle, CheckCircle, Server, Edit } from 'lucide-react';
 import Modal from '../components/Modal';
@@ -200,6 +201,17 @@ const CFOptimize = () => {
         return { className: 'badge', text: status || t.cfOptimize.status.pending };
     };
 
+    // Helper to find domain ID by account_id and zone_name
+    const getDomainLink = (config) => {
+        const domain = allDomains.find(d =>
+            d.account_id === config.account_id && d.name === config.zone_name
+        );
+        if (domain) {
+            return `/accounts/${config.account_id}/domains/${domain.id}/records`;
+        }
+        return null;
+    };
+
     const getSSLBadge = (status) => {
         const s = (status || '').toLowerCase();
         if (s === 'active') return { className: 'badge badge-success', text: t.cfOptimize.sslStatus.active };
@@ -276,7 +288,17 @@ const CFOptimize = () => {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                                                 <span className="badge badge-neutral" style={{ gap: '0.25rem' }}>
                                                     <Server size={11} />
-                                                    <span>{config.zone_name}</span>
+                                                    {getDomainLink(config) ? (
+                                                        <Link
+                                                            to={getDomainLink(config)}
+                                                            state={{ from: '/cf-optimize' }}
+                                                            style={{ color: 'var(--text-primary)', textDecoration: 'none' }}
+                                                        >
+                                                            {config.zone_name}
+                                                        </Link>
+                                                    ) : (
+                                                        <span>{config.zone_name}</span>
+                                                    )}
                                                 </span>
                                                 <span className={statusBadge.className}>{statusBadge.text}</span>
                                                 <span className={sslBadge.className}>{sslBadge.text}</span>
@@ -347,7 +369,19 @@ const CFOptimize = () => {
                                                 <span className="font-mono" style={{ fontSize: '14px', fontWeight: '500' }}>{config.custom_hostname}</span>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '12px 16px', fontSize: '14px' }}>{config.zone_name}</td>
+                                        <td style={{ padding: '12px 16px', fontSize: '14px' }}>
+                                            {getDomainLink(config) ? (
+                                                <Link
+                                                    to={getDomainLink(config)}
+                                                    state={{ from: '/cf-optimize' }}
+                                                    style={{ color: 'var(--text-primary)', textDecoration: 'none' }}
+                                                >
+                                                    {config.zone_name}
+                                                </Link>
+                                            ) : (
+                                                config.zone_name
+                                            )}
+                                        </td>
                                         <td style={{ padding: '12px 16px', fontSize: '14px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div className="font-mono">{config.origin_ip}</div>
