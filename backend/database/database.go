@@ -245,6 +245,9 @@ func createTables() {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_cf_optimize_user_id ON cf_optimize(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_cf_optimize_account_id ON cf_optimize(account_id)`,
+		`ALTER TABLE cf_optimize ADD COLUMN intermediate_record_name TEXT DEFAULT ''`,
+		`ALTER TABLE cf_optimize ADD COLUMN intermediate_record_id TEXT DEFAULT ''`,
+		`ALTER TABLE cf_optimize ADD COLUMN validation_record_ids TEXT DEFAULT ''`,
 	}
 
 	for _, q := range queries {

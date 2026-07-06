@@ -27,6 +27,7 @@ const CFOptimize = () => {
         hostname: '',
         origin_ip: '',
         cname_target: '',
+        intermediate_prefix: 'saas',
     });
     const [formError, setFormError] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -80,7 +81,7 @@ const CFOptimize = () => {
     }, [loadData]);
 
     const openModal = () => {
-        setFormData({ account_id: '', zone_name: '', hostname: '', origin_ip: '', cname_target: cnamePresets[0].value });
+        setFormData({ account_id: '', zone_name: '', hostname: '', origin_ip: '', cname_target: cnamePresets[0].value, intermediate_prefix: 'saas' });
         setFormError('');
         setCnameMode('preset');
         setIsModalOpen(true);
@@ -106,6 +107,7 @@ const CFOptimize = () => {
                 hostname: formData.hostname,
                 origin_ip: formData.origin_ip,
                 cname_target: formData.cname_target || undefined,
+                intermediate_prefix: formData.intermediate_prefix || undefined,
             });
             closeModal();
             setSuccess(t.cfOptimize.messages.createSuccess);
@@ -243,6 +245,7 @@ const CFOptimize = () => {
                                 </div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem' }}>
                                     <span>{t.cfOptimize.table.originIP}: <span className="font-mono">{config.origin_ip}</span></span>
+                                    <span>{t.cfOptimize.table.intermediateRecord}: <span className="font-mono">{config.intermediate_record_name || `saas.${config.zone_name}`}</span></span>
                                     <span>{t.cfOptimize.table.cnameTarget}: <span className="font-mono">{config.cname_target}</span></span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -296,7 +299,17 @@ const CFOptimize = () => {
                                         </td>
                                         <td style={{ padding: '12px 16px', fontSize: '14px' }}>{config.zone_name}</td>
                                         <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono, monospace)', fontSize: '14px' }}>{config.origin_ip}</td>
-                                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono, monospace)', fontSize: '14px' }}>{config.cname_target}</td>
+                                        <td style={{ padding: '12px 16px', fontSize: '14px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <div className="font-mono" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                                    {config.intermediate_record_name || `saas.${config.zone_name}`}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{t.cfOptimize.table.pointsTo}:</div>
+                                                <div className="font-mono" style={{ fontSize: '13px', fontWeight: '500' }}>
+                                                    {config.cname_target}
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td style={{ padding: '12px 16px' }}>
                                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                 <span className={statusBadge.className}>{statusBadge.text}</span>
@@ -363,6 +376,9 @@ const CFOptimize = () => {
                                 {t.cfOptimize.form.noCFAccount}
                             </span>
                         )}
+                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
+                            {t.cfOptimize.form.permissionHint}
+                        </span>
                     </div>
 
                     {/* Zone */}
@@ -393,6 +409,21 @@ const CFOptimize = () => {
                         />
                         <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
                             {t.cfOptimize.form.hostnameHint}
+                        </span>
+                    </div>
+
+                    {/* Intermediate Prefix */}
+                    <div className="form-group">
+                        <label className="form-label">{t.cfOptimize.form.intermediatePrefix}</label>
+                        <input
+                            className="form-input"
+                            type="text"
+                            placeholder="e.g. saas"
+                            value={formData.intermediate_prefix}
+                            onChange={e => setFormData(prev => ({ ...prev, intermediate_prefix: e.target.value }))}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
+                            {t.cfOptimize.form.intermediatePrefixHint}
                         </span>
                     </div>
 

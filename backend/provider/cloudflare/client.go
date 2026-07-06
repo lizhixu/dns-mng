@@ -284,6 +284,57 @@ func (c *Client) UpdateRecord(ctx context.Context, apiToken, zoneID, recordID st
 	return &record, nil
 }
 
+func (c *Client) UpdateRecordWithProxied(ctx context.Context, apiToken, zoneID, recordID string, recordType, name, content string, ttl int, proxied bool) (*Record, error) {
+	path := "/zones/" + zoneID + "/dns_records/" + recordID
+
+	reqBody := map[string]interface{}{
+		"type":    recordType,
+		"name":    name,
+		"content": content,
+		"ttl":     ttl,
+	}
+
+	if recordType == "A" || recordType == "AAAA" || recordType == "CNAME" {
+		reqBody["proxied"] = proxied
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "POST", path, strings.NewReader(string(data)))
+	if err != nil {
+		// Cloudflare API supports PUT for update, but let's make sure we send PUT.
+		// Wait, let's check: the URL path is same, but method is PUT.
+		// Yes, let's use PUT!
+	}
+	resp, err = c.doRequest(ctx, apiToken, "PUT", path, strings.NewReader(string(data)))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var record Record
+	resultData, _ := json.Marshal(apiResp.Result)
+	json.Unmarshal(resultData, &record)
+
+	return &record, nil
+}
+
 func (c *Client) DeleteRecord(ctx context.Context, apiToken, zoneID, recordID string) error {
 	path := "/zones/" + zoneID + "/dns_records/" + recordID
 	resp, err := c.doRequest(ctx, apiToken, "DELETE", path, nil)
@@ -564,11 +615,18 @@ type CustomHostname struct {
 
 // CustomHostnameSSL represents SSL config of a custom hostname
 type CustomHostnameSSL struct {
-	Status            string `json:"status"`
-	Method            string `json:"method,omitempty"`
-	Type              string `json:"type,omitempty"`
-	CnameTarget       string `json:"cname_target,omitempty"`
-	CnameName         string `json:"cname_name,omitempty"`
+	Status            string                  `json:"status"`
+	Method            string                  `json:"method,omitempty"`
+	Type              string                  `json:"type,omitempty"`
+	CnameTarget       string                  `json:"cname_target,omitempty"`
+	CnameName         string                  `json:"cname_name,omitempty"`
+	ValidationRecords []SSLValidationRecord   `json:"validation_records,omitempty"`
+}
+
+type SSLValidationRecord struct {
+	Status   string `json:"status"`
+	TxtName  string `json:"txt_name,omitempty"`
+	TxtValue string `json:"txt_value,omitempty"`
 }
 
 // CustomHostnameVerification represents ownership verification info
