@@ -180,6 +180,7 @@ func main() {
 
 		// CF Optimize (CDN优选)
 		protected.POST("/cf-optimize", cfOptimizeHandler.Create)
+		protected.PUT("/cf-optimize/:id", cfOptimizeHandler.Update)
 		protected.GET("/cf-optimize", cfOptimizeHandler.List)
 		protected.GET("/cf-optimize/:id/refresh", cfOptimizeHandler.Refresh)
 		protected.DELETE("/cf-optimize/:id", cfOptimizeHandler.Delete)

@@ -46,16 +46,49 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 	}
 
 	apiToken := account.APIKey
-	zoneName := req.ZoneName
-	hostname := req.Hostname
-	originIP := req.OriginIP
-	cnameTarget := req.CnameTarget
+	zoneName := strings.TrimSpace(req.ZoneName)
+	hostname := strings.TrimSpace(req.Hostname)
+	originIP := strings.TrimSpace(req.OriginIP)
+	cnameTarget := strings.TrimSpace(req.CnameTarget)
+	intermediatePrefix := strings.TrimSpace(req.IntermediatePrefix)
+
 	if cnameTarget == "" {
 		cnameTarget = "cloudflare.468123.xyz"
 	}
-	intermediatePrefix := req.IntermediatePrefix
-	if intermediatePrefix == "" {
-		intermediatePrefix = "saas"
+
+	// Helper to extract subdomain prefix if full domain is provided
+	cleanSubdomain := func(sub, zone string) string {
+		subLower := strings.ToLower(sub)
+		zoneLower := strings.ToLower(zone)
+		if subLower == zoneLower || sub == "@" || sub == "" {
+			return ""
+		}
+		suffix := "." + zoneLower
+		if strings.HasSuffix(subLower, suffix) {
+			return sub[:len(sub)-len(suffix)]
+		}
+		return sub
+	}
+
+	cleanHost := cleanSubdomain(hostname, zoneName)
+	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
+	if cleanIntermediate == "" {
+		cleanIntermediate = "saas"
+	}
+
+	// Helper to extract first segment of CNAME target
+	getCNAMESegment := func(cname string) string {
+		cname = strings.TrimSpace(strings.ToLower(cname))
+		parts := strings.Split(cname, ".")
+		if len(parts) > 0 && parts[0] != "" {
+			return parts[0]
+		}
+		return ""
+	}
+
+	cnameSeg := getCNAMESegment(cnameTarget)
+	if cnameSeg != "" {
+		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, cleanIntermediate)
 	}
 
 	// 2. Find zone by name
@@ -66,14 +99,17 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 	zoneID := zone.ID
 
 	// 3. Build record names
-	originRecordName := fmt.Sprintf("origin.%s", zoneName)
-	intermediateRecordName := fmt.Sprintf("%s.%s", intermediatePrefix, zoneName)
+	originRecordName := "origin." + zoneName
+	if cleanHost != "" {
+		originRecordName = fmt.Sprintf("origin-%s.%s", cleanHost, zoneName)
+	}
+	intermediateRecordName := fmt.Sprintf("%s.%s", cleanIntermediate, zoneName)
 
 	var cnameRecordName string
-	if hostname == "@" || hostname == zoneName || hostname == "" {
+	if cleanHost == "" {
 		cnameRecordName = zoneName
 	} else {
-		cnameRecordName = fmt.Sprintf("%s.%s", hostname, zoneName)
+		cnameRecordName = fmt.Sprintf("%s.%s", cleanHost, zoneName)
 	}
 	customHostname := cnameRecordName
 
@@ -102,6 +138,15 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 		}
 		originRecordID = newRec.ID
 		createdOriginID = newRec.ID
+	}
+
+	// 4b. Set the fallback origin for the zone to ensure custom hostnames can be verified
+	log.Printf("[CF Optimize] Setting fallback origin for zone %s: %s", zoneID, originRecordName)
+	if err := s.client.SetFallbackOrigin(ctx, apiToken, zoneID, originRecordName); err != nil {
+		if createdOriginID != "" {
+			_ = s.client.DeleteRecord(ctx, apiToken, zoneID, createdOriginID)
+		}
+		return nil, fmt.Errorf("failed to set fallback origin for zone: %w", err)
 	}
 
 	// 5. Create/Update intermediate CNAME record (gray cloud)
@@ -194,22 +239,26 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 	// 8. Auto-create validation records on the same Cloudflare zone
 	var validationRecordIDs []string
 
-	// Ownership validation TXT record
+	// Ownership validation record (TXT or CNAME)
 	if ch.OwnershipVerification != nil && ch.OwnershipVerification.Status != "active" && ch.OwnershipVerification.Status != "verified" {
 		txtName := ch.OwnershipVerification.Name
 		txtValue := ch.OwnershipVerification.Value
 		if txtName != "" && txtValue != "" {
-			existingTxt := findRecord(records, txtName, "TXT")
+			recType := "TXT"
+			if strings.ToLower(ch.OwnershipVerification.Type) == "cname" {
+				recType = "CNAME"
+			}
+			existingRec := findRecord(records, txtName, recType)
 			var recID string
-			if existingTxt != nil {
-				log.Printf("[CF Optimize] Updating existing ownership TXT: %s", txtName)
-				updated, err := s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, existingTxt.ID, "TXT", txtName, txtValue, 1, false)
+			if existingRec != nil {
+				log.Printf("[CF Optimize] Updating existing ownership %s: %s", recType, txtName)
+				updated, err := s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, existingRec.ID, recType, txtName, txtValue, 1, false)
 				if err == nil {
 					recID = updated.ID
 				}
 			} else {
-				log.Printf("[CF Optimize] Creating ownership TXT: %s", txtName)
-				newRec, err := s.client.CreateRecordWithProxied(ctx, apiToken, zoneID, "TXT", txtName, txtValue, 1, false)
+				log.Printf("[CF Optimize] Creating ownership %s: %s", recType, txtName)
+				newRec, err := s.client.CreateRecordWithProxied(ctx, apiToken, zoneID, recType, txtName, txtValue, 1, false)
 				if err == nil {
 					recID = newRec.ID
 				}
@@ -363,6 +412,17 @@ func (s *CFOptimizeService) Refresh(ctx context.Context, userID, configID int64)
 		return nil, fmt.Errorf("failed to get custom hostname status: %w", err)
 	}
 
+	// Self-healing: if custom hostname is pending, ensure the fallback origin is set on the zone.
+	// This resolves the "zone does not have a fallback origin set" validation blockage.
+	if ch.Status == "pending" {
+		log.Printf("[CF Optimize] Custom hostname %s is pending. Setting fallback origin self-healing to: %s", config.CustomHostname, config.OriginRecordName)
+		_ = s.client.SetFallbackOrigin(ctx, account.APIKey, config.ZoneID, config.OriginRecordName)
+		// Re-query status immediately to get updated status and clear verification errors
+		if updatedCh, err := s.client.GetCustomHostname(ctx, account.APIKey, config.ZoneID, config.CustomHostnameID); err == nil {
+			ch = updatedCh
+		}
+	}
+
 	// Update local status
 	status := ch.Status
 	sslStatus := "pending"
@@ -439,7 +499,9 @@ func (s *CFOptimizeService) Delete(ctx context.Context, userID, configID int64, 
 					config.ZoneID, configID, config.OriginRecordID,
 				).Scan(&count)
 				if err == nil && count == 0 {
-					log.Printf("[CF Optimize] Cleaning up unused origin A record: %s", config.OriginRecordName)
+					log.Printf("[CF Optimize] Cleaning up unused origin A record: %s. Clearing fallback origin first.", config.OriginRecordName)
+					_ = s.client.DeleteFallbackOrigin(ctx, apiToken, config.ZoneID)
+					time.Sleep(2 * time.Second)
 					_ = s.client.DeleteRecord(ctx, apiToken, config.ZoneID, config.OriginRecordID)
 				}
 			}
@@ -487,3 +549,207 @@ func (s *CFOptimizeService) getAccount(userID, accountID int64) (*models.Account
 	}
 	return &a, nil
 }
+
+// Update updates a CDN optimization configuration
+func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, req *models.UpdateCFOptimizeRequest) (*models.CFOptimize, error) {
+	// 1. Get existing config
+	config, err := s.get(userID, configID)
+	if err != nil {
+		return nil, fmt.Errorf("config not found: %w", err)
+	}
+
+	// 2. Get account and verify ownership
+	account, err := s.getAccount(userID, config.AccountID)
+	if err != nil {
+		return nil, fmt.Errorf("account not found: %w", err)
+	}
+	apiToken := account.APIKey
+	zoneID := config.ZoneID
+	zoneName := config.ZoneName
+
+	// Normalize inputs
+	originIP := strings.TrimSpace(req.OriginIP)
+	cnameTarget := strings.TrimSpace(req.CnameTarget)
+	if cnameTarget == "" {
+		cnameTarget = "cloudflare.468123.xyz"
+	}
+	intermediatePrefix := strings.TrimSpace(req.IntermediatePrefix)
+
+	// Clean intermediate prefix subdomain
+	cleanSubdomain := func(sub, zone string) string {
+		subLower := strings.ToLower(sub)
+		zoneLower := strings.ToLower(zone)
+		if subLower == zoneLower || sub == "@" || sub == "" {
+			return ""
+		}
+		suffix := "." + zoneLower
+		if strings.HasSuffix(subLower, suffix) {
+			return sub[:len(sub)-len(suffix)]
+		}
+		return sub
+	}
+
+	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
+	if cleanIntermediate == "" {
+		cleanIntermediate = "saas"
+	}
+
+	cleanHost := cleanSubdomain(config.CustomHostname, zoneName)
+	originRecordName := "origin." + zoneName
+	if cleanHost != "" {
+		originRecordName = fmt.Sprintf("origin-%s.%s", cleanHost, zoneName)
+	}
+
+	getCNAMESegment := func(cname string) string {
+		cname = strings.TrimSpace(strings.ToLower(cname))
+		parts := strings.Split(cname, ".")
+		if len(parts) > 0 && parts[0] != "" {
+			return parts[0]
+		}
+		return ""
+	}
+
+	cnameSeg := getCNAMESegment(cnameTarget)
+	if cnameSeg != "" {
+		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, cleanIntermediate)
+	}
+	intermediateRecordName := fmt.Sprintf("%s.%s", cleanIntermediate, zoneName)
+
+	// Fetch all existing records in the zone for smart reuse/updating
+	records, err := s.client.ListRecords(ctx, apiToken, zoneID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list DNS records: %w", err)
+	}
+
+	// 3. Update origin A record if IP or record name changed
+	originRecordID := config.OriginRecordID
+	originNameChanged := (originRecordName != config.OriginRecordName)
+	originIPChanged := (originIP != config.OriginIP)
+
+	if originNameChanged || originIPChanged {
+		log.Printf("[CF Optimize] Origin record changed. IP: %s -> %s, Name: %s -> %s", config.OriginIP, originIP, config.OriginRecordName, originRecordName)
+
+		if originNameChanged {
+			// Clean up old origin record if not used elsewhere
+			if config.OriginRecordID != "" {
+				var count int
+				err := database.DB.QueryRow(
+					"SELECT COUNT(*) FROM cf_optimize WHERE zone_id = ? AND id != ? AND origin_record_id = ?",
+					zoneID, configID, config.OriginRecordID,
+				).Scan(&count)
+				if err == nil && count == 0 {
+					log.Printf("[CF Optimize] Cleaning up old unused origin record: %s. Clearing fallback origin first.", config.OriginRecordName)
+					_ = s.client.DeleteFallbackOrigin(ctx, apiToken, zoneID)
+					time.Sleep(2 * time.Second)
+					_ = s.client.DeleteRecord(ctx, apiToken, zoneID, config.OriginRecordID)
+				}
+			}
+
+			// Create new origin record
+			newRec, err := s.client.CreateRecordWithProxied(ctx, apiToken, zoneID, "A", originRecordName, originIP, 1, true)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create new origin A record: %w", err)
+			}
+			originRecordID = newRec.ID
+		} else {
+			// Name is same, IP changed. Update it.
+			if originRecordID != "" {
+				_, err = s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, originRecordID, "A", originRecordName, originIP, 1, true)
+				if err != nil {
+					return nil, fmt.Errorf("failed to update origin A record: %w", err)
+				}
+			} else {
+				newRec, err := s.client.CreateRecordWithProxied(ctx, apiToken, zoneID, "A", originRecordName, originIP, 1, true)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create origin A record: %w", err)
+				}
+				originRecordID = newRec.ID
+			}
+		}
+
+		// Also ensure Fallback Origin is set to the new origin record name
+		_ = s.client.SetFallbackOrigin(ctx, apiToken, zoneID, originRecordName)
+	}
+
+	// 4. Update intermediate CNAME record
+	intermediateRecordID := config.IntermediateRecordID
+	intermediateChanged := (intermediateRecordName != config.IntermediateRecordName)
+	targetChanged := (cnameTarget != config.CnameTarget)
+
+	if intermediateChanged || targetChanged {
+		if intermediateChanged {
+			// Prefix changed: we must handle references of the old intermediate CNAME record
+			if config.IntermediateRecordID != "" {
+				var count int
+				err := database.DB.QueryRow(
+					"SELECT COUNT(*) FROM cf_optimize WHERE zone_id = ? AND id != ? AND intermediate_record_id = ?",
+					zoneID, configID, config.IntermediateRecordID,
+				).Scan(&count)
+				if err == nil && count == 0 {
+					log.Printf("[CF Optimize] Cleaning up old unused intermediate CNAME record: %s", config.IntermediateRecordName)
+					_ = s.client.DeleteRecord(ctx, apiToken, zoneID, config.IntermediateRecordID)
+				}
+			}
+
+			// Create or find the new intermediate CNAME record
+			existingNewInter := findRecord(records, intermediateRecordName, "CNAME")
+			if existingNewInter != nil {
+				log.Printf("[CF Optimize] Reusing existing CNAME record for new intermediate prefix: %s", intermediateRecordName)
+				if existingNewInter.Content != cnameTarget {
+					updated, err := s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, existingNewInter.ID, "CNAME", intermediateRecordName, cnameTarget, 1, false)
+					if err != nil {
+						return nil, fmt.Errorf("failed to update intermediate CNAME record: %w", err)
+					}
+					intermediateRecordID = updated.ID
+				} else {
+					intermediateRecordID = existingNewInter.ID
+				}
+			} else {
+				log.Printf("[CF Optimize] Creating new intermediate CNAME record: %s -> %s", intermediateRecordName, cnameTarget)
+				newRec, err := s.client.CreateRecordWithProxied(ctx, apiToken, zoneID, "CNAME", intermediateRecordName, cnameTarget, 1, false)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create intermediate CNAME record: %w", err)
+				}
+				intermediateRecordID = newRec.ID
+			}
+		} else {
+			// Prefix is same, but target changed. Just update the existing CNAME record content.
+			if intermediateRecordID != "" {
+				log.Printf("[CF Optimize] CNAME target changed from %s to %s. Updating intermediate record.", config.CnameTarget, cnameTarget)
+				_, err = s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, intermediateRecordID, "CNAME", intermediateRecordName, cnameTarget, 1, false)
+				if err != nil {
+					return nil, fmt.Errorf("failed to update intermediate CNAME record: %w", err)
+				}
+			}
+		}
+	}
+
+	// 5. Update business CNAME record to point to the new intermediate record if it changed
+	cnameRecordID := config.CnameRecordID
+	if intermediateChanged && cnameRecordID != "" {
+		log.Printf("[CF Optimize] Intermediate prefix changed. Updating business CNAME to point to: %s", intermediateRecordName)
+		_, err = s.client.UpdateRecordWithProxied(ctx, apiToken, zoneID, cnameRecordID, "CNAME", config.CnameRecordName, intermediateRecordName, 1, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update business CNAME record: %w", err)
+		}
+	}
+
+	// 6. Save changes to DB
+	now := time.Now()
+	_, err = database.DB.Exec(
+		`UPDATE cf_optimize 
+		 SET origin_ip = ?, origin_record_name = ?, origin_record_id = ?, cname_target = ?, 
+		     intermediate_record_name = ?, intermediate_record_id = ?, updated_at = ? 
+		 WHERE id = ? AND user_id = ?`,
+		originIP, originRecordName, originRecordID, cnameTarget, 
+		intermediateRecordName, intermediateRecordID, now, 
+		configID, userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update database: %w", err)
+	}
+
+	// Return updated config
+	return s.get(userID, configID)
+}
+

@@ -295,6 +295,7 @@ export const en = {
     title: 'CF Optimize',
     subtitle: 'One-click Cloudflare CDN optimization — auto-configure origin records, optimized CNAME, and custom hostnames',
     createButton: 'One-Click Optimize',
+    editTitle: 'Edit Optimization Config',
     form: {
       account: 'Cloudflare Account',
       accountPlaceholder: 'Select a Cloudflare account',
@@ -323,6 +324,7 @@ export const en = {
       customHostname: 'Custom Hostname',
       zone: 'Domain',
       originIP: 'Origin IP',
+      originDomain: 'Origin Domain',
       intermediateRecord: 'Intermediate Record',
       pointsTo: 'pointing to',
       cnameTarget: 'Optimized Domain',
@@ -344,12 +346,14 @@ export const en = {
     },
     actions: {
       refresh: 'Refresh Status',
+      edit: 'Edit',
       delete: 'Delete',
       deleteWithCleanup: 'Delete & Cleanup Records',
     },
     messages: {
       createSuccess: 'Optimization config created successfully',
       createError: 'Creation failed',
+      updateSuccess: 'Optimization config updated successfully',
       refreshSuccess: 'Status updated',
       refreshError: 'Refresh failed',
       deleteSuccess: 'Deleted',

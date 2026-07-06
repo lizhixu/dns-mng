@@ -408,6 +408,15 @@ export const api = {
         return handleResponse(response);
     },
 
+    cfOptimizeUpdate: async (id, data) => {
+        const response = await fetch(`${API_BASE}/cf-optimize/${id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
     cfOptimizeList: async () => {
         const response = await fetch(`${API_BASE}/cf-optimize`, {
             headers: getHeaders(),

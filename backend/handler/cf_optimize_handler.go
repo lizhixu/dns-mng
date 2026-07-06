@@ -94,3 +94,28 @@ func (h *CFOptimizeHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
+
+// Update handles updating a CF CDN optimization configuration
+func (h *CFOptimizeHandler) Update(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req models.UpdateCFOptimizeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	config, err := h.cfOptimizeService.Update(c.Request.Context(), userID, id, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, config)
+}

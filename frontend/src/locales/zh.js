@@ -295,6 +295,7 @@ export const zh = {
     title: 'CF 优选',
     subtitle: 'Cloudflare CDN 一键优选，自动配置源站记录、优选 CNAME 和自定义主机名',
     createButton: '一键优选',
+    editTitle: '编辑优选配置',
     form: {
       account: 'Cloudflare 账号',
       accountPlaceholder: '选择 Cloudflare 账号',
@@ -323,6 +324,7 @@ export const zh = {
       customHostname: '自定义主机名',
       zone: '域名',
       originIP: '源站 IP',
+      originDomain: '源站域名',
       intermediateRecord: '中转记录',
       pointsTo: '指向',
       cnameTarget: '优选域名',
@@ -344,12 +346,14 @@ export const zh = {
     },
     actions: {
       refresh: '刷新状态',
+      edit: '编辑',
       delete: '删除',
       deleteWithCleanup: '删除并清理记录',
     },
     messages: {
       createSuccess: '优选配置创建成功',
       createError: '创建失败',
+      updateSuccess: '优选配置更新成功',
       refreshSuccess: '状态已更新',
       refreshError: '刷新失败',
       deleteSuccess: '已删除',

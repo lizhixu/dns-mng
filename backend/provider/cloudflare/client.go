@@ -519,6 +519,68 @@ func (c *Client) CreateCustomHostname(ctx context.Context, apiToken, zoneID, hos
 	return &ch, nil
 }
 
+// SetFallbackOrigin sets or updates the fallback origin for custom hostnames in a zone
+func (c *Client) SetFallbackOrigin(ctx context.Context, apiToken, zoneID, origin string) error {
+	path := "/zones/" + zoneID + "/custom_hostnames/fallback_origin"
+
+	reqBody := map[string]interface{}{
+		"origin": origin,
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "PUT", path, strings.NewReader(string(data)))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	return nil
+}
+
+// DeleteFallbackOrigin deletes the fallback origin configuration for custom hostnames in a zone
+func (c *Client) DeleteFallbackOrigin(ctx context.Context, apiToken, zoneID string) error {
+	path := "/zones/" + zoneID + "/custom_hostnames/fallback_origin"
+
+	resp, err := c.doRequest(ctx, apiToken, "DELETE", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	return nil
+}
+
+
 // ListCustomHostnames lists all custom hostnames for a zone
 func (c *Client) ListCustomHostnames(ctx context.Context, apiToken, zoneID string) ([]CustomHostname, error) {
 	path := "/zones/" + zoneID + "/custom_hostnames"

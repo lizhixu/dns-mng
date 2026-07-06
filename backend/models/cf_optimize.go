@@ -36,6 +36,13 @@ type CreateCFOptimizeRequest struct {
 	IntermediatePrefix string `json:"intermediate_prefix"`                  // optional, default "saas"
 }
 
+// UpdateCFOptimizeRequest is the request for updating a CDN optimization configuration
+type UpdateCFOptimizeRequest struct {
+	OriginIP           string `json:"origin_ip" binding:"required"`
+	CnameTarget        string `json:"cname_target"`
+	IntermediatePrefix string `json:"intermediate_prefix"`
+}
+
 // CFOptimizeResponse is the response for a single optimization config
 type CFOptimizeResponse struct {
 	CFOptimize

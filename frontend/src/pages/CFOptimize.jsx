@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../api';
-import { Zap, RefreshCw, Trash2, AlertCircle, CheckCircle, Server } from 'lucide-react';
+import { Zap, RefreshCw, Trash2, AlertCircle, CheckCircle, Server, Edit } from 'lucide-react';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
@@ -21,6 +21,7 @@ const CFOptimize = () => {
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editConfig, setEditConfig] = useState(null);
     const [formData, setFormData] = useState({
         account_id: '',
         zone_name: '',
@@ -80,37 +81,77 @@ const CFOptimize = () => {
         loadData();
     }, [loadData]);
 
-    const openModal = () => {
-        setFormData({ account_id: '', zone_name: '', hostname: '', origin_ip: '', cname_target: cnamePresets[0].value, intermediate_prefix: 'saas' });
+    const openModal = (config = null) => {
+        if (config && config.id) {
+            setEditConfig(config);
+            setFormData({
+                account_id: String(config.account_id),
+                zone_name: config.zone_name,
+                hostname: config.custom_hostname ? config.custom_hostname.split('.')[0] : '',
+                origin_ip: config.origin_ip,
+                cname_target: config.cname_target,
+                intermediate_prefix: config.intermediate_record_name ? config.intermediate_record_name.split('.')[0] : 'saas',
+            });
+            const isPreset = cnamePresets.some(p => p.value === config.cname_target);
+            setCnameMode(isPreset ? 'preset' : 'custom');
+        } else {
+            setEditConfig(null);
+            setFormData({
+                account_id: '',
+                zone_name: '',
+                hostname: '',
+                origin_ip: '',
+                cname_target: cnamePresets[0].value,
+                intermediate_prefix: 'saas',
+            });
+            setCnameMode('preset');
+        }
         setFormError('');
-        setCnameMode('preset');
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
+        setEditConfig(null);
         setFormError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.account_id || !formData.zone_name || !formData.hostname || !formData.origin_ip) {
-            setFormError(t.common.error);
-            return;
+        if (editConfig) {
+            if (!formData.origin_ip) {
+                setFormError(t.common.error);
+                return;
+            }
+        } else {
+            if (!formData.account_id || !formData.zone_name || !formData.hostname || !formData.origin_ip) {
+                setFormError(t.common.error);
+                return;
+            }
         }
         setFormError('');
         setSubmitting(true);
         try {
-            await api.cfOptimizeCreate({
-                account_id: Number(formData.account_id),
-                zone_name: formData.zone_name,
-                hostname: formData.hostname,
-                origin_ip: formData.origin_ip,
-                cname_target: formData.cname_target || undefined,
-                intermediate_prefix: formData.intermediate_prefix || undefined,
-            });
-            closeModal();
-            setSuccess(t.cfOptimize.messages.createSuccess);
+            if (editConfig) {
+                await api.cfOptimizeUpdate(editConfig.id, {
+                    origin_ip: formData.origin_ip,
+                    cname_target: formData.cname_target || undefined,
+                    intermediate_prefix: formData.intermediate_prefix || undefined,
+                });
+                closeModal();
+                setSuccess(t.cfOptimize.messages.updateSuccess || '更新成功');
+            } else {
+                await api.cfOptimizeCreate({
+                    account_id: Number(formData.account_id),
+                    zone_name: formData.zone_name,
+                    hostname: formData.hostname,
+                    origin_ip: formData.origin_ip,
+                    cname_target: formData.cname_target || undefined,
+                    intermediate_prefix: formData.intermediate_prefix || undefined,
+                });
+                closeModal();
+                setSuccess(t.cfOptimize.messages.createSuccess);
+            }
             setTimeout(() => setSuccess(''), 3000);
             loadData();
         } catch (err) {
@@ -183,7 +224,7 @@ const CFOptimize = () => {
                         <button onClick={() => loadData()} className="btn btn-secondary" style={{ height: '34px', padding: '0 10px' }} title={t.common.refresh}>
                             <RefreshCw size={15} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                         </button>
-                        <button onClick={openModal} className="btn btn-primary" style={{ height: '34px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button onClick={() => openModal()} className="btn btn-primary" style={{ height: '34px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Zap size={15} />
                             {t.cfOptimize.createButton}
                         </button>
@@ -244,11 +285,20 @@ const CFOptimize = () => {
                                     </div>
                                 </div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem' }}>
+                                    <span>{t.cfOptimize.table.originDomain || '源站域名'}: <span className="font-mono">{config.origin_record_name}</span></span>
                                     <span>{t.cfOptimize.table.originIP}: <span className="font-mono">{config.origin_ip}</span></span>
-                                    <span>{t.cfOptimize.table.intermediateRecord}: <span className="font-mono">{config.intermediate_record_name || `saas.${config.zone_name}`}</span></span>
+                                    <span>{t.cfOptimize.table.intermediateRecord}: <span className="font-mono">{config.intermediate_record_name}</span></span>
                                     <span>{t.cfOptimize.table.cnameTarget}: <span className="font-mono">{config.cname_target}</span></span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => openModal(config)}
+                                        style={{ fontSize: '13px', padding: '0 10px', height: '32px' }}
+                                    >
+                                        <Edit size={13} />
+                                        {t.cfOptimize.actions.edit || '编辑'}
+                                    </button>
                                     <button
                                         className="btn btn-secondary"
                                         onClick={() => handleRefresh(config.id)}
@@ -298,11 +348,18 @@ const CFOptimize = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '12px 16px', fontSize: '14px' }}>{config.zone_name}</td>
-                                        <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono, monospace)', fontSize: '14px' }}>{config.origin_ip}</td>
+                                        <td style={{ padding: '12px 16px', fontSize: '14px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <div className="font-mono">{config.origin_ip}</div>
+                                                <div className="font-mono" style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+                                                    {config.origin_record_name}
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td style={{ padding: '12px 16px', fontSize: '14px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div className="font-mono" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                                    {config.intermediate_record_name || `saas.${config.zone_name}`}
+                                                    {config.intermediate_record_name}
                                                 </div>
                                                 <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{t.cfOptimize.table.pointsTo}:</div>
                                                 <div className="font-mono" style={{ fontSize: '13px', fontWeight: '500' }}>
@@ -318,6 +375,14 @@ const CFOptimize = () => {
                                         </td>
                                         <td style={{ padding: '12px 16px' }}>
                                             <div style={{ display: 'flex', gap: '4px' }}>
+                                                <button
+                                                    className="btn btn-ghost"
+                                                    onClick={() => openModal(config)}
+                                                    title={t.cfOptimize.actions.edit || '编辑'}
+                                                    style={{ padding: '6px 8px' }}
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
                                                 <button
                                                     className="btn btn-ghost"
                                                     onClick={() => handleRefresh(config.id)}
@@ -345,16 +410,16 @@ const CFOptimize = () => {
                 </div>
             )}
 
-            {/* Create Modal */}
+            {/* Create/Edit Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={closeModal}
-                title={t.cfOptimize.createButton}
+                title={editConfig ? (t.cfOptimize.editTitle || '编辑优选配置') : t.cfOptimize.createButton}
             >
                 <form onSubmit={handleSubmit}>
                     {formError && (
                         <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                            {formError}
+                             {formError}
                         </div>
                     )}
 
@@ -365,6 +430,7 @@ const CFOptimize = () => {
                             className="form-input"
                             value={formData.account_id}
                             onChange={e => setFormData(prev => ({ ...prev, account_id: e.target.value, zone_name: '' }))}
+                            disabled={!!editConfig}
                         >
                             <option value="">{t.cfOptimize.form.accountPlaceholder}</option>
                             {cfAccounts.map(a => (
@@ -376,9 +442,11 @@ const CFOptimize = () => {
                                 {t.cfOptimize.form.noCFAccount}
                             </span>
                         )}
-                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
-                            {t.cfOptimize.form.permissionHint}
-                        </span>
+                        {!editConfig && (
+                            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
+                                {t.cfOptimize.form.permissionHint}
+                            </span>
+                        )}
                     </div>
 
                     {/* Zone */}
@@ -388,7 +456,7 @@ const CFOptimize = () => {
                             className="form-input"
                             value={formData.zone_name}
                             onChange={e => setFormData(prev => ({ ...prev, zone_name: e.target.value }))}
-                            disabled={!formData.account_id}
+                            disabled={!!editConfig || !formData.account_id}
                         >
                             <option value="">{t.cfOptimize.form.zonePlaceholder}</option>
                             {zones.map(z => (
@@ -406,10 +474,13 @@ const CFOptimize = () => {
                             placeholder={t.cfOptimize.form.hostnamePlaceholder}
                             value={formData.hostname}
                             onChange={e => setFormData(prev => ({ ...prev, hostname: e.target.value }))}
+                            disabled={!!editConfig}
                         />
-                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
-                            {t.cfOptimize.form.hostnameHint}
-                        </span>
+                        {!editConfig && (
+                            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
+                                {t.cfOptimize.form.hostnameHint}
+                            </span>
+                        )}
                     </div>
 
                     {/* Intermediate Prefix */}
@@ -478,11 +549,11 @@ const CFOptimize = () => {
                         <button
                             type="submit"
                             className="btn btn-primary"
-                            disabled={submitting || !formData.account_id || !formData.zone_name || !formData.hostname || !formData.origin_ip}
+                            disabled={submitting || (editConfig ? !formData.origin_ip : (!formData.account_id || !formData.zone_name || !formData.hostname || !formData.origin_ip))}
                             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
                             {submitting ? <div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}></div> : <Zap size={14} />}
-                            {t.cfOptimize.createButton}
+                            {editConfig ? (t.cfOptimize.actions.edit || '保存') : t.cfOptimize.createButton}
                         </button>
                     </div>
                 </form>
