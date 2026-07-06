@@ -13,6 +13,7 @@ A modern, multi-provider DNS record management system with a clean web UI. Manag
 - 📧 **Domain expiry notifications** — scheduled daily email alerts for domains approaching renewal
 - 💾 **Backup & restore** — JSON export/import with optional AES encryption
 - 📝 **Logging** — API call logs, login logs with IP geolocation, scheduler task logs
+- ⚡ **CF Optimize** — Cloudflare CDN SaaS origin pull optimization with one-click setup
 - 🎨 **Modern UI** — clean interface with light / dark / system theme
 - 🌍 **i18n** — Chinese and English
 - 📱 **Responsive** — works on all screen sizes
@@ -41,6 +42,21 @@ chmod +x start.sh
 - **Backend API**: http://localhost:8080
 
 On first visit, enter any username and password — the account is created automatically.
+
+### Deploy with Dokploy
+
+The project supports deployment with [Dokploy](https://dokploy.com):
+
+1. Create a Compose service in Dokploy
+2. Configure Git repository: `github.com/lizhixu/dns-mng.git`
+3. Set Compose Path: `./backend/docker-compose.yaml`
+4. Configure environment variables:
+   ```
+   DB_TYPE=libsql
+   DB_URL=libsql://your-db.turso.io
+   DB_AUTH_TOKEN=your-turso-auth-token
+   ```
+5. Deploy the service
 
 ### Manual Setup
 
@@ -115,6 +131,15 @@ Go to **Accounts** and add your DNS provider credentials:
 
 - **All Domains** — view domains across all accounts, with search and filters
 - **Records** — create, update, delete DNS records (A, AAAA, CNAME, MX, TXT, SPF, SRV)
+- Click on any domain name to navigate directly to its DNS records page
+
+### 4. CF Optimize
+
+Configure Cloudflare CDN SaaS origin pull optimization:
+- One-click setup for SaaS origin pull with automatic DNS record creation
+- Custom CNAME target and intermediate gateway prefix
+- Automatic SSL certificate validation status
+- Click domain names to navigate to DNS records page
 
 ## APIs
 
@@ -201,13 +226,14 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   │   ├── ipv64/
 │   │   ├── dnshe/
 │   │   └── vps8/
-│   └── service/             # Business logic
+│   ├── service/             # Business logic
+│   └── docker-compose.yaml  # Backend-only Docker config
 ├── frontend/                # React frontend
 │   └── src/
 │       ├── components/      # Shared components
 │       ├── pages/           # Page views
 │       └── locales/         # i18n translations
-├── docker-compose.yaml      # Docker Compose config
+├── docker-compose.yaml      # Full Docker config (frontend + backend)
 ├── start.sh / stop.sh       # Convenience scripts
 └── .github/workflows/       # CI/CD
 ```
@@ -227,6 +253,13 @@ Contributions are welcome!
 5. Open a Pull Request
 
 ## Changelog
+
+### v0.0.3 (2026-07-06)
+
+- ✨ Added CF Optimize feature for Cloudflare CDN SaaS origin pull optimization
+- 🔗 Click domain names to navigate directly to DNS records page (All Domains, Single Account, CF Optimize)
+- 🗑️ Optimized deletion logic: deleting an account now automatically cleans up associated CF Optimize configs
+- 🔒 CF Optimize deletion improvement: SaaS records check if other domains are using them before deletion
 
 ### v0.0.2 (2026-04-23)
 

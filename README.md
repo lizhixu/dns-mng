@@ -18,6 +18,7 @@
 - 📝 **日志管理**：API 调用记录和定时任务日志
 - 🔒 **ACME DNS-01 API**：提供对外调用接口，便于自动签发证书（HTTP Basic Auth）
 - 🔄 **DDNS 支持**：DuckDNS 兼容的动态 DNS 更新 API
+- ⚡ **CF 优选**：Cloudflare CDN 优选功能，一键配置 SaaS 回源
 
 ## 技术栈
 
@@ -56,6 +57,21 @@ chmod +x start.sh
 4. 首次登录：
 - 直接输入任意用户名和密码登录
 - 系统会自动创建该账户
+
+### 使用 Dokploy 部署
+
+项目支持使用 [Dokploy](https://dokploy.com) 进行部署：
+
+1. 在 Dokploy 中创建 Compose 服务
+2. 配置 Git 仓库：`github.com/lizhixu/dns-mng.git`
+3. 设置 Compose Path：`./backend/docker-compose.yaml`
+4. 配置环境变量：
+   ```
+   DB_TYPE=libsql
+   DB_URL=libsql://your-db.turso.io
+   DB_AUTH_TOKEN=your-turso-auth-token
+   ```
+5. 部署服务
 
 ## ACME DNS-01 API（对外调用）
 
@@ -296,6 +312,14 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 - 支持记录启用/禁用（部分提供商）
 - 显示记录状态和更新时间
 
+### 5. CF 优选功能
+
+在"CF 优选"页面配置 Cloudflare CDN 优选：
+- 一键配置 SaaS 回源，自动创建所需 DNS 记录
+- 支持自定义 CNAME 目标和中间网关前缀
+- 自动验证 SSL 证书状态
+- 点击域名可直接跳转到该域名的 DNS 记录页面
+
 ## 支持的 DNS 提供商
 
 | 提供商 | 状态 | 特性 |
@@ -364,6 +388,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   │   ├── dnshe/
 │   │   └── vps8/
 │   ├── service/         # 业务逻辑
+│   └── docker-compose.yaml  # 后端独立 Docker 配置
 ├── frontend/            # React 前端
 │   ├── src/
 │   │   ├── components/  # 组件
@@ -372,7 +397,7 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 │   │   ├── locales/     # 国际化
 │   │   └── ...
 │   └── ...
-└── docker-compose.yaml  # Docker 配置
+└── docker-compose.yaml  # 完整 Docker 配置（前后端）
 ```
 
 ### 贡献指南
@@ -390,6 +415,13 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 MIT License
 
 ## 更新日志
+
+### v0.0.3 (2026-07-06)
+
+- ✨ 新增 CF 优选功能，支持 Cloudflare CDN SaaS 回源一键配置
+- 🔗 点击域名可直接跳转到 DNS 记录页面（所有域名、单账号域名、CF 优选页面）
+- 🗑️ 优化删除逻辑：删除账号时自动清理关联的 CF 优选配置
+- 🔒 CF 优选删除优化：SaaS 记录需要判断是否还有其他域名使用，避免误删
 
 ### v0.0.2 (2026-04-23)
 
