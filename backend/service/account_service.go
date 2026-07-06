@@ -4,6 +4,7 @@ import (
 	"dns-mng/database"
 	"dns-mng/models"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -95,6 +96,14 @@ func (s *AccountService) Update(userID, accountID int64, req *models.UpdateAccou
 }
 
 func (s *AccountService) Delete(userID, accountID int64) error {
+	// First delete related cf_optimize records
+	_, err := database.DB.Exec("DELETE FROM cf_optimize WHERE account_id = ? AND user_id = ?", accountID, userID)
+	if err != nil {
+		// Log but continue with account deletion
+		log.Printf("Warning: failed to delete cf_optimize records for account %d: %v", accountID, err)
+	}
+
+	// Then delete the account
 	result, err := database.DB.Exec("DELETE FROM accounts WHERE id = ? AND user_id = ?", accountID, userID)
 	if err != nil {
 		return err

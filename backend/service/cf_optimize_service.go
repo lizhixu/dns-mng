@@ -457,17 +457,12 @@ func (s *CFOptimizeService) Delete(ctx context.Context, userID, configID int64, 
 		if err == nil {
 			apiToken := account.APIKey
 
-			// 1. Delete custom hostname
-			if config.CustomHostnameID != "" {
-				_ = s.client.DeleteCustomHostname(ctx, apiToken, config.ZoneID, config.CustomHostnameID)
-			}
-
-			// 2. Delete business CNAME record
+			// 1. Delete business CNAME record
 			if config.CnameRecordID != "" {
 				_ = s.client.DeleteRecord(ctx, apiToken, config.ZoneID, config.CnameRecordID)
 			}
 
-			// 3. Delete auto-created validation records
+			// 2. Delete auto-created validation records
 			if config.ValidationRecordIDs != "" {
 				vIDs := strings.Split(config.ValidationRecordIDs, ",")
 				for _, rID := range vIDs {
@@ -475,6 +470,19 @@ func (s *CFOptimizeService) Delete(ctx context.Context, userID, configID int64, 
 					if rID != "" {
 						_ = s.client.DeleteRecord(ctx, apiToken, config.ZoneID, rID)
 					}
+				}
+			}
+
+			// 3. Reference count check for SaaS custom hostname
+			if config.CustomHostnameID != "" {
+				var count int
+				err := database.DB.QueryRow(
+					"SELECT COUNT(*) FROM cf_optimize WHERE custom_hostname_id = ? AND id != ?",
+					config.CustomHostnameID, configID,
+				).Scan(&count)
+				if err == nil && count == 0 {
+					log.Printf("[CF Optimize] Cleaning up unused SaaS custom hostname: %s", config.CustomHostname)
+					_ = s.client.DeleteCustomHostname(ctx, apiToken, config.ZoneID, config.CustomHostnameID)
 				}
 			}
 
