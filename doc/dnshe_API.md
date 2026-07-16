@@ -1,86 +1,149 @@
-## 免费域名服务API使用文档
+# DNSHE 免费域名 API 文档
 
-欢迎使用免费域名API服务。
+> 基础地址：`https://api005.dnshe.com/index.php`
+> 所有请求通用参数：`m=domain_hub`
 
- 
+---
 
-本 API 旨在为开发者提供高效、便捷的域名管理解决方案，支持子域名注册、DNS 记录配置、API 密钥管控及配额查询等核心能力，无需深入底层 DNS 技术细节，
+## 目录
 
- 
+- [一、认证方式](#一认证方式)
+- [二、API 端点](#二api-端点)
+  - [1. 子域名管理](#1-子域名管理)
+    - [1.1 列出子域名](#11-列出子域名)
+    - [1.2 注册子域名](#12-注册子域名)
+    - [1.3 获取子域名详情](#13-获取子域名详情)
+    - [1.4 删除子域名](#14-删除子域名)
+    - [1.5 续期子域名](#15-续期子域名)
+  - [2. DNS 记录管理](#2-dns-记录管理)
+    - [2.1 列出 DNS 记录](#21-列出-dns-记录)
+    - [2.2 创建 DNS 记录](#22-创建-dns-记录)
+    - [2.3 更新 DNS 记录](#23-更新-dns-记录)
+    - [2.4 删除 DNS 记录](#24-删除-dns-记录)
+  - [3. API 密钥管理](#3-api-密钥管理)
+    - [3.1 列出 API 密钥](#31-列出-api-密钥)
+    - [3.2 创建 API 密钥](#32-创建-api-密钥)
+    - [3.3 删除 API 密钥](#33-删除-api-密钥)
+    - [3.4 重新生成 API 密钥](#34-重新生成-api-密钥)
+  - [4. 配额查询](#4-配额查询)
+    - [4.1 查询配额](#41-查询配额)
+  - [5. WHOIS 查询](#5-whois-查询公开接口)
+- [三、错误代码与统一错误结构](#三错误代码与统一错误结构)
+- [四、速率限制](#四速率限制)
+- [五、SDK 示例](#五sdk-示例)
+  - [PHP 示例](#php-示例)
+  - [Python 示例](#python-示例)
+  - [JavaScript 示例](#javascript-示例)
 
-文档系统梳理了 API 的调用规范、端点详情、请求 / 响应示例及多语言 SDK 实现，适用于需要集成域名服务的各类应用场景（如开发者工具、SAAS 平台、个人项目等）。
+---
 
- 
+## 一、认证方式
 
-使用前请确保已获取合法的 API Key 与 API Secret，严格遵循认证机制与速率限制要求。建议优先采用 HTTP Header 方式传递认证信息，同时做好密钥安全防护与访问权限管控。
+### 方式 1：HTTP Header（推荐）
 
- 
-
-若在集成过程中遇到问题，可参考文档 “常见问题” 或联系客服获取技术支持。我们将持续优化 API 功能与文档质量，为您提供更稳定、高效的开发体验。
-
- 
-
-- **API 地址**：`https://api005.dnshe.com/index.php?m=domain_hub`
-- **认证方式**：API Key + API Secret
-- **支持格式**：JSON
-- **默认速率限制**：默认 60 请求 / 分钟
-
-## 二、认证机制
-
-### 1. 获取 API 密钥
-
-1. 登录 DNSHE 客户区
-2. 进入 "免费域名" 页面
-3. 在底部找到 "API 管理" 卡片
-4. 点击 "创建 API 密钥"
-
-### 2. 认证方式示例
-
-#### 方式 1：HTTP Header（推荐）
-
-```markup
-curl -X GET "https://api005.dnshe.com//index.php?m=domain_hub&endpoint=subdomains&action=list" \
-  -H "X-API-Key: cfsd_xxxxxxxxxx" \
-  -H "X-API-Secret: yyyyyyyyyyyy"
-```
-
-## 三、核心 API 端点及示例
-
-### 1. 子域名管理
-
-| 操作       | 方法        | 描述           |
-| :--------- | :---------- | :------------- |
-| `list`     | GET         | 列出所有子域名 |
-| `register` | POST        | 注册新子域名   |
-| `get`      | GET         | 获取子域名详情 |
-| `delete`   | POST/DELETE | 删除子域名     |
-| `renew`    | POST/PUT    | 续期子域名     |
-
-#### 1.1 列出子域名
-
-- **请求示例**：
-
- 
-
-bash
-
-```markup
+```bash
 curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy"
 ```
 
- 
+### 方式 2：URL/Body 参数（已禁用）
 
- 
+出于安全原因，`api_key` / `api_secret` **不再支持**通过 URL Query 或请求体传递。请仅使用 `X-API-Key` 和 `X-API-Secret` 请求头认证。
 
-- **响应示例**：
+---
 
- 
+## 二、API 端点
 
-json
+### 1. 子域名管理
 
- 
+#### 1.1 列出子域名
+
+- **端点**：`subdomains`
+- **操作**：`list`
+- **方法**：`GET`
+
+**查询参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `page` | integer | 否 | 1 | 页码（从 1 开始） |
+| `per_page` | integer | 否 | 200 | 每页数量（1-500） |
+| `include_total` | boolean | 否 | false | 是否返回总数（大数据量时较慢） |
+| `search` | string | 否 | - | 搜索关键词（匹配 subdomain 或 rootdomain） |
+| `rootdomain` | string | 否 | - | 按根域名过滤 |
+| `status` | string | 否 | - | 按状态过滤（active/suspended/expired） |
+| `created_from` | string | 否 | - | 创建时间起始（YYYY-MM-DD） |
+| `created_to` | string | 否 | - | 创建时间结束（YYYY-MM-DD） |
+| `sort_by` | string | 否 | id | 排序字段（id/created_at/updated_at/expires_at/subdomain） |
+| `sort_dir` | string | 否 | desc | 排序方向（asc/desc） |
+| `fields` | string | 否 | all | 返回字段（逗号分隔），自定义时会自动补充 id |
+
+**fields 可选值**：`id, subdomain, rootdomain, full_domain, status, created_at, updated_at, expires_at, never_expires, cloudflare_zone_id, provider_account_id`
+
+**基础请求示例：**
+
+```bash
+# 默认获取第 1 页（200 条）
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+```
+
+**分页请求示例：**
+
+```bash
+# 获取第 1 页（每页 100 条）
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&page=1&per_page=100" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 获取第 2 页并返回总数
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&page=2&per_page=100&include_total=1" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+```
+
+**搜索和过滤示例：**
+
+```bash
+# 搜索包含 "test" 的域名
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&search=test" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 只查看 example.com 的域名
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&rootdomain=example.com" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 查看已暂停的域名
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&status=suspended" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 查看 2025 年 1 月创建的域名
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&created_from=2025-01-01&created_to=2025-01-31" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 按过期时间升序排列
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&sort_by=expires_at&sort_dir=asc" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 组合查询：搜索 test 开头的 active 状态域名，按创建时间倒序，每页 50 条
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&search=test&status=active&sort_by=created_at&sort_dir=desc&per_page=50" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+
+# 只返回 ID 和域名字段（减少数据传输）
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=list&fields=id,subdomain,rootdomain,status" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+```
+
+**基础响应示例：**
 
 ```json
 {
@@ -109,26 +172,62 @@ json
 }
 ```
 
- 
+**分页响应示例：**
+
+```json
+{
+  "success": true,
+  "count": 100,
+  "subdomains": [
+    {
+      "id": 201,
+      "subdomain": "app201",
+      "rootdomain": "example.com",
+      "full_domain": "app201.example.com",
+      "status": "active",
+      "created_at": "2025-10-19 10:00:00",
+      "updated_at": "2025-10-19 10:00:00"
+    }
+    // ... 99 more items
+  ],
+  "pagination": {
+    "page": 2,
+    "per_page": 100,
+    "has_more": true,
+    "next_page": 3,
+    "prev_page": 1,
+    "total": 12500
+  }
+}
+```
+
+**性能优化建议：**
+
+- 默认每页 200 条，建议根据需求调整 `per_page`（推荐 50-100）
+- `include_total=1` 会执行 COUNT 查询，数据量大时可能较慢，仅在必要时使用
+- 通过 `pagination.has_more` 判断是否有下一页，比依赖 `total` 更高效
+- 使用 `fields` 参数可以显著减少数据传输量
+- 最大 `per_page=500`，超过会自动限制为 500
+- 对于 1 万+域名，建议使用搜索和过滤功能精确定位目标域名
+
+---
 
 #### 1.2 注册子域名
 
-- 请求参数
+- **端点**：`subdomains`
+- **操作**：`register`
+- **方法**：`POST`
 
-  ：
+**请求参数：**
 
-  - `subdomain`：子域名前缀（字符串，必填）
-  - `rootdomain`：根域名（字符串，必填）
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain` | string | 是 | 子域名前缀 |
+| `rootdomain` | string | 是 | 根域名 |
 
-- **请求示例**：
+**请求示例：**
 
- 
-
-bash
-
- 
-
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=register" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -139,17 +238,7 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomain
   }'
 ```
 
- 
-
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
@@ -160,38 +249,31 @@ json
 }
 ```
 
- 
+---
 
 #### 1.3 获取子域名详情
 
-- **请求参数**：`subdomain_id`（整数，必填）
-- **请求示例**：
+- **端点**：`subdomains`
+- **操作**：`get`
+- **方法**：`GET`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain_id` | integer | 是 | 子域名 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=get&subdomain_id=1" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy"
 ```
 
- 
+**响应示例：**
 
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
-
-```markup
+```json
 {
   "success": true,
   "subdomain": {
@@ -219,20 +301,23 @@ json
 }
 ```
 
- 
+---
 
 #### 1.4 删除子域名
 
-- **请求参数**：`subdomain_id`（整数，必填）
-- **请求示例**：
+- **端点**：`subdomains`
+- **操作**：`delete`
+- **方法**：`POST` 或 `DELETE`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain_id` | integer | 是 | 子域名 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=delete" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -242,60 +327,50 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomain
   }'
 ```
 
- 
-
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
   "success": true,
-  "message": "Subdomain deleted successfully"
+  "message": "Subdomain deleted successfully",
+  "subdomain_id": 1,
+  "full_domain": "test.example.com",
+  "dns_records_deleted": 4
 }
 ```
 
- 
+---
 
 #### 1.5 续期子域名
 
-- **请求参数**：`subdomain_id`（域名id，必填）
-- **请求示例**：
+- **端点**：`subdomains`
+- **操作**：`renew`
+- **方法**：`POST` 或 `PUT`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain_id` | integer | 是 | 子域名 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=subdomains&action=renew" \
--H "X-API-Key: cfsd_xxxxxxxxxx" \
--H "X-API-Secret: yyyyyyyyyyyy" \
--H "Content-Type: application/json" \
--d '{
-  "subdomain_id": 3
-}'
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subdomain_id": 3
+  }'
 ```
 
-**响应示例**：
-
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
   "success": true,
-  "message": "Subdomain renewed successfully",
+  "message": "Subdomain renewed successfully (charged 9.90 credit)",
   "subdomain_id": 3,
   "subdomain": "myapp",
   "previous_expires_at": "2025-05-01 00:00:00",
@@ -303,69 +378,70 @@ json
   "renewed_at": "2025-04-10 12:34:56",
   "never_expires": 0,
   "status": "active",
-  "remaining_days": 366
+  "remaining_days": 366,
+  "charged_amount": 9.9
 }
 ```
 
-2. DNS 记录管理
+**说明：**
 
-| 操作     | 方法        | 描述                  |
-| :------- | :---------- | :-------------------- |
-| `list`   | GET         | 列出子域名的 DNS 记录 |
-| `create` | POST        | 创建 DNS 记录         |
-| `update` | POST/PUT    | 更新 DNS 记录         |
-| `delete` | POST/DELETE | 删除 DNS 记录         |
+- `charged_amount` 表示本次续期从用户账户余额中扣除的金额。免费续期或扣费金额为 0 时，该字段值为 `0`。
+
+**可能的错误：**
+
+| 状态码 | 错误信息 | 说明 |
+|--------|---------|------|
+| 403 | `renewal disabled` | 后台未配置有效的注册年限 |
+| 422 | `renewal not yet available` | 尚未进入免费续期窗口（同时返回 `error_code=renewal_not_yet_available` 与剩余时间字段） |
+| 403 | `redemption period requires administrator` | 域名处于赎回期且后台配置为人工处理 |
+| 403 | `renewal window expired` | 已超过续期宽限期 |
+| 402 | `insufficient balance for redemption renewal` | 赎回期设置为自动扣费，但账户余额不足 |
+| 404 | `subdomain not found` | 找不到对应子域名或不属于当前 API Key |
+
+---
+
+### 2. DNS 记录管理
 
 #### 2.1 列出 DNS 记录
 
-- **请求参数**：`subdomain_id`（整数，必填）
-- **请求示例**：
+- **端点**：`dns_records`
+- **操作**：`list`
+- **方法**：`GET`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain_id` | integer | 是 | 子域名 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_records&action=list&subdomain_id=1" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy"
 ```
 
- 
+**响应示例：**
 
-- **响应示例**：
-
- 
-
-json
-
- 
-
- 
-
- 
-
- 
-
- 
-
-```markup
+```json
 {
   "success": true,
   "count": 2,
   "records": [
     {
       "id": 1,
+      "record_id": "5a0ce6c4d1d4c71bc5e60a2a2a0e4997",
       "name": "test.example.com",
       "type": "A",
       "content": "192.168.1.1",
       "ttl": 600,
       "priority": null,
+      "line": null,
       "proxied": false,
       "status": "active",
-      "created_at": "2025-10-19 10:05:00"
+      "created_at": "2025-10-19 10:05:00",
+      "updated_at": "2025-10-19 10:05:00"
     },
     {
       "id": 2,
@@ -382,28 +458,39 @@ json
 }
 ```
 
- 
+> **提示**：列表同时返回模块内部 `id` 和云解析服务商 `record_id`。`update` / `delete` 可使用任意一个字段定位记录（**推荐优先使用 `id`**）。
+
+---
 
 #### 2.2 创建 DNS 记录
 
-- 请求参数
+- **端点**：`dns_records`
+- **操作**：`create`
+- **方法**：`POST`
 
-  ：
+**请求参数：**
 
-  - `subdomain_id`：关联的子域名 ID（整数，必填）
-  - `type`：记录类型（A/AAAA/CNAME/MX/TXT，必填）
-  - `content`：记录值（字符串，必填）
-  - `name`：记录名称（字符串，可选）
-  - `ttl`：TTL 值（整数，可选，默认 600）
-  - `priority`：优先级（整数，可选，MX 记录需要）
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `subdomain_id` | integer | 是 | 子域名 ID |
+| `type` | string | 是 | 记录类型（A / AAAA / CNAME / MX / TXT / NS / SRV / CAA） |
+| `name` | string | 否 | 记录名称（`@` 或留空 = 当前子域本身；支持完整域名） |
+| `content` | string | 条件必填 | 记录值（SRV / CAA 可由结构化参数自动组装） |
+| `ttl` | integer | 否 | TTL 值（默认 600） |
+| `priority` | integer | 否 | MX 优先级（默认 10）/ SRV 优先级（默认 0） |
+| `line` | string | 否 | 解析线路（us.ci / cn.mt 可用，其他域名自动忽略） |
+| `record_weight` / `weight` | integer | 否 | SRV 权重 |
+| `record_port` / `port` | integer | 否 | SRV 端口（1-65535） |
+| `record_target` / `target` | string | 否 | SRV 目标主机 |
+| `caa_flag` | integer | 否 | CAA flag（默认 0） |
+| `caa_tag` | string | 否 | CAA tag（默认 issue） |
+| `caa_value` | string | 否 | CAA value |
 
-- **请求示例**：
+> **说明**：若 DNS 管理（`disable_ns_management`）为禁用状态，则 `NS` 类型写入会被拒绝。
 
- 
+**请求示例：**
 
-bash
-
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_records&action=create" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -416,98 +503,112 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_recor
   }'
 ```
 
- 
-
- 
-
-- **响应示例**：
-
-json
+**响应示例：**
 
 ```json
 {
   "success": true,
   "message": "DNS record created successfully",
-  "record_id": 3
+  "id": 3,
+  "record_id": "5a0ce6c4d1d4c71bc5e60a2a2a0e4997"
 }
 ```
 
- 
+---
 
 #### 2.3 更新 DNS 记录
 
-- 请求参数
+- **端点**：`dns_records`
+- **操作**：`update`
+- **方法**：`POST` 或 `PUT` 或 `PATCH`
 
-  ：
+**请求参数：**
 
-  - `record_id`：DNS 记录 ID（整数，必填）
-  - `content`：新的记录值（字符串，可选）
-  - `ttl`：新的 TTL 值（整数，可选）
-  - `priority`：新的优先级（整数，可选）
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `record_id` | string | 否 | 记录定位 ID（可传模块 `id` 或供应商 `record_id`） |
+| `id` | integer | 否 | 模块内部记录 ID（推荐） |
+| `type` | string | 否 | 新类型（A / AAAA / CNAME / MX / TXT / NS / SRV / CAA） |
+| `name` | string | 否 | 新名称（`@` 或留空 = 当前子域本身） |
+| `content` | string | 否 | 新记录值 |
+| `ttl` | integer | 否 | 新 TTL 值 |
+| `priority` | integer | 否 | MX / SRV 优先级 |
+| `line` | string | 否 | 解析线路 |
+| `record_weight` / `weight` | integer | 否 | SRV 权重 |
+| `record_port` / `port` | integer | 否 | SRV 端口 |
+| `record_target` / `target` | string | 否 | SRV 目标主机 |
+| `caa_flag` / `caa_tag` / `caa_value` | mixed | 否 | CAA 结构化参数 |
 
-- **请求示例**：
+> **注意**：至少提供 `record_id` 或 `id` 其中之一。
 
-bash
+**请求示例：**
 
- 
-
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_records&action=update" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
   -H "Content-Type: application/json" \
   -d '{
-    "record_id": 1,
+    "id": 1,
+    "type": "A",
     "content": "192.168.1.200",
     "ttl": 600
   }'
 ```
 
- 
-
- 
-
-- **响应示例**：
-
-json
+**响应示例：**
 
 ```json
 {
   "success": true,
-  "message": "DNS record updated successfully"
+  "message": "DNS record updated successfully",
+  "id": 1,
+  "record_id": "5a0ce6c4d1d4c71bc5e60a2a2a0e4997"
 }
 ```
 
- 
+---
 
 #### 2.4 删除 DNS 记录
 
-- **请求参数**：`record_id`（整数，必填）
-- **请求示例**：
+- **端点**：`dns_records`
+- **操作**：`delete`
+- **方法**：`POST` 或 `DELETE`
 
-bash
+**请求参数：**
 
- 
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `record_id` | string | 否 | 云解析服务商返回的记录 ID。若提供，将首先按该字段匹配 |
+| `id` | integer | 否 | 模块内部记录 ID，可直接使用 `list` 接口返回的 `id` 值 |
 
-```markup
+> **注意**：至少提供 `record_id` 或 `id` 其中之一。
+
+**请求示例（按模块 ID）：**
+
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_records&action=delete" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
   -H "Content-Type: application/json" \
   -d '{
-    "record_id": 1
+    "id": 1
   }'
 ```
 
- 
+**请求示例（按服务商 record_id）：**
 
-- **响应示例**：
+```bash
+curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=dns_records&action=delete" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "record_id": "5a0ce6c4d1d4c71bc5e60a2a2a0e4997"
+  }'
+```
 
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
@@ -516,42 +617,25 @@ json
 }
 ```
 
- 
+---
 
 ### 3. API 密钥管理
 
-| 操作         | 方法        | 描述              |
-| :----------- | :---------- | :---------------- |
-| `list`       | GET         | 列出所有 API 密钥 |
-| `create`     | POST        | 创建新 API 密钥   |
-| `delete`     | POST/DELETE | 删除 API 密钥     |
-| `regenerate` | POST        | 重新生成 API 密钥 |
-
 #### 3.1 列出 API 密钥
 
-- **请求示例**：
+- **端点**：`keys`
+- **操作**：`list`
+- **方法**：`GET`
 
- 
+**请求示例：**
 
-bash
-
- 
-
-```markup
+```bash
 curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&action=list" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy"
 ```
 
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
@@ -580,26 +664,24 @@ json
 }
 ```
 
- 
+---
 
 #### 3.2 创建 API 密钥
 
-- 请求参数
+- **端点**：`keys`
+- **操作**：`create`
+- **方法**：`POST`
 
-  ：
+**请求参数：**
 
-  - `key_name`：密钥名称（字符串，必填）
-  - `ip_whitelist`：IP 白名单（字符串，可选，逗号分隔）
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `key_name` | string | 是 | 密钥名称 |
+| `ip_whitelist` | string | 否 | IP 白名单（逗号 / 换行 / 分号分隔，支持单 IP 或 CIDR；需后台开启"启用 API IP 白名单"） |
 
-- **请求示例**：
+**请求示例：**
 
- 
-
-bash
-
- 
-
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&action=create" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -610,17 +692,7 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&acti
   }'
 ```
 
- 
-
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
+**响应示例：**
 
 ```json
 {
@@ -632,20 +704,25 @@ json
 }
 ```
 
- 
+> ⚠️ **重要**：`api_secret` 只显示一次，请妥善保存！
+
+---
 
 #### 3.3 删除 API 密钥
 
-- **请求参数**：`key_id`（整数，必填）
-- **请求示例**：
+- **端点**：`keys`
+- **操作**：`delete`
+- **方法**：`POST` 或 `DELETE`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `key_id` | integer | 是 | 密钥 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&action=delete" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -655,17 +732,7 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&acti
   }'
 ```
 
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
-
- 
+**响应示例：**
 
 ```json
 {
@@ -674,20 +741,23 @@ json
 }
 ```
 
- 
+---
 
 #### 3.4 重新生成 API 密钥
 
-- **请求参数**：`key_id`（整数，必填）
-- **请求示例**：
+- **端点**：`keys`
+- **操作**：`regenerate`
+- **方法**：`POST`
 
- 
+**请求参数：**
 
-bash
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `key_id` | integer | 是 | 密钥 ID |
 
- 
+**请求示例：**
 
-```markup
+```bash
 curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&action=regenerate" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy" \
@@ -697,17 +767,7 @@ curl -X POST "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=keys&acti
   }'
 ```
 
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
-
- 
+**响应示例：**
 
 ```json
 {
@@ -719,41 +779,24 @@ json
 }
 ```
 
- 
+---
 
 ### 4. 配额查询
 
+#### 4.1 查询配额
+
 - **端点**：`quota`
 - **方法**：`GET`
-- **请求示例**：
 
- 
+**请求示例：**
 
-bash
-
- 
-
- 
-
-```markup
+```bash
 curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=quota" \
   -H "X-API-Key: cfsd_xxxxxxxxxx" \
   -H "X-API-Secret: yyyyyyyyyyyy"
 ```
 
- 
-
- 
-
-- **响应示例**：
-
- 
-
-json
-
- 
-
- 
+**响应示例：**
 
 ```json
 {
@@ -768,73 +811,139 @@ json
 }
 ```
 
- 
+---
 
-## 四、错误处理
+### 5. WHOIS 查询（公开接口）
 
-### 常见 HTTP 状态码
+> 该接口用于对外查询 WHOIS 信息，支持系统内二级域名与外部域名。**默认无需 API Key**，系统会基于访问 IP 做速率限制（默认 30 次/分钟）。如果系统开启强制 API 验证要求，则必须使用 API Key 查询。
 
-| 状态码 | 说明               |
-| :----- | :----------------- |
-| 200    | 请求成功           |
-| 400    | 请求参数错误       |
-| 401    | 认证失败           |
-| 403    | 权限不足或功能禁用 |
-| 404    | 资源不存在         |
-| 429    | 请求频率超限       |
-| 500    | 服务器内部错误     |
+- **端点**：`whois`
+- **方法**：`GET`
 
-### 错误响应示例
+**参数：**
 
-json
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `domain` | string | 是 | 完整子域名，例如 `foo.example.com` |
 
- 
+**请求示例（公共模式）：**
 
- 
+```bash
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=whois&domain=foo.example.com"
+```
 
- 
+**请求示例（要求 API Key 时）：**
+
+```bash
+curl -X GET "https://api005.dnshe.com/index.php?m=domain_hub&endpoint=whois&domain=foo.example.com" \
+  -H "X-API-Key: cfsd_xxxxxxxxxx" \
+  -H "X-API-Secret: yyyyyyyyyyyy"
+```
+
+**响应示例（已注册）：**
 
 ```json
 {
+  "success": true,
+  "domain": "foo.example.com",
+  "status": "active",
+  "registered_at": "2025-01-10 08:30:00",
+  "expires_at": "2026-01-10 08:30:00",
+  "registrant_email": "whois@example.com",
+  "nameservers": [
+    "ns1.example.net",
+    "ns2.example.net"
+  ],
+  "rate_limit": {
+    "limit": 2,
+    "remaining": 1,
+    "reset_at": "2025-01-10 08:31:00"
+  }
+}
+```
+
+**响应示例（未注册）：**
+
+```json
+{
+  "success": true,
+  "domain": "foo.example.com",
+  "registered": false,
+  "status": "unregistered",
+  "message": "domain not registered"
+}
+```
+
+---
+
+## 三、错误代码与统一错误结构
+
+从当前版本开始，所有 API 错误响应统一为以下结构：
+
+```json
+{
+  "success": false,
+  "error_code": "auth_invalid_credentials",
+  "message": "Invalid API key",
+  "details": {
+    "request_id": "optional"
+  },
   "error": "Invalid API key"
 }
 ```
 
- 
+**字段说明：**
 
-## 五、速率限制
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `success` | boolean | 固定为 `false` |
+| `error_code` | string | 稳定错误码（**建议业务侧按此字段处理**） |
+| `message` | string | 人类可读错误描述 |
+| `details` | object | 可选，附加上下文（如 `limit` / `remaining` / `reset_at`） |
+| `error` | string | 兼容旧版客户端（等同 `message`） |
 
-- 默认限制：60 请求 / 分钟
-- 超限响应示例：
+**常见错误码：**
 
- 
+| `error_code` | HTTP 状态码 | 说明 |
+|--------------|-------------|------|
+| `bad_request` | 400 | 请求参数错误 |
+| `auth_invalid_credentials` | 401 | API Key / Secret 无效或缺失 |
+| `auth_ip_not_allowed` | 403 | 请求 IP 不在白名单 |
+| `api_access_disabled` | 403 | 后台关闭了 API 访问 |
+| `not_found` / `subdomain_not_found` / `dns_record_not_found` | 404 | 资源不存在 |
+| `quota_exceeded` | 429 | 额度不足 |
+| `rate_limit_exceeded` | 429 | 请求频率超限 |
+| `provider_operation_failed` | 502 | 上游 DNS 提供商执行失败 |
+| `internal_error` | 500 | 服务内部异常 |
 
-json
+---
 
- 
+## 四、速率限制
 
- 
+- **默认限制**：60 请求/分钟
+- **响应头**：请求响应中会包含速率限制信息
+
+**超限响应示例：**
 
 ```json
 {
-  "error": "Rate limit exceeded",
-  "limit": 60,
-  "remaining": 0,
-  "reset_at": "2025-10-19 15:31:00"
+  "success": false,
+  "error_code": "rate_limit_exceeded",
+  "message": "Rate limit exceeded",
+  "details": {
+    "limit": 60,
+    "remaining": 0,
+    "reset_at": "2025-10-19 15:31:00"
+  },
+  "error": "Rate limit exceeded"
 }
 ```
 
- 
+---
 
-## 六、SDK 示例
+## 五、SDK 示例
 
 ### PHP 示例
-
-php
-
- 
-
- 
 
 ```php
 <?php
@@ -842,16 +951,16 @@ class CloudflareSubdomainAPI {
     private $baseUrl;
     private $apiKey;
     private $apiSecret;
-    
+  
     public function __construct($baseUrl, $apiKey, $apiSecret) {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey;
         $this->apiSecret = $apiSecret;
     }
-    
+  
     private function request($endpoint, $action, $method = 'GET', $data = []) {
         $url = $this->baseUrl . '?m=domain_hub&endpoint=' . $endpoint . '&action=' . $action;
-        
+      
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -860,24 +969,24 @@ class CloudflareSubdomainAPI {
             'X-API-Secret: ' . $this->apiSecret,
             'Content-Type: application/json'
         ]);
-        
+      
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         }
-        
+      
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        
+      
         return json_decode($response, true);
     }
-    
+  
     // 列出子域名
     public function listSubdomains() {
         return $this->request('subdomains', 'list', 'GET');
     }
-    
+  
     // 注册子域名
     public function registerSubdomain($subdomain, $rootdomain) {
         return $this->request('subdomains', 'register', 'POST', [
@@ -885,26 +994,163 @@ class CloudflareSubdomainAPI {
             'rootdomain' => $rootdomain
         ]);
     }
-    
-    // 创建DNS记录
-    public function createDnsRecord($subdomainId, $type, $content, $ttl = 120) {
+  
+    // 创建 DNS 记录
+    public function createDnsRecord($subdomainId, $type, $content, $ttl = 600) {
         return $this->request('dns_records', 'create', 'POST', [
             'subdomain_id' => $subdomainId,
-            'type' => 
+            'type' => $type,
+            'content' => $content,
+            'ttl' => $ttl
+        ]);
+    }
+}
+
+// 使用示例
+$api = new CloudflareSubdomainAPI(
+    'https://api005.dnshe.com/index.php',
+    'cfsd_xxxxxxxxxx',
+    'yyyyyyyyyyyy'
+);
+
+// 列出子域名
+$result = $api->listSubdomains();
+print_r($result);
+
+// 注册新子域名
+$result = $api->registerSubdomain('myapp', 'example.com');
+print_r($result);
 ```
 
-## 七、安全建议
+---
 
-1. 不在客户端硬编码密钥，使用环境变量存储
-2. 为生产密钥配置 IP 白名单
-3. 遵循最小权限原则，定期轮换密钥
-4. 始终通过 HTTPS 调用 API
-5. 监控异常请求模式
+### Python 示例
 
-## 八、常见问题
+```python
+import requests
+import json
 
-- 密钥丢失可通过`regenerate`操作重新生成
-- 速率限制可联系管理员调整
-- 仅主账户可创建和使用 API 密钥
-- 目前不支持批量操作
-- 可在客户区 "API 管理" 查看使用统计
+class CloudflareSubdomainAPI:
+    def __init__(self, base_url, api_key, api_secret):
+        self.base_url = base_url.rstrip('/')
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.headers = {
+            'X-API-Key': api_key,
+            'X-API-Secret': api_secret,
+            'Content-Type': 'application/json'
+        }
+  
+    def request(self, endpoint, action, method='GET', data=None):
+        url = f"{self.base_url}?m=domain_hub&endpoint={endpoint}&action={action}"
+      
+        if method == 'GET':
+            response = requests.get(url, headers=self.headers)
+        else:
+            response = requests.post(url, headers=self.headers, json=data)
+      
+        return response.json()
+  
+    def list_subdomains(self):
+        return self.request('subdomains', 'list', 'GET')
+  
+    def register_subdomain(self, subdomain, rootdomain):
+        return self.request('subdomains', 'register', 'POST', {
+            'subdomain': subdomain,
+            'rootdomain': rootdomain
+        })
+  
+    def create_dns_record(self, subdomain_id, record_type, content, ttl=600):
+        return self.request('dns_records', 'create', 'POST', {
+            'subdomain_id': subdomain_id,
+            'type': record_type,
+            'content': content,
+            'ttl': ttl
+        })
+
+# 使用示例
+api = CloudflareSubdomainAPI(
+    'https://api005.dnshe.com/index.php',
+    'cfsd_xxxxxxxxxx',
+    'yyyyyyyyyyyy'
+)
+
+# 列出子域名
+result = api.list_subdomains()
+print(result)
+
+# 注册新子域名
+result = api.register_subdomain('myapp', 'example.com')
+print(result)
+```
+
+---
+
+### JavaScript 示例
+
+```javascript
+class CloudflareSubdomainAPI {
+    constructor(baseUrl, apiKey, apiSecret) {
+        this.baseUrl = baseUrl.replace(/\/$/, '');
+        this.apiKey = apiKey;
+        this.apiSecret = apiSecret;
+    }
+  
+    async request(endpoint, action, method = 'GET', data = null) {
+        const url = `${this.baseUrl}?m=domain_hub&endpoint=${endpoint}&action=${action}`;
+      
+        const options = {
+            method: method,
+            headers: {
+                'X-API-Key': this.apiKey,
+                'X-API-Secret': this.apiSecret,
+                'Content-Type': 'application/json'
+            }
+        };
+      
+        if (method === 'POST' && data) {
+            options.body = JSON.stringify(data);
+        }
+      
+        const response = await fetch(url, options);
+        return await response.json();
+    }
+  
+    async listSubdomains() {
+        return await this.request('subdomains', 'list', 'GET');
+    }
+  
+    async registerSubdomain(subdomain, rootdomain) {
+        return await this.request('subdomains', 'register', 'POST', {
+            subdomain: subdomain,
+            rootdomain: rootdomain
+        });
+    }
+  
+    async createDnsRecord(subdomainId, type, content, ttl = 600) {
+        return await this.request('dns_records', 'create', 'POST', {
+            subdomain_id: subdomainId,
+            type: type,
+            content: content,
+            ttl: ttl
+        });
+    }
+}
+
+// 使用示例
+const api = new CloudflareSubdomainAPI(
+    'https://api005.dnshe.com/index.php',
+    'cfsd_xxxxxxxxxx',
+    'yyyyyyyyyyyy'
+);
+
+// 列出子域名
+api.listSubdomains().then(result => {
+    console.log(result);
+});
+
+// 注册新子域名
+api.registerSubdomain('myapp', 'example.com').then(result => {
+    console.log(result);
+});
+```
