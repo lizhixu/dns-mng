@@ -127,12 +127,12 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 			for i := range allDomains {
 				key := cacheKey(allDomains[i].AccountID, allDomains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					// Cache exists - use cache data, but if cache has no renewal date and provider does, use provider's
-					if cache.RenewalDate != "" {
+					// Provider returned empty renewal date - preserve cached value
+					if allDomains[i].RenewalDate == "" {
 						allDomains[i].RenewalDate = cache.RenewalDate
 					}
-					// Use cached renewal URL if provider didn't return one
-					if allDomains[i].RenewalURL == "" && cache.RenewalURL != "" {
+					// Provider returned empty renewal URL - preserve cached value
+					if allDomains[i].RenewalURL == "" {
 						allDomains[i].RenewalURL = cache.RenewalURL
 					}
 					allDomains[i].CacheSynced = true
@@ -294,12 +294,12 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 			for i := range domains {
 				key := cacheKey(domains[i].AccountID, domains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					// Cache exists - use cache data, but if cache has no renewal date and provider does, use provider's
-					if cache.RenewalDate != "" {
+					// Provider returned empty renewal date - preserve cached value
+					if domains[i].RenewalDate == "" {
 						domains[i].RenewalDate = cache.RenewalDate
 					}
-					// Use cached renewal URL if provider didn't return one
-					if domains[i].RenewalURL == "" && cache.RenewalURL != "" {
+					// Provider returned empty renewal URL - preserve cached value
+					if domains[i].RenewalURL == "" {
 						domains[i].RenewalURL = cache.RenewalURL
 					}
 					domains[i].CacheSynced = true
