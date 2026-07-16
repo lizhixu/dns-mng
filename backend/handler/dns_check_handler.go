@@ -154,6 +154,10 @@ func (h *DNSCheckHandler) CheckDNS(c *gin.Context) {
 func normalizeValue(value string) string {
 	// Trim spaces
 	value = strings.TrimSpace(value)
+	// Remove surrounding double quotes (common in DNS provider TXT record display)
+	if len(value) >= 2 && value[0] == '"' && value[len(value)-1] == '"' {
+		value = value[1 : len(value)-1]
+	}
 	// Convert to lowercase
 	value = strings.ToLower(value)
 	// Remove trailing dot (common in DNS responses)
