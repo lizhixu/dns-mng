@@ -99,12 +99,21 @@ func (h *DNSHandler) RefreshAllDomains(c *gin.Context) {
 	accountService := service.NewAccountService()
 	accounts, _ := accountService.List(userID)
 	accountMap := make(map[int64]string)
+	dnsheAccountIDs := make(map[int64]bool)
 	for _, acc := range accounts {
 		accountMap[acc.ID] = acc.Name
+		if acc.ProviderType == "dnshe" {
+			dnsheAccountIDs[acc.ID] = true
+		}
 	}
 
 	var domainsToDelete []models.BatchCacheDeleteItem
 	for _, cache := range allCaches {
+		// DNSHE 第三方解析的域名（uses_dnshe_dns=false）已从展示列表过滤，provider 也不会
+		// 把它们当作返回项参与删除检测——跳过，避免被误判为「需要删除」。
+		if dnsheAccountIDs[cache.AccountID] && !cache.UsesDNSHEDNS {
+			continue
+		}
 		key := fmt.Sprintf("%d:%s", cache.AccountID, cache.DomainID)
 		if !providerDomainMap[key] {
 			domainsToDelete = append(domainsToDelete, models.BatchCacheDeleteItem{
