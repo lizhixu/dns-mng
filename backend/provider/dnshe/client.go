@@ -25,7 +25,10 @@ func NewClient() *Client {
 }
 
 func (c *Client) doRequest(ctx context.Context, apiKey, apiSecret, method, endpoint, action string, body io.Reader) (*http.Response, error) {
-	url := fmt.Sprintf("%s&endpoint=%s&action=%s", baseURL, endpoint, action)
+	url := fmt.Sprintf("%s&endpoint=%s", baseURL, endpoint)
+	if action != "" {
+		url = fmt.Sprintf("%s&action=%s", url, action)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
@@ -78,8 +81,6 @@ func (c *Client) GetSubdomain(ctx context.Context, apiKey, apiSecret string, sub
 	req.Header.Set("X-API-Secret", apiSecret)
 	req.Header.Set("Accept", "application/json")
 
-	fmt.Printf("DNSHE GetSubdomain Request: %s\n", url)
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -90,8 +91,6 @@ func (c *Client) GetSubdomain(ctx context.Context, apiKey, apiSecret string, sub
 	if err != nil {
 		return nil, fmt.Errorf("read response: %w", err)
 	}
-
-	fmt.Printf("DNSHE GetSubdomain Response (status %d): %s\n", resp.StatusCode, string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
@@ -118,8 +117,6 @@ func (c *Client) ListDNSRecords(ctx context.Context, apiKey, apiSecret string, s
 	req.Header.Set("X-API-Secret", apiSecret)
 	req.Header.Set("Accept", "application/json")
 
-	fmt.Printf("DNSHE ListDNSRecords Request: %s\n", url)
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -130,8 +127,6 @@ func (c *Client) ListDNSRecords(ctx context.Context, apiKey, apiSecret string, s
 	if err != nil {
 		return nil, fmt.Errorf("read response: %w", err)
 	}
-
-	fmt.Printf("DNSHE ListDNSRecords Response (status %d): %s\n", resp.StatusCode, string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
@@ -168,8 +163,6 @@ func (c *Client) CreateDNSRecord(ctx context.Context, apiKey, apiSecret string, 
 		return fmt.Errorf("marshal request: %w", err)
 	}
 
-	fmt.Printf("DNSHE CreateDNSRecord Request: %s\n", string(jsonData))
-
 	resp, err := c.doRequest(ctx, apiKey, apiSecret, "POST", "dns_records", "create", bytes.NewReader(jsonData))
 	if err != nil {
 		return err
@@ -180,8 +173,6 @@ func (c *Client) CreateDNSRecord(ctx context.Context, apiKey, apiSecret string, 
 	if err != nil {
 		return fmt.Errorf("read response: %w", err)
 	}
-
-	fmt.Printf("DNSHE CreateDNSRecord Response (status %d): %s\n", resp.StatusCode, string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
@@ -251,4 +242,132 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, apiKey, apiSecret string, 
 	}
 
 	return nil
+}
+
+// RegisterSubdomain registers a new subdomain
+func (c *Client) RegisterSubdomain(ctx context.Context, apiKey, apiSecret, subdomain, rootdomain string) (*RegisterSubdomainResponse, error) {
+	data := map[string]interface{}{
+		"subdomain":  subdomain,
+		"rootdomain":  rootdomain,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiKey, apiSecret, "POST", "subdomains", "register", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result RegisterSubdomainResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// DeleteSubdomain deletes a subdomain
+func (c *Client) DeleteSubdomain(ctx context.Context, apiKey, apiSecret string, subdomainID int) (*DeleteSubdomainResponse, error) {
+	data := map[string]interface{}{
+		"subdomain_id": subdomainID,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiKey, apiSecret, "POST", "subdomains", "delete", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result DeleteSubdomainResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// RenewSubdomain renews a subdomain
+func (c *Client) RenewSubdomain(ctx context.Context, apiKey, apiSecret string, subdomainID int) (*RenewSubdomainResponse, error) {
+	data := map[string]interface{}{
+		"subdomain_id": subdomainID,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiKey, apiSecret, "POST", "subdomains", "renew", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result RenewSubdomainResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// GetQuota queries the account quota
+func (c *Client) GetQuota(ctx context.Context, apiKey, apiSecret string) (*QuotaResponse, error) {
+	resp, err := c.doRequest(ctx, apiKey, apiSecret, "GET", "quota", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result QuotaResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	return &result, nil
 }

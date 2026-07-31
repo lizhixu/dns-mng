@@ -17,7 +17,7 @@ func NewDomainCacheService() *DomainCacheService {
 // GetCacheByUser gets all domain cache entries for a user (excluding soft deleted)
 func (s *DomainCacheService) GetCacheByUser(userID int64) ([]models.DomainCache, error) {
 	rows, err := database.DB.Query(
-		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
+		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
 		 FROM domain_cache WHERE user_id = ? AND deleted_at IS NULL ORDER BY domain_name`,
 		userID,
 	)
@@ -31,7 +31,7 @@ func (s *DomainCacheService) GetCacheByUser(userID int64) ([]models.DomainCache,
 		var c models.DomainCache
 		var deletedAt, lastSyncAt, providerUpdatedOn sql.NullTime
 		if err := rows.Scan(&c.ID, &c.UserID, &c.AccountID, &c.DomainID, &c.DomainName,
-			&c.RenewalDate, &c.RenewalURL, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
+			&c.RenewalDate, &c.RenewalURL, &c.UsesDNSHEDNS, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if deletedAt.Valid {
@@ -53,11 +53,11 @@ func (s *DomainCacheService) GetCache(userID, accountID int64, domainID string) 
 	var c models.DomainCache
 	var deletedAt, lastSyncAt, providerUpdatedOn sql.NullTime
 	err := database.DB.QueryRow(
-		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
+		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
 		 FROM domain_cache WHERE user_id = ? AND account_id = ? AND domain_id = ? AND deleted_at IS NULL`,
 		userID, accountID, domainID,
 	).Scan(&c.ID, &c.UserID, &c.AccountID, &c.DomainID, &c.DomainName,
-		&c.RenewalDate, &c.RenewalURL, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt)
+		&c.RenewalDate, &c.RenewalURL, &c.UsesDNSHEDNS, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +92,12 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 			`UPDATE domain_cache SET deleted_at = NULL,
 			 renewal_date = CASE WHEN ? != '' THEN ? ELSE renewal_date END,
 			 renewal_url = CASE WHEN ? != '' THEN ? ELSE renewal_url END,
-			 domain_name = ?, updated_at = ?
+			 uses_dnshe_dns = CASE WHEN ? IS NOT NULL THEN ? ELSE uses_dnshe_dns END,
+			 domain_name = CASE WHEN ? != '' THEN ? ELSE domain_name END, updated_at = ?
 			 WHERE id = ?`,
-			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL, domainName, now, existingID,
+			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL,
+			req.UsesDNSHEDNS, req.UsesDNSHEDNS,
+			domainName, domainName, now, existingID,
 		)
 		if err != nil {
 			return nil, err
@@ -105,9 +108,12 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 			`UPDATE domain_cache SET
 			 renewal_date = CASE WHEN ? != '' THEN ? ELSE renewal_date END,
 			 renewal_url = CASE WHEN ? != '' THEN ? ELSE renewal_url END,
-			 domain_name = ?, updated_at = ?
+			 uses_dnshe_dns = CASE WHEN ? IS NOT NULL THEN ? ELSE uses_dnshe_dns END,
+			 domain_name = CASE WHEN ? != '' THEN ? ELSE domain_name END, updated_at = ?
 			 WHERE user_id = ? AND account_id = ? AND domain_id = ? AND deleted_at IS NULL`,
-			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL, domainName, now,
+			req.RenewalDate, req.RenewalDate, req.RenewalURL, req.RenewalURL,
+			req.UsesDNSHEDNS, req.UsesDNSHEDNS,
+			domainName, domainName, now,
 			userID, accountID, domainID,
 		)
 		if err != nil {
@@ -117,10 +123,14 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 		rowsAffected, _ := result.RowsAffected()
 		if rowsAffected == 0 {
 			// Insert new entry
+			usesDNSHE := 1
+			if req.UsesDNSHEDNS != nil && !*req.UsesDNSHEDNS {
+				usesDNSHE = 0
+			}
 			_, err = database.DB.Exec(
-				`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, created_at, updated_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-				userID, accountID, domainID, domainName, req.RenewalDate, req.RenewalURL, now, now,
+				`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				userID, accountID, domainID, domainName, req.RenewalDate, req.RenewalURL, usesDNSHE, now, now,
 			)
 			if err != nil {
 				return nil, err
@@ -128,10 +138,14 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 		}
 	} else {
 		// Record doesn't exist, insert new
+		usesDNSHE := 1
+		if req.UsesDNSHEDNS != nil && !*req.UsesDNSHEDNS {
+			usesDNSHE = 0
+		}
 		_, err = database.DB.Exec(
-			`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			userID, accountID, domainID, domainName, req.RenewalDate, req.RenewalURL, now, now,
+			`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			userID, accountID, domainID, domainName, req.RenewalDate, req.RenewalURL, usesDNSHE, now, now,
 		)
 		if err != nil {
 			return nil, err
@@ -337,7 +351,7 @@ func (s *DomainCacheService) BatchRestoreCache(userID int64, items []models.Batc
 // GetSoftDeletedDomains gets all soft deleted domains for a user
 func (s *DomainCacheService) GetSoftDeletedDomains(userID int64) ([]models.DomainCache, error) {
 	rows, err := database.DB.Query(
-		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
+		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
 		 FROM domain_cache WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY domain_name`,
 		userID,
 	)
@@ -351,7 +365,7 @@ func (s *DomainCacheService) GetSoftDeletedDomains(userID int64) ([]models.Domai
 		var c models.DomainCache
 		var deletedAt, lastSyncAt, providerUpdatedOn sql.NullTime
 		if err := rows.Scan(&c.ID, &c.UserID, &c.AccountID, &c.DomainID, &c.DomainName,
-			&c.RenewalDate, &c.RenewalURL, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
+			&c.RenewalDate, &c.RenewalURL, &c.UsesDNSHEDNS, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if deletedAt.Valid {
@@ -382,7 +396,7 @@ func (s *DomainCacheService) UpdateLastSyncTime(userID, accountID int64, domainI
 // GetAllCacheByUser gets all domain cache entries for a user (including soft deleted)
 func (s *DomainCacheService) GetAllCacheByUser(userID int64) ([]models.DomainCache, error) {
 	rows, err := database.DB.Query(
-		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
+		`SELECT id, user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at
 		 FROM domain_cache WHERE user_id = ? ORDER BY domain_name`,
 		userID,
 	)
@@ -396,7 +410,7 @@ func (s *DomainCacheService) GetAllCacheByUser(userID int64) ([]models.DomainCac
 		var c models.DomainCache
 		var deletedAt, lastSyncAt, providerUpdatedOn sql.NullTime
 		if err := rows.Scan(&c.ID, &c.UserID, &c.AccountID, &c.DomainID, &c.DomainName,
-			&c.RenewalDate, &c.RenewalURL, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
+			&c.RenewalDate, &c.RenewalURL, &c.UsesDNSHEDNS, &deletedAt, &lastSyncAt, &providerUpdatedOn, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if deletedAt.Valid {

@@ -20,6 +20,9 @@ type Domain struct {
 	RenewalDate string `json:"renewal_date,omitempty"`
 	RenewalURL  string `json:"renewal_url,omitempty"`
 	CacheSynced bool   `json:"cache_synced,omitempty"`
+	// UsesDNSHEDNS indicates whether the domain uses DNSHE's own DNS resolution.
+	// Only set for DNSHE-account domains. nil for non-DNSHE domains.
+	UsesDNSHEDNS *bool `json:"uses_dnshe_dns,omitempty"`
 }
 
 // DomainCache represents cached domain data with renewal info
@@ -31,6 +34,7 @@ type DomainCache struct {
 	DomainName        string     `json:"domain_name"`
 	RenewalDate       string     `json:"renewal_date,omitempty"`
 	RenewalURL        string     `json:"renewal_url,omitempty"`
+	UsesDNSHEDNS      bool       `json:"uses_dnshe_dns"`
 	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
 	LastSyncAt        *time.Time `json:"last_sync_at,omitempty"`
 	ProviderUpdatedOn *time.Time `json:"provider_updated_on,omitempty"`
@@ -44,6 +48,7 @@ type UpdateDomainCacheRequest struct {
 	RenewalURL       string `json:"renewal_url"`
 	NotifyDaysBefore int    `json:"notify_days_before"`
 	NotifyEnabled    bool   `json:"notify_enabled"`
+	UsesDNSHEDNS     *bool  `json:"uses_dnshe_dns,omitempty"`
 }
 
 // BatchCacheItem represents a single item in batch cache operations
@@ -98,4 +103,32 @@ type RefreshDomainsResponse struct {
 	RestoredDomains []string               `json:"restored_domains"`
 	CacheTimestamp  string                 `json:"cache_timestamp"`
 	HasChanges      bool                   `json:"has_changes"`
+}
+
+// DNSHEAutoRenewConfig represents the DNSHE auto-renew configuration for a user
+type DNSHEAutoRenewConfig struct {
+	UserID      int64      `json:"user_id"`
+	Enabled     bool       `json:"enabled"`
+	DaysBefore  int        `json:"days_before"`
+	LastRunAt   *time.Time `json:"last_run_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
+// UpdateDNSHEAutoRenewConfigRequest is the request body for updating DNSHE auto-renew config
+type UpdateDNSHEAutoRenewConfigRequest struct {
+	Enabled    *bool `json:"enabled,omitempty"`
+	DaysBefore *int  `json:"days_before,omitempty"`
+}
+
+// ResolveToCloudflareRequest is the request body for resolving a DNSHE domain to Cloudflare
+type ResolveToCloudflareRequest struct {
+	CloudflareAccountID int64 `json:"cloudflare_account_id" binding:"required"`
+}
+
+// ResolveToCloudflareResult is the result of resolving a DNSHE domain to Cloudflare
+type ResolveToCloudflareResult struct {
+	DomainName  string   `json:"domain_name"`
+	ZoneName    string   `json:"zone_name"`
+	NameServers []string `json:"name_servers"`
 }

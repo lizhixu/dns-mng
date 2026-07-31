@@ -438,4 +438,79 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // DNSHE management
+    dnsheGetAccounts: async () => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheGetQuota: async (accountId) => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts/${accountId}/quota`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheRegister: async (accountId, data) => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts/${accountId}/register`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheDelete: async (accountId, data) => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts/${accountId}/delete`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheSetResolution: async (accountId, domainId, data) => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts/${accountId}/domains/${domainId}/resolution`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheResolveToCloudflare: async (accountId, domainId, data) => {
+        const response = await fetch(`${API_BASE}/dnshe/accounts/${accountId}/domains/${domainId}/resolve-to-cloudflare`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheGetAutoRenew: async () => {
+        const response = await fetch(`${API_BASE}/dnshe/auto-renew`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheUpdateAutoRenew: async (data) => {
+        const response = await fetch(`${API_BASE}/dnshe/auto-renew`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    dnsheTriggerAutoRenew: async () => {
+        const response = await fetch(`${API_BASE}/dnshe/auto-renew/trigger`, {
+            method: 'POST',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
 };

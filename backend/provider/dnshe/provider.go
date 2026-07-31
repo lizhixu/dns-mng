@@ -41,8 +41,8 @@ func (p *Provider) DefaultTTL() int {
 	return 600
 }
 
-// parseAPIKey splits the API key format "apikey,apisecret"
-func parseAPIKey(apiKey string) (string, string, error) {
+// ParseAPIKey splits the API key format "apikey,apisecret"
+func ParseAPIKey(apiKey string) (string, string, error) {
 	parts := strings.Split(apiKey, ",")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid API key format, expected: apikey,apisecret")
@@ -51,7 +51,7 @@ func parseAPIKey(apiKey string) (string, string, error) {
 }
 
 func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Domain, error) {
-	key, secret, err := parseAPIKey(apiKey)
+	key, secret, err := ParseAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +63,11 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 
 	domains := make([]models.Domain, 0, len(resp.Subdomains))
 	for _, sub := range resp.Subdomains {
+		// full_domain 可能为空，用 subdomain + "." + rootdomain 兜底
+		fullDomain := sub.FullDomain
+		if fullDomain == "" && sub.Subdomain != "" && sub.RootDomain != "" {
+			fullDomain = sub.Subdomain + "." + sub.RootDomain
+		}
 		// Parse expires_at to renewal date format (YYYY-MM-DD)
 		renewalDate := ""
 		if sub.NeverExpires == 1 {
@@ -76,8 +81,8 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 
 		domains = append(domains, models.Domain{
 			ID:          strconv.Itoa(sub.ID),
-			Name:        sub.FullDomain,
-			UnicodeName: sub.FullDomain,
+			Name:        fullDomain,
+			UnicodeName: fullDomain,
 			State:       sub.Status,
 			CreatedOn:   sub.CreatedAt,
 			UpdatedOn:   sub.UpdatedAt,
@@ -106,7 +111,7 @@ func (p *Provider) GetDomain(ctx context.Context, apiKey string, domainID string
 }
 
 func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID string) ([]models.Record, error) {
-	key, secret, err := parseAPIKey(apiKey)
+	key, secret, err := ParseAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +165,7 @@ func (p *Provider) ListRecords(ctx context.Context, apiKey string, domainID stri
 }
 
 func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
-	key, secret, err := parseAPIKey(apiKey)
+	key, secret, err := ParseAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +216,7 @@ func (p *Provider) CreateRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID string, record *models.Record) (*models.Record, error) {
-	key, secret, err := parseAPIKey(apiKey)
+	key, secret, err := ParseAPIKey(apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +308,7 @@ func (p *Provider) UpdateRecord(ctx context.Context, apiKey string, domainID str
 }
 
 func (p *Provider) DeleteRecord(ctx context.Context, apiKey string, domainID string, recordID string) error {
-	key, secret, err := parseAPIKey(apiKey)
+	key, secret, err := ParseAPIKey(apiKey)
 	if err != nil {
 		return err
 	}

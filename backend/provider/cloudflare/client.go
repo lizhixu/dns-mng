@@ -1,6 +1,7 @@
 package cloudflare
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -60,11 +61,12 @@ func (c *Client) parseResponse(resp *http.Response) error {
 
 // Zone represents a Cloudflare zone
 type Zone struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Status     string `json:"status"`
-	CreatedOn  string `json:"created_on"`
-	ModifiedOn string `json:"modified_on"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Status      string   `json:"status"`
+	NameServers []string `json:"name_servers"`
+	CreatedOn   string   `json:"created_on"`
+	ModifiedOn  string   `json:"modified_on"`
 }
 
 // Record represents a Cloudflare DNS record
@@ -391,6 +393,84 @@ func (c *Client) GetZoneByName(ctx context.Context, apiToken, domainName string)
 	}
 
 	return &zones[0], nil
+}
+
+// GetAccountID returns the account ID associated with the API token.
+func (c *Client) GetAccountID(ctx context.Context, apiToken string) (string, error) {
+	resp, err := c.doRequest(ctx, apiToken, "GET", "/accounts", nil)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return "", err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return "", fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return "", fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	// accounts 返回的是数组，每个元素有 id/name
+	type accountItem struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	var accounts []accountItem
+	data, _ := json.Marshal(apiResp.Result)
+	if err := json.Unmarshal(data, &accounts); err != nil {
+		return "", fmt.Errorf("decode accounts: %w", err)
+	}
+	if len(accounts) == 0 {
+		return "", fmt.Errorf("no Cloudflare accounts found for this API token")
+	}
+	return accounts[0].ID, nil
+}
+
+// CreateZone creates a new zone under the given Cloudflare account.
+func (c *Client) CreateZone(ctx context.Context, apiToken, accountID, domainName string) (*Zone, error) {
+	body := map[string]interface{}{
+		"name": domainName,
+		"account": map[string]string{
+			"id": accountID,
+		},
+		"type": "full",
+	}
+	jsonData, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, apiToken, "POST", "/zones", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := c.parseResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	}
+
+	var zone Zone
+	data, _ := json.Marshal(apiResp.Result)
+	if err := json.Unmarshal(data, &zone); err != nil {
+		return nil, fmt.Errorf("decode zone: %w", err)
+	}
+	return &zone, nil
 }
 
 // GetRecordByID gets a single record by ID

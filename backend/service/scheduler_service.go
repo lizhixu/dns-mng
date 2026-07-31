@@ -1,24 +1,27 @@
 package service
 
 import (
+	"context"
 	"log"
 	"time"
 )
 
 type SchedulerService struct {
-	notificationService *NotificationService
-	emailService        *EmailService
-	schedulerLogService *SchedulerLogService
-	ticker              *time.Ticker
-	done                chan bool
+	notificationService   *NotificationService
+	emailService          *EmailService
+	schedulerLogService   *SchedulerLogService
+	dnsheAutoRenewService *DNSHEAutoRenewService
+	ticker                *time.Ticker
+	done                  chan bool
 }
 
-func NewSchedulerService(notificationService *NotificationService, emailService *EmailService, schedulerLogService *SchedulerLogService) *SchedulerService {
+func NewSchedulerService(notificationService *NotificationService, emailService *EmailService, schedulerLogService *SchedulerLogService, dnsheAutoRenewService *DNSHEAutoRenewService) *SchedulerService {
 	return &SchedulerService{
-		notificationService: notificationService,
-		emailService:        emailService,
-		schedulerLogService: schedulerLogService,
-		done:                make(chan bool),
+		notificationService:   notificationService,
+		emailService:          emailService,
+		schedulerLogService:   schedulerLogService,
+		dnsheAutoRenewService: dnsheAutoRenewService,
+		done:                  make(chan bool),
 	}
 }
 
@@ -56,6 +59,7 @@ func (s *SchedulerService) scheduleDaily() {
 	// Wait until the scheduled time
 	time.AfterFunc(duration, func() {
 		s.checkExpiringDomains()
+		s.runDNSHEAutoRenew()
 		// Schedule next run (every 24 hours)
 		s.ticker = time.NewTicker(24 * time.Hour)
 		go func() {
@@ -63,12 +67,21 @@ func (s *SchedulerService) scheduleDaily() {
 				select {
 				case <-s.ticker.C:
 					s.checkExpiringDomains()
+					s.runDNSHEAutoRenew()
 				case <-s.done:
 					return
 				}
 			}
 		}()
 	})
+}
+
+// runDNSHEAutoRenew runs the DNSHE auto-renew job for all enabled users.
+func (s *SchedulerService) runDNSHEAutoRenew() {
+	if s.dnsheAutoRenewService == nil {
+		return
+	}
+	s.dnsheAutoRenewService.RunAll(context.Background(), s.schedulerLogService)
 }
 
 // checkExpiringDomains checks for expiring domains and sends notifications

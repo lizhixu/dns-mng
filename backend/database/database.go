@@ -134,6 +134,7 @@ func createTables() {
 		`ALTER TABLE domain_cache ADD COLUMN deleted_at DATETIME`,
 		`ALTER TABLE domain_cache ADD COLUMN last_sync_at DATETIME`,
 		`ALTER TABLE domain_cache ADD COLUMN provider_updated_on DATETIME`,
+		`ALTER TABLE domain_cache ADD COLUMN uses_dnshe_dns INTEGER NOT NULL DEFAULT 1`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_user_id ON domain_cache(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_domain_name ON domain_cache(domain_name)`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_deleted_at ON domain_cache(deleted_at)`,
@@ -174,6 +175,19 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_email_config_user_id ON email_config(user_id)`,
 		// 为兼容旧版本，添加邮件语言列（如果不存在）
 		`ALTER TABLE email_config ADD COLUMN language TEXT DEFAULT ''`,
+
+		// DNSHE auto-renew config table (per user)
+		`CREATE TABLE IF NOT EXISTS dnshe_auto_renew_config (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL UNIQUE,
+			enabled INTEGER NOT NULL DEFAULT 0,
+			days_before INTEGER NOT NULL DEFAULT 7,
+			last_run_at DATETIME,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_dnshe_auto_renew_user_id ON dnshe_auto_renew_config(user_id)`,
 
 		// Scheduler logs table
 		`CREATE TABLE IF NOT EXISTS scheduler_logs (

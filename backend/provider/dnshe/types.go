@@ -4,15 +4,64 @@ package dnshe
 
 // Subdomain represents a subdomain in DNSHE
 type Subdomain struct {
-	ID           int    `json:"id"`
-	Subdomain    string `json:"subdomain"`
-	RootDomain   string `json:"rootdomain"`
-	FullDomain   string `json:"full_domain"`
-	Status       string `json:"status"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
-	ExpiresAt    string `json:"expires_at,omitempty"`
-	NeverExpires int    `json:"never_expires"`
+	ID                int         `json:"id"`
+	Subdomain         string      `json:"subdomain"`
+	RootDomain        string      `json:"rootdomain"`
+	FullDomain        string      `json:"full_domain"`
+	Status            string      `json:"status"`
+	CreatedAt         string      `json:"created_at"`
+	UpdatedAt         string      `json:"updated_at"`
+	ExpiresAt         string      `json:"expires_at,omitempty"`
+	NeverExpires      int         `json:"never_expires"`
+	CloudflareZoneID  interface{} `json:"cloudflare_zone_id,omitempty"`
+	ProviderAccountID interface{} `json:"provider_account_id,omitempty"`
+}
+
+// RegisterSubdomainResponse represents the response from register subdomain
+type RegisterSubdomainResponse struct {
+	Success     bool   `json:"success"`
+	Message     string `json:"message"`
+	SubdomainID int    `json:"subdomain_id"`
+	FullDomain  string `json:"full_domain"`
+}
+
+// DeleteSubdomainResponse represents the response from delete subdomain
+type DeleteSubdomainResponse struct {
+	Success          bool   `json:"success"`
+	Message          string `json:"message"`
+	SubdomainID      int    `json:"subdomain_id"`
+	FullDomain       string `json:"full_domain"`
+	DNSRecordsDeleted int   `json:"dns_records_deleted"`
+}
+
+// RenewSubdomainResponse represents the response from renew subdomain
+type RenewSubdomainResponse struct {
+	Success           bool    `json:"success"`
+	Message           string  `json:"message"`
+	SubdomainID       int     `json:"subdomain_id"`
+	Subdomain         string  `json:"subdomain"`
+	PreviousExpiresAt string  `json:"previous_expires_at"`
+	NewExpiresAt      string  `json:"new_expires_at"`
+	RenewedAt         string  `json:"renewed_at"`
+	NeverExpires      int     `json:"never_expires"`
+	Status            string  `json:"status"`
+	RemainingDays     int     `json:"remaining_days"`
+	ChargedAmount     float64 `json:"charged_amount"`
+}
+
+// Quota represents the DNSHE account quota
+type Quota struct {
+	Used        int `json:"used"`
+	Base        int `json:"base"`
+	InviteBonus int `json:"invite_bonus"`
+	Total       int `json:"total"`
+	Available   int `json:"available"`
+}
+
+// QuotaResponse represents the response from quota query
+type QuotaResponse struct {
+	Success bool  `json:"success"`
+	Quota   Quota `json:"quota"`
 }
 
 // SubdomainsResponse represents the response from list subdomains

@@ -38,9 +38,26 @@ func (s *DNSService) ListAllDomainsFromCache(ctx context.Context, userID int64) 
 		return s.ListAllDomainsFromProvider(ctx, userID)
 	}
 
+	// Build a set of DNSHE account IDs to filter out domains that delegate DNS to third parties
+	accounts, _ := s.accountService.List(userID)
+	accountMap := make(map[int64]string)
+	dnsheAccountIDs := make(map[int64]bool)
+	for _, acc := range accounts {
+		accountMap[acc.ID] = acc.Name
+		if acc.ProviderType == "dnshe" {
+			dnsheAccountIDs[acc.ID] = true
+		}
+	}
+
 	// 从缓存构建域名列表
 	domains := make([]models.Domain, 0, len(caches))
 	for _, cache := range caches {
+		// DNSHE 账户下未使用 DNSHE 自身解析的域名不进入「所有域名」
+		// （解析已托管到第三方平台，可能在其他服务商账户下重复出现）
+		if dnsheAccountIDs[cache.AccountID] && !cache.UsesDNSHEDNS {
+			continue
+		}
+
 		domain := models.Domain{
 			ID:          cache.DomainID,
 			Name:        cache.DomainName,
@@ -53,20 +70,18 @@ func (s *DNSService) ListAllDomainsFromCache(ctx context.Context, userID int64) 
 		if cache.ProviderUpdatedOn != nil {
 			domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
 		}
+		// DNSHE 账户下的域名回填解析归属标记
+		if dnsheAccountIDs[cache.AccountID] {
+			uses := cache.UsesDNSHEDNS
+			domain.UsesDNSHEDNS = &uses
+		}
 		domains = append(domains, domain)
 	}
 
 	// 补充账户名称
-	accounts, err := s.accountService.List(userID)
-	if err == nil {
-		accountMap := make(map[int64]string)
-		for _, acc := range accounts {
-			accountMap[acc.ID] = acc.Name
-		}
-		for i := range domains {
-			if name, ok := accountMap[domains[i].AccountID]; ok {
-				domains[i].AccountName = name
-			}
+	for i := range domains {
+		if name, ok := accountMap[domains[i].AccountID]; ok {
+			domains[i].AccountName = name
 		}
 	}
 
@@ -124,6 +139,13 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 	if s.domainCacheService != nil {
 		cacheMap, err := s.domainCacheService.BatchGetCacheByUser(userID)
 		if err == nil {
+			// Build a set of DNSHE account IDs for UsesDNSHEDNS backfill
+			dnsheAccountIDs := make(map[int64]bool)
+			for _, acc := range accounts {
+				if acc.ProviderType == "dnshe" {
+					dnsheAccountIDs[acc.ID] = true
+				}
+			}
 			for i := range allDomains {
 				key := cacheKey(allDomains[i].AccountID, allDomains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
@@ -136,6 +158,11 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 						allDomains[i].RenewalURL = cache.RenewalURL
 					}
 					allDomains[i].CacheSynced = true
+					// DNSHE 账户下的域名回填解析归属标记
+					if dnsheAccountIDs[allDomains[i].AccountID] {
+						uses := cache.UsesDNSHEDNS
+						allDomains[i].UsesDNSHEDNS = &uses
+					}
 				}
 				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
 				s.domainCacheService.UpsertCache(userID, allDomains[i].AccountID, allDomains[i].ID, allDomains[i].Name, &models.UpdateDomainCacheRequest{
@@ -224,6 +251,10 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 		return nil, err
 	}
 
+	// Determine if this account is a DNSHE account for UsesDNSHEDNS backfill
+	account, accErr := s.accountService.Get(userID, accountID)
+	isDNSHE := accErr == nil && account.ProviderType == "dnshe"
+
 	// 过滤出指定账户的域名
 	domains := make([]models.Domain, 0)
 	for _, cache := range caches {
@@ -239,6 +270,10 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 			// 将 provider_updated_on 映射到 updated_on
 			if cache.ProviderUpdatedOn != nil {
 				domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
+			}
+			if isDNSHE {
+				uses := cache.UsesDNSHEDNS
+				domain.UsesDNSHEDNS = &uses
 			}
 			domains = append(domains, domain)
 		}
@@ -303,6 +338,11 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 						domains[i].RenewalURL = cache.RenewalURL
 					}
 					domains[i].CacheSynced = true
+					// 回填解析归属（DNSHE 账户下域名保留缓存中的 uses_dnshe_dns）
+					if account.ProviderType == "dnshe" {
+						uses := cache.UsesDNSHEDNS
+						domains[i].UsesDNSHEDNS = &uses
+					}
 				}
 				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
 				s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
@@ -317,6 +357,13 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 }
 
 func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, domainID string) (*models.Domain, error) {
+	// 先获取账户判断是否 DNSHE
+	account, err := s.accountService.Get(userID, accountID)
+	if err != nil {
+		return nil, err
+	}
+	isDNSHE := account.ProviderType == "dnshe"
+
 	// 优先从缓存读取
 	if s.domainCacheService != nil {
 		cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
@@ -333,20 +380,16 @@ func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, dom
 				domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
 			}
 			// 补充账户名称
-			account, err := s.accountService.Get(userID, accountID)
-			if err == nil {
-				domain.AccountName = account.Name
+			domain.AccountName = account.Name
+			if isDNSHE {
+				uses := cache.UsesDNSHEDNS
+				domain.UsesDNSHEDNS = &uses
 			}
 			return domain, nil
 		}
 	}
 
 	// 缓存未命中，从供应商获取
-	account, err := s.accountService.Get(userID, accountID)
-	if err != nil {
-		return nil, err
-	}
-
 	p, err := provider.Get(account.ProviderType)
 	if err != nil {
 		return nil, err
@@ -364,6 +407,10 @@ func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, dom
 			domain.RenewalDate = cache.RenewalDate
 			domain.RenewalURL = cache.RenewalURL
 			domain.CacheSynced = true
+			if isDNSHE {
+				uses := cache.UsesDNSHEDNS
+				domain.UsesDNSHEDNS = &uses
+			}
 		}
 	}
 

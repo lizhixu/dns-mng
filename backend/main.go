@@ -56,14 +56,16 @@ func main() {
 	notificationService := service.NewNotificationService()
 	emailService := service.NewEmailService()
 
-	// Start scheduler for domain expiry notifications
-	schedulerService := service.NewSchedulerService(notificationService, emailService, schedulerLogService)
-	schedulerService.Start()
-	defer schedulerService.Stop()
-
 	ddnsTokenService := service.NewDDNSTokenService()
 	backupService := service.NewBackupService(accountService, domainCacheService, ddnsTokenService, emailService, notificationService)
 	cfOptimizeService := service.NewCFOptimizeService()
+	dnsheService := service.NewDNSHEService(accountService, domainCacheService)
+	dnsheAutoRenewService := service.NewDNSHEAutoRenewService(dnsheService)
+
+	// Start scheduler for domain expiry notifications
+	schedulerService := service.NewSchedulerService(notificationService, emailService, schedulerLogService, dnsheAutoRenewService)
+	schedulerService.Start()
+	defer schedulerService.Stop()
 
 	// Init handlers
 	authHandler := handler.NewAuthHandler(userService, logService)
@@ -80,6 +82,7 @@ func main() {
 	ddnsTokenHandler := handler.NewDDNSTokenHandler(ddnsTokenService, logService)
 	backupHandler := handler.NewBackupHandler(backupService)
 	cfOptimizeHandler := handler.NewCFOptimizeHandler(cfOptimizeService)
+	dnsheHandler := handler.NewDNSHEHandler(dnsheService, dnsheAutoRenewService, logService, schedulerLogService)
 
 	// Setup router
 	r := gin.Default()
@@ -184,6 +187,17 @@ func main() {
 		protected.GET("/cf-optimize", cfOptimizeHandler.List)
 		protected.GET("/cf-optimize/:id/refresh", cfOptimizeHandler.Refresh)
 		protected.DELETE("/cf-optimize/:id", cfOptimizeHandler.Delete)
+
+		// DNSHE management
+		protected.GET("/dnshe/accounts", dnsheHandler.ListAccounts)
+		protected.GET("/dnshe/accounts/:id/quota", dnsheHandler.GetQuota)
+		protected.POST("/dnshe/accounts/:id/register", dnsheHandler.RegisterSubdomain)
+		protected.POST("/dnshe/accounts/:id/delete", dnsheHandler.DeleteSubdomain)
+		protected.PUT("/dnshe/accounts/:id/domains/:domainId/resolution", dnsheHandler.SetDomainResolution)
+		protected.POST("/dnshe/accounts/:id/domains/:domainId/resolve-to-cloudflare", dnsheHandler.ResolveToCloudflare)
+		protected.GET("/dnshe/auto-renew", dnsheHandler.GetAutoRenewConfig)
+		protected.PUT("/dnshe/auto-renew", dnsheHandler.UpdateAutoRenewConfig)
+		protected.POST("/dnshe/auto-renew/trigger", dnsheHandler.TriggerAutoRenew)
 	}
 
 	log.Printf("Server starting on :%s", cfg.ServerPort)

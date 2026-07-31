@@ -13,6 +13,7 @@ import APILogsManagement from './pages/APILogsManagement';
 import EmailSettings from './pages/EmailSettings';
 import Backup from './pages/Backup';
 import CFOptimize from './pages/CFOptimize';
+import DNSHE from './pages/DNSHE';
 
 // Placeholder components until we implement them
 const PrivateRoute = ({ children }) => {
@@ -36,6 +37,7 @@ function App() {
               }>
                 <Route index element={<Navigate to="/domains" replace />} />
                 <Route path="domains" element={<AllDomains />} />
+                <Route path="dnshe" element={<DNSHE />} />
                 <Route path="accounts" element={<Accounts />} />
                 <Route path="accounts/:accountId/domains" element={<Domains />} />
                 <Route path="accounts/:accountId/domains/:domainId/records" element={<Records />} />

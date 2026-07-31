@@ -814,7 +814,6 @@ table tr:hover td {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 16px 20px;
-  transition: var(--transition);
 }
 
 .domain-list-card:hover,
@@ -822,6 +821,7 @@ table tr:hover td {
 .log-card:hover {
   border-color: var(--border-hover);
   box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Code block pre styles */
@@ -839,6 +839,10 @@ pre {
 
 /* ===== Responsive Styles ===== */
 @media (max-width: 768px) {
+  .app-content {
+    padding: 16px;
+  }
+
   .app-sidebar.desktop {
     display: none;
   }
@@ -939,8 +943,18 @@ pre {
 
   .page-title-row {
     flex-direction: column;
-    align-items: flex-start !important;
+    align-items: stretch !important;
     gap: 12px;
+  }
+
+  .page-actions-bar {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .page-actions-bar .form-input {
+    flex: 1;
+    min-width: 0;
   }
 
   .domains-toolbar,
@@ -966,25 +980,38 @@ pre {
   .domain-card-actions {
     margin-top: 12px;
     width: 100%;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .domain-card-actions>* {
-    flex: 1;
+    flex: 1 1 auto;
     justify-content: center;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-only-cards {
-    display: none;
-  }
-
-  .desktop-only-table {
-    display: block;
+    min-width: 0;
   }
 }
 
 @media (max-width: 480px) {
+  .app-content {
+    padding: 12px;
+  }
+
+  .domain-list-card,
+  .account-list-card,
+  .log-card {
+    padding: 12px 14px;
+  }
+
+  /* On very narrow screens, stack action buttons full-width to avoid overflow */
+  .domain-card-actions {
+    flex-direction: column;
+  }
+
+  .domain-card-actions>* {
+    width: 100%;
+    flex: none;
+  }
+
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -1001,6 +1028,16 @@ pre {
   .btn {
     height: 40px;
     /* touch friendly */
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only-cards {
+    display: none;
+  }
+
+  .desktop-only-table {
+    display: block;
   }
 }
 
