@@ -146,6 +146,14 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 					dnsheAccountIDs[acc.ID] = true
 				}
 			}
+
+			// 跨账户回填（前置）：DNSHE 域名解析至第三方供应商后，第三方账户下的同名域名
+			// 没有过期时间/续费地址。这里先用 DNSHE 缓存中的 renewal_date + renewal_url 回填到内存域名，
+			// 随后统一写缓存，避免被缓存里的旧空值盖住。必须在合并循环之前做，否则合并循环会把
+			// 缓存里的空 renewal_date 保留下来，回填条件（RenewalDate==""）虽满足但顺序已晚。
+			dnsheExpiryByName := dnsheExpiryFromCache(cacheMap, dnsheAccountIDs)
+			backfillExpiryFromDNSHE(allDomains, dnsheAccountIDs, dnsheExpiryByName)
+
 			for i := range allDomains {
 				key := cacheKey(allDomains[i].AccountID, allDomains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
@@ -173,10 +181,19 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 		}
 	}
 
-	return allDomains, nil
-}
+	// 过滤掉 DNSHE 第三方解析的域名（uses_dnshe_dns=false）：这些域名的解析已托管到第三方平台，
+	// 会在第三方账户下重复出现，在「所有域名」列表中展示无意义，统一不展示。
+	dnsheAccountIDs := dnsheAccountIDsFrom(accounts)
+	filtered := make([]models.Domain, 0, len(allDomains))
+	for _, d := range allDomains {
+		if dnsheAccountIDs[d.AccountID] && d.UsesDNSHEDNS != nil && !*d.UsesDNSHEDNS {
+			continue
+		}
+		filtered = append(filtered, d)
+	}
 
-// listDomainsFromProviderForAccount is a helper to fetch domains for a single account
+	return filtered, nil
+}
 func (s *DNSService) listDomainsFromProviderForAccount(ctx context.Context, userID int64, account models.Account) ([]models.Domain, []string, error) {
 	p, err := provider.Get(account.ProviderType)
 	if err != nil {
@@ -221,6 +238,68 @@ func (s *DNSService) listDomainsFromProviderForAccount(ctx context.Context, user
 // cacheKey generates a map key for domain cache lookup
 func cacheKey(accountID int64, domainID string) string {
 	return fmt.Sprintf("%d:%s", accountID, domainID)
+}
+
+// dnsheAccountIDsFrom returns a set of DNSHE account IDs built from the given accounts.
+// Reuses an already-loaded account list to avoid an extra DB query.
+func dnsheAccountIDsFrom(accounts []models.Account) map[int64]bool {
+	ids := make(map[int64]bool)
+	for _, acc := range accounts {
+		if acc.ProviderType == "dnshe" {
+			ids[acc.ID] = true
+		}
+	}
+	return ids
+}
+
+// dnsheExpiryFromCache builds name -> (renewal_date, renewal_url) from cached domains
+// belonging to DNSHE accounts. Used to backfill third-party domains (e.g. Cloudflare) that
+// share a name with a DNSHE domain resolved to them — those third-party entries have no
+// expiry/renewal URL, so we copy them from the DNSHE domain.
+func dnsheExpiryFromCache(cacheMap map[string]*models.DomainCache, dnsheAccountIDs map[int64]bool) map[string]models.Domain {
+	byName := make(map[string]models.Domain)
+	for _, cache := range cacheMap {
+		if dnsheAccountIDs[cache.AccountID] && cache.DomainName != "" && (cache.RenewalDate != "" || cache.RenewalURL != "") {
+			// 保留信息最全的那条（同名 DNSHE 域名理论上只有一条）
+			existing, ok := byName[cache.DomainName]
+			if !ok || (len(cache.RenewalDate) > len(existing.RenewalDate)) {
+				byName[cache.DomainName] = models.Domain{
+					Name:        cache.DomainName,
+					RenewalDate: cache.RenewalDate,
+					RenewalURL:  cache.RenewalURL,
+				}
+			}
+		}
+	}
+	return byName
+}
+
+// backfillExpiryFromDNSHE copies renewal_date/renewal_url from the DNSHE expiry map onto
+// non-DNSHE domains whose renewal_date and renewal_url are both empty. Callers must invoke
+// this BEFORE the merge+upsert loop so the backfilled values are written to cache in one pass
+// (otherwise the cache's stale/empty renewal_date would be preserved and the backfill skipped).
+func backfillExpiryFromDNSHE(domains []models.Domain, dnsheAccountIDs map[int64]bool, dnsheExpiryByName map[string]models.Domain) {
+	if len(dnsheExpiryByName) == 0 {
+		return
+	}
+	for i := range domains {
+		if dnsheAccountIDs[domains[i].AccountID] {
+			continue
+		}
+		if domains[i].Name == "" || (domains[i].RenewalDate != "" && domains[i].RenewalURL != "") {
+			continue
+		}
+		src, ok := dnsheExpiryByName[domains[i].Name]
+		if !ok {
+			continue
+		}
+		if domains[i].RenewalDate == "" {
+			domains[i].RenewalDate = src.RenewalDate
+		}
+		if domains[i].RenewalURL == "" {
+			domains[i].RenewalURL = src.RenewalURL
+		}
+	}
 }
 
 func (s *DNSService) ListDomains(ctx context.Context, userID, accountID int64) ([]models.Domain, error) {
@@ -322,6 +401,19 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 			for key, cache := range cacheMap {
 				if cache.AccountID == accountID && !providerDomainIDs[key] {
 					domainsToDelete = append(domainsToDelete, cache.DomainID)
+				}
+			}
+
+			// 跨账户回填（前置）：当前账户非 DNSHE 时，用 DNSHE 缓存中的 renewal_date + renewal_url
+			// 回填到本账户同名域名（DNSHE 域名解析至第三方后，第三方域名无过期时间/续费地址）。
+			// 先回填到内存域名，再走下面的合并+写缓存，避免缓存旧值盖住回填值。
+			if account.ProviderType != "dnshe" {
+				if dnsheAccounts, err := s.accountService.List(userID); err == nil {
+					dnsheIDs := dnsheAccountIDsFrom(dnsheAccounts)
+					if len(dnsheIDs) > 0 {
+						dnsheExpiryByName := dnsheExpiryFromCache(cacheMap, dnsheIDs)
+						backfillExpiryFromDNSHE(domains, dnsheIDs, dnsheExpiryByName)
+					}
 				}
 			}
 
