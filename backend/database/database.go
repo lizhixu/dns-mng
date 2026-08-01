@@ -135,6 +135,8 @@ func createTables() {
 		`ALTER TABLE domain_cache ADD COLUMN last_sync_at DATETIME`,
 		`ALTER TABLE domain_cache ADD COLUMN provider_updated_on DATETIME`,
 		`ALTER TABLE domain_cache ADD COLUMN uses_dnshe_dns INTEGER NOT NULL DEFAULT 1`,
+		// 手动编辑锁定标记：1 表示 renewal_date/renewal_url 由用户手动维护，同步时不应被 provider 返回值覆盖
+		`ALTER TABLE domain_cache ADD COLUMN renewal_manual INTEGER NOT NULL DEFAULT 0`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_user_id ON domain_cache(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_domain_name ON domain_cache(domain_name)`,
 		`CREATE INDEX IF NOT EXISTS idx_domain_cache_deleted_at ON domain_cache(deleted_at)`,
