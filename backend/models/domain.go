@@ -34,6 +34,9 @@ type DomainCache struct {
 	DomainName        string     `json:"domain_name"`
 	RenewalDate       string     `json:"renewal_date,omitempty"`
 	RenewalURL        string     `json:"renewal_url,omitempty"`
+	// RenewalManual indicates renewal_date/renewal_url were manually edited by
+	// the user and must not be overwritten by provider data during sync.
+	RenewalManual     bool       `json:"renewal_manual,omitempty"`
 	UsesDNSHEDNS      bool       `json:"uses_dnshe_dns"`
 	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
 	LastSyncAt        *time.Time `json:"last_sync_at,omitempty"`
@@ -49,15 +52,23 @@ type UpdateDomainCacheRequest struct {
 	NotifyDaysBefore int    `json:"notify_days_before"`
 	NotifyEnabled    bool   `json:"notify_enabled"`
 	UsesDNSHEDNS     *bool  `json:"uses_dnshe_dns,omitempty"`
+	// RenewalManual controls the manual-edit lock flag. nil leaves it unchanged
+	// (used by sync paths); 0/1 explicitly clears/sets it (used by the manual
+	// edit endpoint).
+	RenewalManual    *int   `json:"renewal_manual,omitempty"`
 }
 
 // BatchCacheItem represents a single item in batch cache operations
 type BatchCacheItem struct {
-	AccountID   int64  `json:"account_id"`
-	DomainID    string `json:"domain_id"`
-	DomainName  string `json:"domain_name"`
-	RenewalDate string `json:"renewal_date"`
-	RenewalURL  string `json:"renewal_url"`
+	AccountID     int64  `json:"account_id"`
+	DomainID      string `json:"domain_id"`
+	DomainName    string `json:"domain_name"`
+	RenewalDate   string `json:"renewal_date"`
+	RenewalURL    string `json:"renewal_url"`
+	// RenewalManual is the manual-edit lock flag written by BatchUpsertCache.
+	// nil leaves the existing value; 0/1 explicitly sets it. BatchUpdateDomainCache
+	// computes this automatically, matching UpdateDomainCache behaviour.
+	RenewalManual *int `json:"renewal_manual,omitempty"`
 }
 
 // BatchCacheRequest is the request body for batch updating domain cache
