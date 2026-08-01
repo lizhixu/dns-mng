@@ -14,6 +14,7 @@ A modern, multi-provider DNS record management system with a clean web UI. Manag
 - 💾 **Backup & restore** — JSON export/import with optional AES encryption
 - 📝 **Logging** — API call logs, login logs with IP geolocation, scheduler task logs
 - ⚡ **CF Optimize** — Cloudflare CDN SaaS origin pull optimization with one-click setup
+- 🔎 **WHOIS Lookup** — WhoisJSON.com integration with automatic URL-to-domain extraction; query registrar, dates, contacts, status, DNSSEC
 - 🎨 **Modern UI** — clean interface with light / dark / system theme
 - 🌍 **i18n** — Chinese and English
 - 📱 **Responsive** — works on all screen sizes
@@ -253,6 +254,12 @@ Contributions are welcome!
 5. Open a Pull Request
 
 ## Changelog
+
+### v0.0.4 (2026-08-01)
+
+- ✨ Added WHOIS lookup (WhoisJSON.com integration) — query registrar, creation/expiry dates, contacts, status, DNSSEC, etc.
+- 🔎 Query input accepts full URLs (`https://www.example.com/path`); the hostname is extracted automatically before lookup
+- 🔐 WHOIS API key is previewable/editable in the UI (eye toggle), stored per user, and lookups are proxied through the backend
 
 ### v0.0.3 (2026-07-06)
 

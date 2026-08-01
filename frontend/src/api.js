@@ -513,4 +513,28 @@ export const api = {
         });
         return handleResponse(response);
     },
+
+    // WHOIS Lookup
+    getWHOISConfig: async () => {
+        const response = await fetch(`${API_BASE}/whois/config`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    updateWHOISConfig: async (data) => {
+        const response = await fetch(`${API_BASE}/whois/config`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        return handleResponse(response);
+    },
+
+    whoisQuery: async (domain) => {
+        const response = await fetch(`${API_BASE}/whois/query?domain=${encodeURIComponent(domain)}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
 };

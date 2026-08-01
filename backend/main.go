@@ -61,6 +61,7 @@ func main() {
 	cfOptimizeService := service.NewCFOptimizeService()
 	dnsheService := service.NewDNSHEService(accountService, domainCacheService)
 	dnsheAutoRenewService := service.NewDNSHEAutoRenewService(dnsheService)
+	whoisService := service.NewWHOISService()
 
 	// Start scheduler for domain expiry notifications
 	schedulerService := service.NewSchedulerService(notificationService, emailService, schedulerLogService, dnsheAutoRenewService)
@@ -83,6 +84,7 @@ func main() {
 	backupHandler := handler.NewBackupHandler(backupService)
 	cfOptimizeHandler := handler.NewCFOptimizeHandler(cfOptimizeService)
 	dnsheHandler := handler.NewDNSHEHandler(dnsheService, dnsheAutoRenewService, logService, schedulerLogService)
+	whoisHandler := handler.NewWHOISHandler(whoisService, logService)
 
 	// Setup router
 	r := gin.Default()
@@ -176,6 +178,11 @@ func main() {
 
 		// DNS Check
 		protected.POST("/dns/check", dnsCheckHandler.CheckDNS)
+
+		// WHOIS Lookup
+		protected.GET("/whois/config", whoisHandler.GetConfig)
+		protected.PUT("/whois/config", whoisHandler.UpdateConfig)
+		protected.GET("/whois/query", whoisHandler.Query)
 
 		// Backup & Restore
 		protected.GET("/backup/export", backupHandler.Export)

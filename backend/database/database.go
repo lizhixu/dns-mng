@@ -176,6 +176,18 @@ func createTables() {
 		// 为兼容旧版本，添加邮件语言列（如果不存在）
 		`ALTER TABLE email_config ADD COLUMN language TEXT DEFAULT ''`,
 
+		// WHOIS lookup configuration table (per user, single row)
+		`CREATE TABLE IF NOT EXISTS whois_config (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL UNIQUE,
+			api_key TEXT NOT NULL DEFAULT '',
+			enabled INTEGER NOT NULL DEFAULT 1,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_whois_config_user_id ON whois_config(user_id)`,
+
 		// DNSHE auto-renew config table (per user)
 		`CREATE TABLE IF NOT EXISTS dnshe_auto_renew_config (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

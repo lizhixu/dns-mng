@@ -14,6 +14,7 @@ import EmailSettings from './pages/EmailSettings';
 import Backup from './pages/Backup';
 import CFOptimize from './pages/CFOptimize';
 import DNSHE from './pages/DNSHE';
+import Whois from './pages/Whois';
 
 // Placeholder components until we implement them
 const PrivateRoute = ({ children }) => {
@@ -46,6 +47,7 @@ function App() {
                 <Route path="email-settings" element={<EmailSettings />} />
                 <Route path="backup" element={<Backup />} />
                 <Route path="cf-optimize" element={<CFOptimize />} />
+                <Route path="whois" element={<Whois />} />
               </Route>
             </Routes>
           </AuthProvider>

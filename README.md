@@ -19,6 +19,7 @@
 - 🔒 **ACME DNS-01 API**：提供对外调用接口，便于自动签发证书（HTTP Basic Auth）
 - 🔄 **DDNS 支持**：DuckDNS 兼容的动态 DNS 更新 API
 - ⚡ **CF 优选**：Cloudflare CDN 优选功能，一键配置 SaaS 回源
+- 🔎 **WHOIS 查询**：集成 WhoisJSON.com，支持直接粘贴 URL 自动提取域名查询注册信息
 
 ## 技术栈
 
@@ -415,6 +416,12 @@ nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Locatio
 MIT License
 
 ## 更新日志
+
+### v0.0.4 (2026-08-01)
+
+- ✨ 新增 WHOIS 查询功能，集成 WhoisJSON.com API，支持查询域名注册信息（注册商、创建/过期时间、联系人、状态、DNSSEC 等）
+- 🔎 查询输入框支持粘贴完整 URL（`https://www.example.com/path`），自动提取裸主机名后查询
+- 🔐 WHOIS API Key 在前端可预览/编辑（眼睛图标切换显隐），后端按用户存储，查询经后端代理调用
 
 ### v0.0.3 (2026-07-06)
 
