@@ -17,7 +17,7 @@ import (
 )
 
 // ErrWHOISAPIKeyNotConfigured is returned when WHOIS lookup is requested but
-// the user has not configured an API key (or the config is disabled).
+// the user has not configured an API key.
 var ErrWHOISAPIKeyNotConfigured = errors.New("WHOIS API key is not configured")
 
 // ErrWHOISAPIKeyRequired is returned when the user tries to create a config
@@ -50,13 +50,12 @@ func NewWHOISService() *WHOISService {
 // `{"configured": false}`.
 func (s *WHOISService) GetConfig(userID int64) (*models.WHOISConfig, error) {
 	var cfg models.WHOISConfig
-	var enabled int
 
 	err := database.DB.QueryRow(
-		`SELECT id, user_id, api_key, enabled, created_at, updated_at
+		`SELECT id, user_id, api_key, created_at, updated_at
 		 FROM whois_config WHERE user_id = ?`,
 		userID,
-	).Scan(&cfg.ID, &cfg.UserID, &cfg.APIKey, &enabled, &cfg.CreatedAt, &cfg.UpdatedAt)
+	).Scan(&cfg.ID, &cfg.UserID, &cfg.APIKey, &cfg.CreatedAt, &cfg.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -65,7 +64,6 @@ func (s *WHOISService) GetConfig(userID int64) (*models.WHOISConfig, error) {
 		return nil, err
 	}
 
-	cfg.Enabled = enabled == 1
 	return &cfg, nil
 }
 
@@ -73,13 +71,12 @@ func (s *WHOISService) GetConfig(userID int64) (*models.WHOISConfig, error) {
 // before calling upstream, mirroring EmailService.getEmailConfigWithPassword.
 func (s *WHOISService) getConfigWithKey(userID int64) (*models.WHOISConfig, error) {
 	var cfg models.WHOISConfig
-	var enabled int
 
 	err := database.DB.QueryRow(
-		`SELECT id, user_id, api_key, enabled, created_at, updated_at
+		`SELECT id, user_id, api_key, created_at, updated_at
 		 FROM whois_config WHERE user_id = ?`,
 		userID,
-	).Scan(&cfg.ID, &cfg.UserID, &cfg.APIKey, &enabled, &cfg.CreatedAt, &cfg.UpdatedAt)
+	).Scan(&cfg.ID, &cfg.UserID, &cfg.APIKey, &cfg.CreatedAt, &cfg.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -88,7 +85,6 @@ func (s *WHOISService) getConfigWithKey(userID int64) (*models.WHOISConfig, erro
 		return nil, err
 	}
 
-	cfg.Enabled = enabled == 1
 	return &cfg, nil
 }
 
@@ -98,10 +94,6 @@ func (s *WHOISService) getConfigWithKey(userID int64) (*models.WHOISConfig, erro
 // config (including the API key in plaintext, same as GetConfig).
 func (s *WHOISService) UpsertConfig(userID int64, req *models.UpdateWHOISConfigRequest) (*models.WHOISConfig, error) {
 	now := time.Now()
-	enabled := 0
-	if req.Enabled {
-		enabled = 1
-	}
 
 	// Check if config exists
 	var existingID int64
@@ -115,23 +107,23 @@ func (s *WHOISService) UpsertConfig(userID int64, req *models.UpdateWHOISConfigR
 			return nil, ErrWHOISAPIKeyRequired
 		}
 		_, err = database.DB.Exec(
-			`INSERT INTO whois_config (user_id, api_key, enabled, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?)`,
-			userID, req.APIKey, enabled, now, now,
+			`INSERT INTO whois_config (user_id, api_key, created_at, updated_at)
+			 VALUES (?, ?, ?, ?)`,
+			userID, req.APIKey, now, now,
 		)
 	case nil:
 		// Update existing config
 		if req.APIKey != "" {
 			// Update with new key
 			_, err = database.DB.Exec(
-				`UPDATE whois_config SET api_key = ?, enabled = ?, updated_at = ? WHERE user_id = ?`,
-				req.APIKey, enabled, now, userID,
+				`UPDATE whois_config SET api_key = ?, updated_at = ? WHERE user_id = ?`,
+				req.APIKey, now, userID,
 			)
 		} else {
-			// Preserve existing key
+			// No changes requested — simply touch updated_at
 			_, err = database.DB.Exec(
-				`UPDATE whois_config SET enabled = ?, updated_at = ? WHERE user_id = ?`,
-				enabled, now, userID,
+				`UPDATE whois_config SET updated_at = ? WHERE user_id = ?`,
+				now, userID,
 			)
 		}
 	default:
@@ -150,13 +142,13 @@ func (s *WHOISService) UpsertConfig(userID int64, req *models.UpdateWHOISConfigR
 
 // Query performs a WHOIS lookup for the given domain using the user's
 // configured API key. Returns ErrWHOISAPIKeyNotConfigured when the user has not
-// configured a key or the config is disabled.
+// configured a key.
 func (s *WHOISService) Query(userID int64, domain string) (*models.WHOISLookupResult, error) {
 	cfg, err := s.getConfigWithKey(userID)
 	if err != nil {
 		return nil, err
 	}
-	if cfg == nil || !cfg.Enabled || strings.TrimSpace(cfg.APIKey) == "" {
+	if cfg == nil || strings.TrimSpace(cfg.APIKey) == "" {
 		return nil, ErrWHOISAPIKeyNotConfigured
 	}
 

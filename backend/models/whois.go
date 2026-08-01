@@ -10,7 +10,6 @@ type WHOISConfig struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`
 	APIKey    string    `json:"api_key"` // Returned in plaintext to the owning user
-	Enabled   bool      `json:"enabled"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -18,8 +17,7 @@ type WHOISConfig struct {
 // UpdateWHOISConfigRequest is the request body for updating WHOIS configuration.
 // APIKey has no binding:"required", so an empty value means "keep existing key".
 type UpdateWHOISConfigRequest struct {
-	APIKey  string `json:"api_key"`
-	Enabled bool   `json:"enabled"`
+	APIKey string `json:"api_key"`
 }
 
 // WHOISLookupResult is the structured result of a WHOIS lookup, returned to the

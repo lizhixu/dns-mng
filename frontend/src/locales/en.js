@@ -477,7 +477,6 @@ export const en = {
     configEditHint: 'Leave blank to keep current; enter a new key to update it',
     previewKey: 'Show API key',
     hideKey: 'Hide API key',
-    configEnabled: 'Enable WHOIS lookup',
     configSave: 'Save',
     configSaved: 'WHOIS configuration saved',
     configExpand: 'API Key settings',

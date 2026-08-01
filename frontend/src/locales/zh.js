@@ -477,7 +477,6 @@ export const zh = {
     configEditHint: '留空则保持当前值不变；如需修改请输入新 Key',
     previewKey: '显示 API Key',
     hideKey: '隐藏 API Key',
-    configEnabled: '启用 WHOIS 查询',
     configSave: '保存配置',
     configSaved: 'WHOIS 配置已保存',
     configExpand: 'API Key 配置',

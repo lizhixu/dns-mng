@@ -181,7 +181,6 @@ func createTables() {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL UNIQUE,
 			api_key TEXT NOT NULL DEFAULT '',
-			enabled INTEGER NOT NULL DEFAULT 1,
 			created_at DATETIME NOT NULL,
 			updated_at DATETIME NOT NULL,
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE

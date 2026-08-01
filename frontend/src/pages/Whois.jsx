@@ -93,7 +93,6 @@ const Whois = () => {
     // Config state
     const [config, setConfig] = useState({
         api_key: '',
-        enabled: true,
     });
     const [configured, setConfigured] = useState(false);
     const [configLoading, setConfigLoading] = useState(true);
@@ -121,12 +120,11 @@ const Whois = () => {
                 setConfigured(true);
                 setConfig({
                     api_key: data.api_key || '',
-                    enabled: data.enabled !== undefined ? data.enabled : true,
                 });
             } else {
                 // Not configured yet
                 setConfigured(false);
-                setConfig({ api_key: '', enabled: true });
+                setConfig({ api_key: '' });
                 // Auto-expand config when no key has been set
                 setShowConfig(true);
             }
@@ -192,7 +190,6 @@ const Whois = () => {
             // input keeps showing the current value (the eye toggle still works).
             setConfig({
                 api_key: data.api_key || '',
-                enabled: data && data.enabled !== undefined ? data.enabled : config.enabled,
             });
             setConfigSuccess(t.whois.configSaved);
             setTimeout(() => setConfigSuccess(''), 3000);
@@ -551,18 +548,6 @@ const Whois = () => {
                                 {configSuccess}
                             </div>
                         )}
-
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
-                            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={config.enabled}
-                                    onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
-                                    style={{ width: 'auto', cursor: 'pointer' }}
-                                />
-                                {t.whois.configEnabled}
-                            </label>
-                        </div>
 
                         <div className="form-group">
                             <label className="form-label">{t.whois.configApiKey}</label>
