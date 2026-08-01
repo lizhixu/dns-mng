@@ -152,24 +152,18 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 			// 随后统一写缓存，避免被缓存里的旧空值盖住。必须在合并循环之前做，否则合并循环会把
 			// 缓存里的空 renewal_date 保留下来，回填条件（RenewalDate==""）虽满足但顺序已晚。
 			dnsheExpiryByName := dnsheExpiryFromCache(cacheMap, dnsheAccountIDs)
-			backfillExpiryFromDNSHE(allDomains, dnsheAccountIDs, dnsheExpiryByName, cacheMap)
+			backfillExpiryFromDNSHE(allDomains, dnsheAccountIDs, dnsheExpiryByName)
 
 			for i := range allDomains {
 				key := cacheKey(allDomains[i].AccountID, allDomains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					if cache.RenewalManual {
-						// 用户已手动维护到期时间/续费地址，同步时保留手动值，不被 provider 返回值覆盖
+					// Provider returned empty renewal date - preserve cached value
+					if allDomains[i].RenewalDate == "" {
 						allDomains[i].RenewalDate = cache.RenewalDate
+					}
+					// Provider returned empty renewal URL - preserve cached value
+					if allDomains[i].RenewalURL == "" {
 						allDomains[i].RenewalURL = cache.RenewalURL
-					} else {
-						// Provider returned empty renewal date - preserve cached value
-						if allDomains[i].RenewalDate == "" {
-							allDomains[i].RenewalDate = cache.RenewalDate
-						}
-						// Provider returned empty renewal URL - preserve cached value
-						if allDomains[i].RenewalURL == "" {
-							allDomains[i].RenewalURL = cache.RenewalURL
-						}
 					}
 					allDomains[i].CacheSynced = true
 					// DNSHE 账户下的域名回填解析归属标记
@@ -178,8 +172,7 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 						allDomains[i].UsesDNSHEDNS = &uses
 					}
 				}
-				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty;
-				// RenewalManual 传 nil，同步不改动手动锁定状态)
+				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
 				s.domainCacheService.UpsertCache(userID, allDomains[i].AccountID, allDomains[i].ID, allDomains[i].Name, &models.UpdateDomainCacheRequest{
 					RenewalDate: allDomains[i].RenewalDate,
 					RenewalURL:  allDomains[i].RenewalURL,
@@ -285,8 +278,7 @@ func dnsheExpiryFromCache(cacheMap map[string]*models.DomainCache, dnsheAccountI
 // non-DNSHE domains whose renewal_date and renewal_url are both empty. Callers must invoke
 // this BEFORE the merge+upsert loop so the backfilled values are written to cache in one pass
 // (otherwise the cache's stale/empty renewal_date would be preserved and the backfill skipped).
-// 手动锁定（renewal_manual=1）的域名跳过回填，保留用户手动维护的值。
-func backfillExpiryFromDNSHE(domains []models.Domain, dnsheAccountIDs map[int64]bool, dnsheExpiryByName map[string]models.Domain, cacheMap map[string]*models.DomainCache) {
+func backfillExpiryFromDNSHE(domains []models.Domain, dnsheAccountIDs map[int64]bool, dnsheExpiryByName map[string]models.Domain) {
 	if len(dnsheExpiryByName) == 0 {
 		return
 	}
@@ -295,10 +287,6 @@ func backfillExpiryFromDNSHE(domains []models.Domain, dnsheAccountIDs map[int64]
 			continue
 		}
 		if domains[i].Name == "" || (domains[i].RenewalDate != "" && domains[i].RenewalURL != "") {
-			continue
-		}
-		// 手动锁定的域名跳过回填，避免 DNSHE 过期信息覆盖用户手动维护的值
-		if cache, ok := cacheMap[cacheKey(domains[i].AccountID, domains[i].ID)]; ok && cache.RenewalManual {
 			continue
 		}
 		src, ok := dnsheExpiryByName[domains[i].Name]
@@ -424,7 +412,7 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 					dnsheIDs := dnsheAccountIDsFrom(dnsheAccounts)
 					if len(dnsheIDs) > 0 {
 						dnsheExpiryByName := dnsheExpiryFromCache(cacheMap, dnsheIDs)
-						backfillExpiryFromDNSHE(domains, dnsheIDs, dnsheExpiryByName, cacheMap)
+						backfillExpiryFromDNSHE(domains, dnsheIDs, dnsheExpiryByName)
 					}
 				}
 			}
@@ -433,19 +421,13 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 			for i := range domains {
 				key := cacheKey(domains[i].AccountID, domains[i].ID)
 				if cache, ok := cacheMap[key]; ok {
-					if cache.RenewalManual {
-						// 用户已手动维护到期时间/续费地址，同步时保留手动值，不被 provider 返回值覆盖
+					// Provider returned empty renewal date - preserve cached value
+					if domains[i].RenewalDate == "" {
 						domains[i].RenewalDate = cache.RenewalDate
+					}
+					// Provider returned empty renewal URL - preserve cached value
+					if domains[i].RenewalURL == "" {
 						domains[i].RenewalURL = cache.RenewalURL
-					} else {
-						// Provider returned empty renewal date - preserve cached value
-						if domains[i].RenewalDate == "" {
-							domains[i].RenewalDate = cache.RenewalDate
-						}
-						// Provider returned empty renewal URL - preserve cached value
-						if domains[i].RenewalURL == "" {
-							domains[i].RenewalURL = cache.RenewalURL
-						}
 					}
 					domains[i].CacheSynced = true
 					// 回填解析归属（DNSHE 账户下域名保留缓存中的 uses_dnshe_dns）
@@ -454,8 +436,7 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 						domains[i].UsesDNSHEDNS = &uses
 					}
 				}
-				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty;
-				// RenewalManual 传 nil，同步不改动手动锁定状态)
+				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
 				s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
 					RenewalDate: domains[i].RenewalDate,
 					RenewalURL:  domains[i].RenewalURL,
@@ -631,16 +612,6 @@ func (s *DNSService) UpdateDomainCache(ctx context.Context, userID, accountID in
 		return nil, fmt.Errorf("domain cache service not available")
 	}
 
-	// 手动编辑：用户提供了非空到期时间或续费地址时，锁定该字段，防止后续同步被 provider 覆盖；
-	// 两者都为空时解锁（置 0），允许同步用 provider 数据回填。
-	if req.RenewalManual == nil {
-		flag := 0
-		if req.RenewalDate != "" || req.RenewalURL != "" {
-			flag = 1
-		}
-		req.RenewalManual = &flag
-	}
-
 	_, err := s.domainCacheService.UpsertCache(userID, accountID, domainID, domainName, req)
 	if err != nil {
 		return nil, err
@@ -653,18 +624,6 @@ func (s *DNSService) UpdateDomainCache(ctx context.Context, userID, accountID in
 func (s *DNSService) BatchUpdateDomainCache(ctx context.Context, userID int64, items []models.BatchCacheItem) error {
 	if s.domainCacheService == nil {
 		return fmt.Errorf("domain cache service not available")
-	}
-
-	// 与 UpdateDomainCache 一致：调用方未显式指定 renewal_manual 时，按是否提供非空
-	// 到期时间/续费地址自动计算——非空锁定（1），都为空解锁（0），防止后续同步覆盖。
-	for i := range items {
-		if items[i].RenewalManual == nil {
-			flag := 0
-			if items[i].RenewalDate != "" || items[i].RenewalURL != "" {
-				flag = 1
-			}
-			items[i].RenewalManual = &flag
-		}
 	}
 
 	return s.domainCacheService.BatchUpsertCache(userID, items)
