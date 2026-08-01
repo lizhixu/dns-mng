@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"dns-mng/models"
@@ -54,22 +53,17 @@ func (p *Provider) ListDomains(ctx context.Context, apiKey string) ([]models.Dom
 			status = "Inactive"
 		}
 
-		// Parse VipEndAt to renewal date format (YYYY-MM-DD)
-		renewalDate := ""
-		if d.VipEndAt != nil && *d.VipEndAt != "" {
-			parts := strings.SplitN(*d.VipEndAt, " ", 2)
-			if len(parts) > 0 {
-				renewalDate = parts[0]
-			}
-		}
-
+		// 腾讯云 DNSPod 的 DescribeDomainList 不返回域名到期时间，VipEndAt 是 DNS
+		// 解析套餐的有效期结束时间，与域名到期时间没有任何关系，不能当作到期时间使用。
+		// 因此这里不返回到期时间/续费地址——到期时间由用户手动维护，缓存合并逻辑
+		// （provider 返空时保留缓存值）会自动保留用户手动填入的值，不会被同步覆盖。
 		domains = append(domains, models.Domain{
 			ID:          *d.Name, // Use domain name as ID
 			Name:        *d.Name,
 			UnicodeName: *d.Name,
 			State:       status,
-			RenewalDate: renewalDate,
-			RenewalURL:  "https://console.cloud.tencent.com/cns",
+			RenewalDate: "",
+			RenewalURL:  "",
 			CreatedOn:   safeString(d.CreatedOn),
 			UpdatedOn:   safeString(d.UpdatedOn),
 		})
