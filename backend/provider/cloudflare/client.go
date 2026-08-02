@@ -71,25 +71,35 @@ type Zone struct {
 
 // Record represents a Cloudflare DNS record
 type Record struct {
-	ID         string  `json:"id"`
-	Type       string  `json:"type"`
-	Name       string  `json:"name"`
-	Content    string  `json:"content"`
-	TTL        int     `json:"ttl"`
-	Proxied    bool    `json:"proxied"`
-	Priority   *int    `json:"priority,omitempty"`
-	ZoneID     string  `json:"zone_id"`
-	ZoneName   string  `json:"zone_name"`
-	CreatedOn  string  `json:"created_on"`
-	ModifiedOn string  `json:"modified_on"`
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Content    string `json:"content"`
+	TTL        int    `json:"ttl"`
+	Proxied    bool   `json:"proxied"`
+	Priority   *int   `json:"priority,omitempty"`
+	ZoneID     string `json:"zone_id"`
+	ZoneName   string `json:"zone_name"`
+	CreatedOn  string `json:"created_on"`
+	ModifiedOn string `json:"modified_on"`
 }
 
 // APIResponse is the standard Cloudflare API response
 type APIResponse struct {
-	Success bool        `json:"success"`
-	Errors  []APIError  `json:"errors"`
-	Messages []string   `json:"messages"`
-	Result  interface{} `json:"result"`
+	Success    bool        `json:"success"`
+	Errors     []APIError  `json:"errors"`
+	Messages   []string    `json:"messages"`
+	Result     interface{} `json:"result"`
+	ResultInfo *ResultInfo `json:"result_info,omitempty"`
+}
+
+// ResultInfo represents Cloudflare pagination metadata
+type ResultInfo struct {
+	Page       int `json:"page"`
+	PerPage    int `json:"per_page"`
+	Count      int `json:"count"`
+	TotalCount int `json:"total_count"`
+	TotalPages int `json:"total_pages"`
 }
 
 // APIError represents a Cloudflare API error
@@ -99,30 +109,48 @@ type APIError struct {
 }
 
 func (c *Client) ListZones(ctx context.Context, apiToken string) ([]Zone, error) {
-	resp, err := c.doRequest(ctx, apiToken, "GET", "/zones", nil)
-	if err != nil {
-		return nil, err
+	const perPage = 50
+
+	var allZones []Zone
+	for page := 1; ; page++ {
+		path := fmt.Sprintf("/zones?page=%d&per_page=%d", page, perPage)
+		resp, err := c.doRequest(ctx, apiToken, "GET", path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := c.parseResponse(resp); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+
+		var apiResp APIResponse
+		if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+			resp.Body.Close()
+			return nil, fmt.Errorf("decode response: %w", err)
+		}
+		resp.Body.Close()
+
+		if !apiResp.Success && len(apiResp.Errors) > 0 {
+			return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+		}
+
+		var zones []Zone
+		data, _ := json.Marshal(apiResp.Result)
+		if err := json.Unmarshal(data, &zones); err != nil {
+			return nil, fmt.Errorf("decode zones: %w", err)
+		}
+		allZones = append(allZones, zones...)
+
+		if apiResp.ResultInfo == nil {
+			break
+		}
+		if apiResp.ResultInfo.TotalPages <= page || len(zones) == 0 {
+			break
+		}
 	}
-	defer resp.Body.Close()
 
-	if err := c.parseResponse(resp); err != nil {
-		return nil, err
-	}
-
-	var apiResp APIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
-	}
-
-	if !apiResp.Success && len(apiResp.Errors) > 0 {
-		return nil, fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
-	}
-
-	var zones []Zone
-	data, _ := json.Marshal(apiResp.Result)
-	json.Unmarshal(data, &zones)
-
-	return zones, nil
+	return allZones, nil
 }
 
 func (c *Client) GetZone(ctx context.Context, apiToken, zoneID string) (*Zone, error) {
@@ -553,12 +581,12 @@ func (c *Client) CreateCustomHostname(ctx context.Context, apiToken, zoneID, hos
 	path := "/zones/" + zoneID + "/custom_hostnames"
 
 	reqBody := map[string]interface{}{
-		"hostname":     hostname,
+		"hostname": hostname,
 		"ssl": map[string]interface{}{
 			"method": "http",
 			"type":   "dv",
 			"settings": map[string]interface{}{
-				"http2":     "on",
+				"http2":           "on",
 				"min_tls_version": "1.2",
 			},
 		},
@@ -660,7 +688,6 @@ func (c *Client) DeleteFallbackOrigin(ctx context.Context, apiToken, zoneID stri
 	return nil
 }
 
-
 // ListCustomHostnames lists all custom hostnames for a zone
 func (c *Client) ListCustomHostnames(ctx context.Context, apiToken, zoneID string) ([]CustomHostname, error) {
 	path := "/zones/" + zoneID + "/custom_hostnames"
@@ -746,23 +773,23 @@ func (c *Client) DeleteCustomHostname(ctx context.Context, apiToken, zoneID, chI
 
 // CustomHostname represents a Cloudflare custom hostname (for SaaS)
 type CustomHostname struct {
-	ID             string                    `json:"id"`
-	Hostname       string                    `json:"hostname"`
-	Status         string                    `json:"status"`
-	SSL            *CustomHostnameSSL        `json:"ssl,omitempty"`
+	ID                    string                      `json:"id"`
+	Hostname              string                      `json:"hostname"`
+	Status                string                      `json:"status"`
+	SSL                   *CustomHostnameSSL          `json:"ssl,omitempty"`
 	OwnershipVerification *CustomHostnameVerification `json:"ownership_verification,omitempty"`
-	VerificationErrors    []string                   `json:"verification_errors,omitempty"`
-	CreatedOn      string                    `json:"created_on,omitempty"`
+	VerificationErrors    []string                    `json:"verification_errors,omitempty"`
+	CreatedOn             string                      `json:"created_on,omitempty"`
 }
 
 // CustomHostnameSSL represents SSL config of a custom hostname
 type CustomHostnameSSL struct {
-	Status            string                  `json:"status"`
-	Method            string                  `json:"method,omitempty"`
-	Type              string                  `json:"type,omitempty"`
-	CnameTarget       string                  `json:"cname_target,omitempty"`
-	CnameName         string                  `json:"cname_name,omitempty"`
-	ValidationRecords []SSLValidationRecord   `json:"validation_records,omitempty"`
+	Status            string                `json:"status"`
+	Method            string                `json:"method,omitempty"`
+	Type              string                `json:"type,omitempty"`
+	CnameTarget       string                `json:"cname_target,omitempty"`
+	CnameName         string                `json:"cname_name,omitempty"`
+	ValidationRecords []SSLValidationRecord `json:"validation_records,omitempty"`
 }
 
 type SSLValidationRecord struct {
@@ -789,18 +816,18 @@ type CustomHostnameVerificationInfo struct {
 
 // TTL constants for Cloudflare
 const (
-	TTLAuto     = 1
-	TTL1Minute  = 60
-	TTL2Minutes = 120
-	TTL5Minutes = 300
+	TTLAuto      = 1
+	TTL1Minute   = 60
+	TTL2Minutes  = 120
+	TTL5Minutes  = 300
 	TTL10Minutes = 600
 	TTL30Minutes = 1800
-	TTL1Hour    = 3600
-	TTL2Hours   = 7200
-	TTL5Hours   = 18000
-	TTL12Hours  = 43200
-	TTL1Day     = 86400
-	TTL5Days    = 432000
+	TTL1Hour     = 3600
+	TTL2Hours    = 7200
+	TTL5Hours    = 18000
+	TTL12Hours   = 43200
+	TTL1Day      = 86400
+	TTL5Days     = 432000
 )
 
 // ConvertTTL converts our TTL to Cloudflare's expected format

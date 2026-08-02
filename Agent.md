@@ -99,6 +99,8 @@
 
 供应商文档索引见 [`doc/README.md`](doc/README.md)。
 
+Cloudflare 维护注意：`backend/provider/cloudflare/client.go` 的 `ListZones` 必须处理 `/zones` 分页，避免只拉取第一页导致“所有域名刷新”误判后续页域名不存在并提示隐藏本地缓存。
+
 新增服务商时：
 
 1. 在 `backend/provider/<name>` 下实现 provider。
