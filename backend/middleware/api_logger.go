@@ -103,6 +103,12 @@ func APILogger(logService *service.LogService) gin.HandlerFunc {
 			uid = userID.(int64)
 		}
 
+		// Public/unauthenticated endpoints do not have a valid user row. Skip them to
+		// avoid foreign key failures because api_call_logs is user-scoped.
+		if uid == 0 {
+			return
+		}
+
 		// Capture error message if any
 		var errorMessage string
 		if len(c.Errors) > 0 {

@@ -358,11 +358,12 @@ const CFOptimize = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {configs.map(config => {
+                            {configs.map((config, index) => {
                                 const statusBadge = getStatusBadge(config.status);
                                 const sslBadge = getSSLBadge(config.ssl_status);
+                                const isLastRow = index === configs.length - 1;
                                 return (
-                                    <tr key={config.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr key={config.id} style={{ borderBottom: isLastRow ? 'none' : '1px solid var(--border-color)' }}>
                                         <td style={{ padding: '12px 16px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <Zap size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />

@@ -310,7 +310,8 @@ DNSHE 第三方解析域名处理：
 ### 日志
 
 - API 调用日志：
-  - 中间件 `APILogger` 记录 API 请求。
+  - 中间件 `APILogger` 记录已认证 API 请求。
+  - 未登录/公开接口请求没有有效用户 ID，不写入 `api_call_logs`，避免 `user_id=0` 触发外键约束失败。
   - 表：`api_call_logs`。
 - 登录日志：
   - 表：`login_logs`。
