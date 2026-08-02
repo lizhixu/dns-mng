@@ -3,6 +3,8 @@ import { useLanguage } from '../LanguageContext';
 import { api } from '../api';
 import { Download, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 
+const MAX_BACKUP_FILE_SIZE = 10 * 1024 * 1024;
+
 export default function Backup() {
     const { t } = useLanguage();
 
@@ -20,7 +22,52 @@ export default function Backup() {
     const [importing, setImporting] = useState(false);
     const [importError, setImportError] = useState('');
     const [importResult, setImportResult] = useState(null);
+    const [backupSummary, setBackupSummary] = useState(null);
+    const [encryptedBackup, setEncryptedBackup] = useState(false);
     const fileInputRef = useRef(null);
+
+    const clearImportState = () => {
+        setImportFile(null);
+        setImportContent('');
+        setImportPassword('');
+        setImportOverwrite(false);
+        setBackupSummary(null);
+        setEncryptedBackup(false);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const parseBackupSummary = (content) => {
+        let parsed;
+        try {
+            parsed = JSON.parse(content);
+        } catch {
+            throw new Error(t.backup.invalidFormat);
+        }
+
+        if (parsed.encrypted) {
+            return { encrypted: true, summary: null };
+        }
+
+        if (!parsed.data || typeof parsed.data !== 'object') {
+            throw new Error(t.backup.invalidFormat);
+        }
+
+        const data = parsed.data;
+        return {
+            encrypted: false,
+            summary: {
+                accounts: data.accounts?.length || 0,
+                domainCaches: data.domain_caches?.length || 0,
+                hasDDNS: Boolean(data.ddns_token),
+                hasEmail: Boolean(data.email_config),
+                hasWHOIS: Boolean(data.whois_config),
+                hasDNSHEAutoRenew: Boolean(data.dnshe_auto_renew),
+                cfOptimize: data.cf_optimize_configs?.length || 0,
+            },
+        };
+    };
 
     // ── 导出 ─────────────────────────────────────────────────────
     const handleExport = async () => {
@@ -28,16 +75,16 @@ export default function Backup() {
         setExportSuccess('');
         setExportError('');
         try {
-            const blob = await api.exportBackup(exportPassword);
+            const { blob, filename } = await api.exportBackup(exportPassword);
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             a.href = url;
-            a.download = `dns-mng-backup-${ts}.json`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            setExportPassword('');
             setExportSuccess(t.backup.exportSuccess);
             setTimeout(() => setExportSuccess(''), 3000);
         } catch (e) {
@@ -50,18 +97,47 @@ export default function Backup() {
     // ── 选择文件 ──────────────────────────────────────────────────
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
-        if (!file) return;
-        setImportFile(file);
         setImportResult(null);
         setImportError('');
+        setBackupSummary(null);
+        setEncryptedBackup(false);
+        setImportContent('');
+
+        if (!file) return;
+        if (file.size > MAX_BACKUP_FILE_SIZE) {
+            setImportFile(null);
+            setImportError(t.backup.fileTooLarge);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        setImportFile(file);
         const reader = new FileReader();
-        reader.onload = () => setImportContent(reader.result);
+        reader.onload = () => {
+            const content = String(reader.result || '');
+            try {
+                const { encrypted, summary } = parseBackupSummary(content);
+                setEncryptedBackup(encrypted);
+                setBackupSummary(summary);
+                setImportContent(content);
+            } catch (err) {
+                setImportFile(null);
+                setImportError(err.message || t.backup.invalidFormat);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.onerror = () => setImportError(t.backup.fileReadError);
+        reader.onabort = () => setImportError(t.backup.fileReadError);
         reader.readAsText(file);
     };
 
     // ── 导入 ─────────────────────────────────────────────────────
     const handleImport = async () => {
         if (!importContent) return;
+        if (importOverwrite && !window.confirm(t.backup.overwriteConfirm)) {
+            return;
+        }
+
         setImporting(true);
         setImportError('');
         setImportResult(null);
@@ -72,12 +148,23 @@ export default function Backup() {
                 content: importContent,
             });
             setImportResult(result);
+            clearImportState();
         } catch (e) {
             setImportError(e.message || t.backup.restoreError);
         } finally {
             setImporting(false);
         }
     };
+
+    const resultRows = importResult ? [
+        [t.backup.resultAccounts, importResult.accounts_imported, importResult.accounts_skipped],
+        [t.backup.resultDomainCaches, importResult.domain_caches_imported, importResult.domain_caches_skipped],
+        [t.accounts.ddns.label, importResult.ddns_token_imported ? t.common.yes : t.common.no, importResult.ddns_token_skipped ? t.common.yes : t.common.no],
+        [t.backup.resultEmailConfig, importResult.email_config_imported ? t.common.yes : t.common.no, importResult.email_config_skipped ? t.common.yes : t.common.no],
+        [t.backup.resultWHOISConfig, importResult.whois_config_imported ? t.common.yes : t.common.no, importResult.whois_config_skipped ? t.common.yes : t.common.no],
+        [t.backup.resultDNSHEAutoRenew, importResult.dnshe_auto_renew_imported ? t.common.yes : t.common.no, importResult.dnshe_auto_renew_skipped ? t.common.yes : t.common.no],
+        [t.backup.resultCFOptimize, importResult.cf_optimize_imported || 0, importResult.cf_optimize_skipped || 0],
+    ] : [];
 
     return (
         <div>
@@ -188,7 +275,7 @@ export default function Backup() {
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".json"
+                        accept=".json,application/json"
                         style={{ display: 'none' }}
                         onChange={handleFileChange}
                     />
@@ -205,6 +292,35 @@ export default function Backup() {
                         }
                     </button>
                 </div>
+
+                {encryptedBackup && (
+                    <div style={{ fontSize: '13px', color: 'var(--warning)', marginBottom: '1rem' }}>
+                        {t.backup.encryptedFileHint}
+                    </div>
+                )}
+
+                {backupSummary && (
+                    <div style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        padding: '0.75rem 1rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-color)',
+                        marginBottom: '1rem',
+                        fontSize: '13px',
+                    }}>
+                        <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t.backup.summaryTitle}</div>
+                        <div style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                            {t.backup.summaryText
+                                .replace('{accounts}', backupSummary.accounts)
+                                .replace('{domainCaches}', backupSummary.domainCaches)
+                                .replace('{ddns}', backupSummary.hasDDNS ? t.common.yes : t.common.no)
+                                .replace('{email}', backupSummary.hasEmail ? t.common.yes : t.common.no)
+                                .replace('{whois}', backupSummary.hasWHOIS ? t.common.yes : t.common.no)
+                                .replace('{dnshe}', backupSummary.hasDNSHEAutoRenew ? t.common.yes : t.common.no)
+                                .replace('{cfOptimize}', backupSummary.cfOptimize)}
+                        </div>
+                    </div>
+                )}
 
                 {/* 加密密码 */}
                 <div className="form-group">
@@ -277,26 +393,13 @@ export default function Backup() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '0.375rem 0' }}>{t.backup.resultAccounts}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.accounts_imported}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.accounts_skipped}</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '0.375rem 0' }}>{t.backup.resultDomainCaches}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.domain_caches_imported}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.domain_caches_skipped}</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '0.375rem 0' }}>{t.accounts.ddns.label}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_imported ? t.common.yes : t.common.no}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.ddns_token_skipped ? t.common.yes : t.common.no}</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '0.375rem 0' }}>{t.backup.resultEmailConfig}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_imported ? t.common.yes : t.common.no}</td>
-                                    <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{importResult.email_config_skipped ? t.common.yes : t.common.no}</td>
-                                </tr>
+                                {resultRows.map(([label, imported, skipped], index) => (
+                                    <tr key={label} style={{ borderBottom: index === resultRows.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '0.375rem 0' }}>{label}</td>
+                                        <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{imported}</td>
+                                        <td style={{ textAlign: 'right', padding: '0.375rem 0' }}>{skipped}</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>

@@ -40,7 +40,13 @@ func shouldSkipAPILogging(path string) bool {
 
 	// Log query endpoints are intentionally excluded. Logging their large
 	// responses creates recursive growth and increases SQLite lock pressure.
-	return strings.HasPrefix(path, "/api/api-logs") || strings.HasPrefix(path, "/api/scheduler-logs") || strings.HasPrefix(path, "/api/login-logs")
+	if strings.HasPrefix(path, "/api/api-logs") || strings.HasPrefix(path, "/api/scheduler-logs") || strings.HasPrefix(path, "/api/login-logs") {
+		return true
+	}
+
+	// Backup import/export carries sensitive configuration and must never be
+	// persisted in API logs.
+	return path == "/api/backup/export" || path == "/api/backup/import"
 }
 
 // APILogger middleware records complete API call information

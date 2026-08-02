@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -20,10 +22,26 @@ func NewBackupHandler(backupService *service.BackupService) *BackupHandler {
 }
 
 // Export 导出用户配置为 JSON 文件（可选加密）。
-// GET /api/backup/export?password=xxx
+// GET /api/backup/export?password=xxx 保留兼容旧用法。
 func (h *BackupHandler) Export(c *gin.Context) {
+	h.export(c, c.Query("password"))
+}
+
+// ExportPost 导出用户配置为 JSON 文件（可选加密）。
+// POST /api/backup/export body: {"password":""}
+func (h *BackupHandler) ExportPost(c *gin.Context) {
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	h.export(c, req.Password)
+}
+
+func (h *BackupHandler) export(c *gin.Context, password string) {
 	userID := middleware.GetUserID(c)
-	password := c.Query("password")
 
 	data, err := h.backupService.Export(userID, password)
 	if err != nil {
@@ -37,7 +55,7 @@ func (h *BackupHandler) Export(c *gin.Context) {
 }
 
 // Import 从备份文件还原配置。
-// POST /api/backup/import  body: {"password":"","overwrite":false,"content":"...base64..."}
+// POST /api/backup/import  body: {"password":"","overwrite":false,"content":"...json..."}
 // content 为上传的备份文件原始内容（JSON 字符串）。
 func (h *BackupHandler) Import(c *gin.Context) {
 	userID := middleware.GetUserID(c)

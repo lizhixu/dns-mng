@@ -374,19 +374,29 @@ export const api = {
 
     // Backup & Restore
     exportBackup: async (password = '') => {
-        const params = password ? `?password=${encodeURIComponent(password)}` : '';
-        const response = await fetch(`${API_BASE}/backup/export${params}`, {
+        const response = await fetch(`${API_BASE}/backup/export`, {
+            method: 'POST',
             headers: getHeaders(),
+            body: JSON.stringify({ password }),
         });
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('token');
                 window.location.href = '/login';
             }
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || response.statusText);
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json')
+                ? await response.json().catch(() => ({}))
+                : await response.text().catch(() => '');
+            throw new Error((data && data.error) || data || response.statusText);
         }
-        return response.blob();
+        const disposition = response.headers.get('content-disposition') || '';
+        const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+        const blob = await response.blob();
+        return {
+            blob,
+            filename: filenameMatch?.[1] || `dns-mng-backup-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`,
+        };
     },
 
     importBackup: async ({ password = '', overwrite = false, content }) => {

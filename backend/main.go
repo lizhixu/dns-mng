@@ -186,6 +186,7 @@ func main() {
 
 		// Backup & Restore
 		protected.GET("/backup/export", backupHandler.Export)
+		protected.POST("/backup/export", backupHandler.ExportPost)
 		protected.POST("/backup/import", backupHandler.Import)
 
 		// CF Optimize (CDN优选)

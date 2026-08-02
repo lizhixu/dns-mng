@@ -5,11 +5,11 @@ import (
 	"crypto/cipher"
 	"crypto/pbkdf2"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"crypto/sha256"
 )
 
 const (
@@ -22,11 +22,11 @@ const (
 
 // encryptedEnvelope 是加密后的备份文件结构。
 type encryptedEnvelope struct {
-	Version   int              `json:"version"`
-	Encrypted bool             `json:"encrypted"`
-	KDF       kdfParams        `json:"kdf"`
-	Nonce     string           `json:"nonce"`
-	Ciphertext string          `json:"ciphertext"`
+	Version    int       `json:"version"`
+	Encrypted  bool      `json:"encrypted"`
+	KDF        kdfParams `json:"kdf"`
+	Nonce      string    `json:"nonce"`
+	Ciphertext string    `json:"ciphertext"`
 }
 
 type kdfParams struct {
@@ -35,8 +35,11 @@ type kdfParams struct {
 }
 
 // deriveKey 从密码和 salt 派生 AES-256 密钥。
-func deriveKey(password string, salt []byte) ([]byte, error) {
-	return pbkdf2.Key(sha256.New, password, salt, pbkdf2Iterations, keyLen)
+func deriveKey(password string, salt []byte, iter int) ([]byte, error) {
+	if iter <= 0 {
+		return nil, fmt.Errorf("invalid kdf iter")
+	}
+	return pbkdf2.Key(sha256.New, password, salt, iter, keyLen)
 }
 
 // EncryptBackup 将明文 JSON 使用 AES-256-GCM 加密，返回完整的加密 JSON 文件字节。
@@ -50,7 +53,7 @@ func EncryptBackup(plainJSON []byte, password string) ([]byte, error) {
 		return nil, fmt.Errorf("generate salt: %w", err)
 	}
 
-	key, err := deriveKey(password, salt)
+	key, err := deriveKey(password, salt, pbkdf2Iterations)
 	if err != nil {
 		return nil, fmt.Errorf("derive key: %w", err)
 	}
@@ -91,25 +94,38 @@ func DecryptBackup(fileBytes []byte, password string) ([]byte, error) {
 	}
 
 	if !envelope.Encrypted {
+		var plain struct {
+			Version int             `json:"version"`
+			Data    json.RawMessage `json:"data"`
+		}
+		if err := json.Unmarshal(fileBytes, &plain); err != nil || plain.Version == 0 || len(plain.Data) == 0 {
+			return nil, fmt.Errorf("备份文件格式无效")
+		}
 		// 未加密文件，直接返回
 		return fileBytes, nil
 	}
 
+	if envelope.Version != 1 {
+		return nil, fmt.Errorf("不支持的加密备份版本: %d", envelope.Version)
+	}
+	if envelope.KDF.Iter <= 0 || envelope.KDF.Salt == "" || envelope.Nonce == "" || envelope.Ciphertext == "" {
+		return nil, fmt.Errorf("加密备份格式无效")
+	}
 	if password == "" {
 		return nil, fmt.Errorf("此备份文件已加密，请输入加密密码")
 	}
 
-		salt, err := hex.DecodeString(envelope.KDF.Salt)
-		if err != nil {
-			return nil, fmt.Errorf("decode salt: %w", err)
-		}
+	salt, err := hex.DecodeString(envelope.KDF.Salt)
+	if err != nil || len(salt) == 0 {
+		return nil, fmt.Errorf("加密备份格式无效")
+	}
 
-		key, err := deriveKey(password, salt)
-		if err != nil {
-			return nil, fmt.Errorf("derive key: %w", err)
-		}
+	key, err := deriveKey(password, salt, envelope.KDF.Iter)
+	if err != nil {
+		return nil, fmt.Errorf("derive key: %w", err)
+	}
 
-		block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, fmt.Errorf("create cipher: %w", err)
 	}
@@ -120,13 +136,13 @@ func DecryptBackup(fileBytes []byte, password string) ([]byte, error) {
 	}
 
 	nonce, err := hex.DecodeString(envelope.Nonce)
-	if err != nil {
-		return nil, fmt.Errorf("decode nonce: %w", err)
+	if err != nil || len(nonce) != gcm.NonceSize() {
+		return nil, fmt.Errorf("加密备份格式无效")
 	}
 
 	ciphertext, err := hex.DecodeString(envelope.Ciphertext)
-	if err != nil {
-		return nil, fmt.Errorf("decode ciphertext: %w", err)
+	if err != nil || len(ciphertext) == 0 {
+		return nil, fmt.Errorf("加密备份格式无效")
 	}
 
 	plain, err := gcm.Open(nil, nonce, ciphertext, nil)

@@ -217,20 +217,25 @@ Token 管理：
 
 路由：
 
-- `GET /api/backup/export`
+- `POST /api/backup/export`：前端使用的导出接口，请求体 `{ "password": "..." }`，避免通过 query 传递备份密码。
+- `GET /api/backup/export`：兼容旧用法。
 - `POST /api/backup/import`
 
 导出内容包括：
 
 - 账号。
-- 域名缓存和续期/通知信息。
+- 域名缓存、续期信息、软删除状态、同步时间与通知设置。
 - DDNS token。
 - 邮件配置。
+- WHOIS 配置。
+- DNSHE 自动续期配置。
+- CF 优选配置。
 
 要求：
 
-- 支持可选密码加密备份。
+- 支持可选密码加密备份；明文备份允许导出，但前端必须强提醒其包含敏感信息。
 - 导入支持 `overwrite` 控制覆盖或跳过。
+- `/api/backup/export` 与 `/api/backup/import` 不写入 `api_call_logs`，避免备份内容、备份密码、API key、SMTP 密码、DDNS token、WHOIS API key 等敏感信息落库。
 - 备份中包含敏感信息，下载、保存、日志处理要谨慎。
 
 ### Cloudflare 优选

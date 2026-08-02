@@ -14,10 +14,13 @@ import (
 // ─── 导出结构体 ────────────────────────────────────────────────
 
 type backupData struct {
-	Accounts            []backupAccount       `json:"accounts"`
-	DomainCaches        []backupDomainCache   `json:"domain_caches"`
-	DDNSToken           *backupDDNSToken      `json:"ddns_token"`
-	EmailConfig         *backupEmailConfig    `json:"email_config"`
+	Accounts          []backupAccount          `json:"accounts"`
+	DomainCaches      []backupDomainCache      `json:"domain_caches"`
+	DDNSToken         *backupDDNSToken         `json:"ddns_token"`
+	EmailConfig       *backupEmailConfig       `json:"email_config"`
+	WHOISConfig       *backupWHOISConfig       `json:"whois_config,omitempty"`
+	DNSHEAutoRenew    *backupDNSHEAutoRenew    `json:"dnshe_auto_renew,omitempty"`
+	CFOptimizeConfigs []backupCFOptimizeConfig `json:"cf_optimize_configs,omitempty"`
 }
 
 type backupAccount struct {
@@ -27,13 +30,19 @@ type backupAccount struct {
 }
 
 type backupDomainCache struct {
-	AccountKey   string `json:"account_key"` // "provider_type::name"
-	DomainID     string `json:"domain_id"`
-	DomainName   string `json:"domain_name"`
-	RenewalDate  string `json:"renewal_date,omitempty"`
-	RenewalURL   string `json:"renewal_url,omitempty"`
-	DaysBefore   int    `json:"days_before,omitempty"`    // 到期前提醒天数
-	NotifyEnabled bool  `json:"notify_enabled,omitempty"` // 是否启用到期提醒
+	AccountKey        string `json:"account_key"` // "provider_type::name"
+	DomainID          string `json:"domain_id"`
+	DomainName        string `json:"domain_name"`
+	RenewalDate       string `json:"renewal_date,omitempty"`
+	RenewalURL        string `json:"renewal_url,omitempty"`
+	UsesDNSHEDNS      *bool  `json:"uses_dnshe_dns,omitempty"`
+	DeletedAt         string `json:"deleted_at,omitempty"`
+	LastSyncAt        string `json:"last_sync_at,omitempty"`
+	ProviderUpdatedOn string `json:"provider_updated_on,omitempty"`
+	HasNotification   bool   `json:"has_notification,omitempty"`
+	DaysBefore        int    `json:"days_before,omitempty"`
+	NotifyEnabled     bool   `json:"notify_enabled,omitempty"`
+	LastNotifiedAt    string `json:"last_notified_at,omitempty"`
 }
 
 type backupDDNSToken struct {
@@ -53,24 +62,59 @@ type backupEmailConfig struct {
 	Enabled      bool   `json:"enabled"`
 }
 
+type backupWHOISConfig struct {
+	APIKey string `json:"api_key"`
+}
+
+type backupDNSHEAutoRenew struct {
+	Enabled    bool   `json:"enabled"`
+	DaysBefore int    `json:"days_before"`
+	LastRunAt  string `json:"last_run_at,omitempty"`
+}
+
+type backupCFOptimizeConfig struct {
+	AccountKey             string `json:"account_key"`
+	ZoneID                 string `json:"zone_id"`
+	ZoneName               string `json:"zone_name"`
+	OriginIP               string `json:"origin_ip"`
+	OriginRecordName       string `json:"origin_record_name"`
+	OriginRecordID         string `json:"origin_record_id,omitempty"`
+	CnameTarget            string `json:"cname_target"`
+	CnameRecordName        string `json:"cname_record_name"`
+	CnameRecordID          string `json:"cname_record_id,omitempty"`
+	CustomHostname         string `json:"custom_hostname"`
+	CustomHostnameID       string `json:"custom_hostname_id,omitempty"`
+	Status                 string `json:"status"`
+	SSLStatus              string `json:"ssl_status"`
+	IntermediateRecordName string `json:"intermediate_record_name,omitempty"`
+	IntermediateRecordID   string `json:"intermediate_record_id,omitempty"`
+	ValidationRecordIDs    string `json:"validation_record_ids,omitempty"`
+}
+
 type backupFile struct {
-	Version    int       `json:"version"`
-	ExportedAt string    `json:"exported_at"`
-	Encrypted  bool      `json:"encrypted"`
+	Version    int        `json:"version"`
+	ExportedAt string     `json:"exported_at"`
+	Encrypted  bool       `json:"encrypted"`
 	Data       backupData `json:"data"`
 }
 
 // ─── 导入结果 ────────────────────────────────────────────────────
 
 type ImportResult struct {
-	AccountsImported     int  `json:"accounts_imported"`
-	AccountsSkipped      int  `json:"accounts_skipped"`
-	DomainCachesImported int  `json:"domain_caches_imported"`
-	DomainCachesSkipped  int  `json:"domain_caches_skipped"`
-	DDNSTokenImported    bool `json:"ddns_token_imported"`
-	DDNSTokenSkipped     bool `json:"ddns_token_skipped"`
-	EmailConfigImported  bool `json:"email_config_imported"`
-	EmailConfigSkipped   bool `json:"email_config_skipped"`
+	AccountsImported       int  `json:"accounts_imported"`
+	AccountsSkipped        int  `json:"accounts_skipped"`
+	DomainCachesImported   int  `json:"domain_caches_imported"`
+	DomainCachesSkipped    int  `json:"domain_caches_skipped"`
+	DDNSTokenImported      bool `json:"ddns_token_imported"`
+	DDNSTokenSkipped       bool `json:"ddns_token_skipped"`
+	EmailConfigImported    bool `json:"email_config_imported"`
+	EmailConfigSkipped     bool `json:"email_config_skipped"`
+	WHOISConfigImported    bool `json:"whois_config_imported"`
+	WHOISConfigSkipped     bool `json:"whois_config_skipped"`
+	DNSHEAutoRenewImported bool `json:"dnshe_auto_renew_imported"`
+	DNSHEAutoRenewSkipped  bool `json:"dnshe_auto_renew_skipped"`
+	CFOptimizeImported     int  `json:"cf_optimize_imported"`
+	CFOptimizeSkipped      int  `json:"cf_optimize_skipped"`
 }
 
 // ─── BackupService ──────────────────────────────────────────────
@@ -119,36 +163,53 @@ func (s *BackupService) Export(userID int64, password string) ([]byte, error) {
 	// 2. 域名缓存（续费信息 + 通知设置）
 	accountKeyMap, err := s.buildAccountKeyMap(userID)
 	if err != nil {
-		log.Printf("Warning: build account key map: %v", err)
+		return nil, fmt.Errorf("build account key map: %w", err)
 	}
-	caches, err := s.domainCacheService.GetCacheByUser(userID)
+	caches, err := s.listAllDomainCaches(userID)
 	if err != nil {
-		log.Printf("Warning: export domain caches: %v", err)
+		return nil, fmt.Errorf("export domain caches: %w", err)
 	}
-	// 构建通知设置查找表: "accountID:domainID" → (days_before, enabled)
-	notifMap := make(map[string]struct{ daysBefore int; enabled bool })
+
+	notifMap := make(map[string]backupDomainCache)
 	notifications, err := s.notificationService.GetAllNotificationSettings(userID)
 	if err != nil {
-		log.Printf("Warning: export notification settings: %v", err)
+		return nil, fmt.Errorf("export notification settings: %w", err)
 	}
 	for _, ns := range notifications {
-		notifMap[fmt.Sprintf("%d:%s", ns.AccountID, ns.DomainID)] = struct{ daysBefore int; enabled bool }{ns.DaysBefore, ns.Enabled}
+		lastNotified := ""
+		if ns.LastNotifiedAt != nil {
+			lastNotified = ns.LastNotifiedAt.UTC().Format(time.RFC3339)
+		}
+		notifMap[fmt.Sprintf("%d:%s", ns.AccountID, ns.DomainID)] = backupDomainCache{
+			HasNotification: true,
+			DaysBefore:      ns.DaysBefore,
+			NotifyEnabled:   ns.Enabled,
+			LastNotifiedAt:  lastNotified,
+		}
 	}
+
 	for _, c := range caches {
 		accountKey := accountKeyMap[c.AccountID]
 		if accountKey == "" {
 			accountKey = fmt.Sprintf("unknown::%d", c.AccountID)
 		}
+		usesDNSHE := c.UsesDNSHEDNS
 		entry := backupDomainCache{
-			AccountKey:  accountKey,
-			DomainID:    c.DomainID,
-			DomainName:  c.DomainName,
-			RenewalDate: c.RenewalDate,
-			RenewalURL:  c.RenewalURL,
+			AccountKey:        accountKey,
+			DomainID:          c.DomainID,
+			DomainName:        c.DomainName,
+			RenewalDate:       c.RenewalDate,
+			RenewalURL:        c.RenewalURL,
+			UsesDNSHEDNS:      &usesDNSHE,
+			DeletedAt:         formatNullTime(c.DeletedAt),
+			LastSyncAt:        formatNullTime(c.LastSyncAt),
+			ProviderUpdatedOn: formatNullTime(c.ProviderUpdatedOn),
 		}
 		if notif, ok := notifMap[fmt.Sprintf("%d:%s", c.AccountID, c.DomainID)]; ok {
-			entry.DaysBefore = notif.daysBefore
-			entry.NotifyEnabled = notif.enabled
+			entry.HasNotification = true
+			entry.DaysBefore = notif.DaysBefore
+			entry.NotifyEnabled = notif.NotifyEnabled
+			entry.LastNotifiedAt = notif.LastNotifiedAt
 		}
 		data.DomainCaches = append(data.DomainCaches, entry)
 	}
@@ -156,19 +217,16 @@ func (s *BackupService) Export(userID int64, password string) ([]byte, error) {
 	// 3. DDNS Token
 	token, err := s.ddnsTokenService.GetToken(userID)
 	if err != nil {
-		log.Printf("Warning: export ddns token: %v", err)
+		return nil, fmt.Errorf("export ddns token: %w", err)
 	}
 	if token != nil {
-		data.DDNSToken = &backupDDNSToken{
-			Token:   token.Token,
-			Enabled: token.Enabled,
-		}
+		data.DDNSToken = &backupDDNSToken{Token: token.Token, Enabled: token.Enabled}
 	}
 
-	// 3. 邮件配置（含密码）
+	// 4. 邮件配置（含密码）
 	emailCfg, err := s.emailService.getEmailConfigWithPassword(userID)
 	if err != nil {
-		log.Printf("Warning: export email config: %v", err)
+		return nil, fmt.Errorf("export email config: %w", err)
 	}
 	if emailCfg != nil {
 		data.EmailConfig = &backupEmailConfig{
@@ -184,7 +242,28 @@ func (s *BackupService) Export(userID int64, password string) ([]byte, error) {
 		}
 	}
 
-	// 构建文件
+	whoisConfig, err := s.getWHOISConfig(userID)
+	if err != nil {
+		return nil, fmt.Errorf("export whois config: %w", err)
+	}
+	if whoisConfig != nil {
+		data.WHOISConfig = whoisConfig
+	}
+
+	autoRenew, err := s.getDNSHEAutoRenew(userID)
+	if err != nil {
+		return nil, fmt.Errorf("export dnshe auto-renew config: %w", err)
+	}
+	if autoRenew != nil {
+		data.DNSHEAutoRenew = autoRenew
+	}
+
+	cfConfigs, err := s.listCFOptimizeConfigs(userID, accountKeyMap)
+	if err != nil {
+		return nil, fmt.Errorf("export cf optimize configs: %w", err)
+	}
+	data.CFOptimizeConfigs = cfConfigs
+
 	file := backupFile{
 		Version:    1,
 		ExportedAt: time.Now().UTC().Format(time.RFC3339),
@@ -197,7 +276,6 @@ func (s *BackupService) Export(userID int64, password string) ([]byte, error) {
 		return nil, fmt.Errorf("marshal backup: %w", err)
 	}
 
-	// 可选加密
 	if password != "" {
 		encrypted, err := EncryptBackup(plainJSON, password)
 		if err != nil {
@@ -211,13 +289,11 @@ func (s *BackupService) Export(userID int64, password string) ([]byte, error) {
 
 // Import 从备份文件导入配置。overwrite=true 时覆盖已存在的同名项，否则跳过。
 func (s *BackupService) Import(userID int64, fileBytes []byte, password string, overwrite bool) (*ImportResult, error) {
-	// 解密
 	plainJSON, err := DecryptBackup(fileBytes, password)
 	if err != nil {
 		return nil, err
 	}
 
-	// 解析
 	var file backupFile
 	if err := json.Unmarshal(plainJSON, &file); err != nil {
 		return nil, fmt.Errorf("解析备份文件失败: %w", err)
@@ -228,21 +304,19 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 
 	result := &ImportResult{}
 
-	// 使用事务保证原子性
 	tx, err := database.DB.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	// 临时把 DB 替换为 tx 以复用 service 方法 —— 但现有 service 直接用 database.DB。
-	// 为简洁起见，直接在 backup_service 中操作 tx，不修改现有 service。
-
-	// 1. 导入账户
-	accountKeyToID := make(map[string]int64) // "provider_type::name" → 新 accountID
+	accountKeyToID := make(map[string]int64)
 	for _, acc := range file.Data.Accounts {
 		key := fmt.Sprintf("%s::%s", acc.ProviderType, acc.Name)
-		existingID, _ := s.findAccountByKey(userID, key, tx)
+		existingID, err := s.findAccountByKey(userID, key, tx)
+		if err != nil {
+			return nil, fmt.Errorf("find account %q: %w", key, err)
+		}
 
 		if existingID > 0 && !overwrite {
 			result.AccountsSkipped++
@@ -251,7 +325,6 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		}
 
 		if existingID > 0 && overwrite {
-			// 更新
 			_, err := tx.Exec(
 				"UPDATE accounts SET api_key = ?, updated_at = ? WHERE id = ? AND user_id = ?",
 				acc.APIKey, time.Now(), existingID, userID,
@@ -264,7 +337,6 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 			continue
 		}
 
-		// 新建
 		res, err := tx.Exec(
 			"INSERT INTO accounts (user_id, name, provider_type, api_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
 			userID, acc.Name, acc.ProviderType, acc.APIKey, time.Now(), time.Now(),
@@ -277,11 +349,13 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		result.AccountsImported++
 	}
 
-	// 2. 导入域名缓存（续费信息）
 	for _, dc := range file.Data.DomainCaches {
 		accountID, ok := accountKeyToID[dc.AccountKey]
 		if !ok {
-			foundID, _ := s.findAccountByKey(userID, dc.AccountKey, tx)
+			foundID, err := s.findAccountByKey(userID, dc.AccountKey, tx)
+			if err != nil {
+				return nil, fmt.Errorf("find account %q for domain cache: %w", dc.AccountKey, err)
+			}
 			if foundID > 0 {
 				accountID = foundID
 			} else {
@@ -291,26 +365,32 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 			}
 		}
 
-		// 检查是否已存在
 		var existingID int64
 		err := tx.QueryRow(
-			"SELECT id FROM domain_cache WHERE user_id = ? AND account_id = ? AND domain_id = ? AND deleted_at IS NULL",
+			"SELECT id FROM domain_cache WHERE user_id = ? AND account_id = ? AND domain_id = ?",
 			userID, accountID, dc.DomainID,
 		).Scan(&existingID)
 
 		now := time.Now()
+		usesDNSHE := 1
+		if dc.UsesDNSHEDNS != nil && !*dc.UsesDNSHEDNS {
+			usesDNSHE = 0
+		}
+		deletedAt := parseNullableTime(dc.DeletedAt)
+		lastSyncAt := parseNullableTime(dc.LastSyncAt)
+		providerUpdatedOn := parseNullableTime(dc.ProviderUpdatedOn)
+
 		if err == sql.ErrNoRows {
-			// 新建
 			_, err = tx.Exec(
-				`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, created_at, updated_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-				userID, accountID, dc.DomainID, dc.DomainName, dc.RenewalDate, dc.RenewalURL, now, now,
+				`INSERT INTO domain_cache (user_id, account_id, domain_id, domain_name, renewal_date, renewal_url, uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				userID, accountID, dc.DomainID, dc.DomainName, dc.RenewalDate, dc.RenewalURL, usesDNSHE, deletedAt, lastSyncAt, providerUpdatedOn, now, now,
 			)
 		} else if err == nil {
 			if overwrite {
 				_, err = tx.Exec(
-					"UPDATE domain_cache SET domain_name=?, renewal_date=?, renewal_url=?, updated_at=? WHERE id=?",
-					dc.DomainName, dc.RenewalDate, dc.RenewalURL, now, existingID,
+					`UPDATE domain_cache SET domain_name=?, renewal_date=?, renewal_url=?, uses_dnshe_dns=?, deleted_at=?, last_sync_at=?, provider_updated_on=?, updated_at=? WHERE id=?`,
+					dc.DomainName, dc.RenewalDate, dc.RenewalURL, usesDNSHE, deletedAt, lastSyncAt, providerUpdatedOn, now, existingID,
 				)
 			} else {
 				result.DomainCachesSkipped++
@@ -323,30 +403,13 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		}
 		result.DomainCachesImported++
 
-		// 同步导入通知设置（days_before + notify_enabled）
-		if dc.DaysBefore > 0 || dc.NotifyEnabled {
-			notifEnabled := boolToInt(dc.NotifyEnabled)
-			var notifID int64
-			err := tx.QueryRow(
-				"SELECT id FROM notification_settings WHERE user_id = ? AND account_id = ? AND domain_id = ?",
-				userID, accountID, dc.DomainID,
-			).Scan(&notifID)
-			if err == sql.ErrNoRows {
-				_, _ = tx.Exec(
-					`INSERT INTO notification_settings (user_id, domain_id, account_id, days_before, enabled, created_at, updated_at)
-					 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-					userID, dc.DomainID, accountID, dc.DaysBefore, notifEnabled, now, now,
-				)
-			} else if err == nil && overwrite {
-				_, _ = tx.Exec(
-					"UPDATE notification_settings SET days_before=?, enabled=?, updated_at=? WHERE id=?",
-					dc.DaysBefore, notifEnabled, now, notifID,
-				)
+		if dc.HasNotification || dc.DaysBefore > 0 || dc.NotifyEnabled || dc.LastNotifiedAt != "" {
+			if err := s.importNotificationSetting(tx, userID, accountID, dc, now, overwrite); err != nil {
+				return nil, err
 			}
 		}
 	}
 
-	// 3. 导入 DDNS Token
 	if file.Data.DDNSToken != nil {
 		existing, err := s.findDDNSToken(userID, tx)
 		if err != nil {
@@ -356,26 +419,33 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		if existing != "" && !overwrite {
 			result.DDNSTokenSkipped = true
 		} else {
-			enabled := boolToInt(file.Data.DDNSToken.Enabled)
-			if existing != "" {
-				_, err = tx.Exec(
-					"UPDATE ddns_tokens SET token = ?, enabled = ?, updated_at = datetime('now') WHERE user_id = ?",
-					file.Data.DDNSToken.Token, enabled, userID,
-				)
-			} else {
-				_, err = tx.Exec(
-					"INSERT INTO ddns_tokens (user_id, token, enabled, created_at, updated_at) VALUES (?, ?, ?, datetime('now'), datetime('now'))",
-					userID, file.Data.DDNSToken.Token, enabled,
-				)
-			}
+			ownerID, err := s.findDDNSTokenOwner(file.Data.DDNSToken.Token, tx)
 			if err != nil {
-				return nil, fmt.Errorf("import ddns token: %w", err)
+				return nil, fmt.Errorf("check ddns token owner: %w", err)
 			}
-			result.DDNSTokenImported = true
+			if ownerID > 0 && ownerID != userID {
+				result.DDNSTokenSkipped = true
+			} else {
+				enabled := backupBoolToInt(file.Data.DDNSToken.Enabled)
+				if existing != "" {
+					_, err = tx.Exec(
+						"UPDATE ddns_tokens SET token = ?, enabled = ?, updated_at = datetime('now') WHERE user_id = ?",
+						file.Data.DDNSToken.Token, enabled, userID,
+					)
+				} else {
+					_, err = tx.Exec(
+						"INSERT INTO ddns_tokens (user_id, token, enabled, created_at, updated_at) VALUES (?, ?, ?, datetime('now'), datetime('now'))",
+						userID, file.Data.DDNSToken.Token, enabled,
+					)
+				}
+				if err != nil {
+					return nil, fmt.Errorf("import ddns token: %w", err)
+				}
+				result.DDNSTokenImported = true
+			}
 		}
 	}
 
-	// 3. 导入邮件配置
 	if file.Data.EmailConfig != nil {
 		ec := file.Data.EmailConfig
 		existing, err := s.findEmailConfig(userID, tx)
@@ -386,7 +456,7 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		if existing && !overwrite {
 			result.EmailConfigSkipped = true
 		} else {
-			enabled := boolToInt(ec.Enabled)
+			enabled := backupBoolToInt(ec.Enabled)
 			now := time.Now()
 			if existing {
 				_, err = tx.Exec(
@@ -412,6 +482,50 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 		}
 	}
 
+	if file.Data.WHOISConfig != nil {
+		imported, skipped, err := s.importWHOISConfig(tx, userID, file.Data.WHOISConfig, overwrite)
+		if err != nil {
+			return nil, err
+		}
+		result.WHOISConfigImported = imported
+		result.WHOISConfigSkipped = skipped
+	}
+
+	if file.Data.DNSHEAutoRenew != nil {
+		imported, skipped, err := s.importDNSHEAutoRenew(tx, userID, file.Data.DNSHEAutoRenew, overwrite)
+		if err != nil {
+			return nil, err
+		}
+		result.DNSHEAutoRenewImported = imported
+		result.DNSHEAutoRenewSkipped = skipped
+	}
+
+	for _, cfg := range file.Data.CFOptimizeConfigs {
+		accountID, ok := accountKeyToID[cfg.AccountKey]
+		if !ok {
+			foundID, err := s.findAccountByKey(userID, cfg.AccountKey, tx)
+			if err != nil {
+				return nil, fmt.Errorf("find account %q for cf optimize config: %w", cfg.AccountKey, err)
+			}
+			if foundID > 0 {
+				accountID = foundID
+			} else {
+				result.CFOptimizeSkipped++
+				continue
+			}
+		}
+		imported, skipped, err := s.importCFOptimizeConfig(tx, userID, accountID, cfg, overwrite)
+		if err != nil {
+			return nil, err
+		}
+		if imported {
+			result.CFOptimizeImported++
+		}
+		if skipped {
+			result.CFOptimizeSkipped++
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit transaction: %w", err)
 	}
@@ -422,7 +536,6 @@ func (s *BackupService) Import(userID int64, fileBytes []byte, password string, 
 // ─── 内部辅助方法 ──────────────────────────────────────────────
 
 func (s *BackupService) findAccountByKey(userID int64, key string, tx *sql.Tx) (int64, error) {
-	// key = "provider_type::name"
 	parts := strings.SplitN(key, "::", 2)
 	if len(parts) < 2 {
 		return 0, nil
@@ -447,6 +560,18 @@ func (s *BackupService) findDDNSToken(userID int64, tx *sql.Tx) (string, error) 
 	return token, err
 }
 
+func (s *BackupService) findDDNSTokenOwner(token string, tx *sql.Tx) (int64, error) {
+	if strings.TrimSpace(token) == "" {
+		return 0, nil
+	}
+	var userID int64
+	err := tx.QueryRow("SELECT user_id FROM ddns_tokens WHERE token = ?", token).Scan(&userID)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return userID, err
+}
+
 func (s *BackupService) findEmailConfig(userID int64, tx *sql.Tx) (bool, error) {
 	var id int64
 	err := tx.QueryRow("SELECT id FROM email_config WHERE user_id = ?", userID).Scan(&id)
@@ -469,4 +594,244 @@ func (s *BackupService) buildAccountKeyMap(userID int64) (map[int64]string, erro
 		m[a.ID] = fmt.Sprintf("%s::%s", a.ProviderType, a.Name)
 	}
 	return m, nil
+}
+
+type allDomainCache struct {
+	AccountID         int64
+	DomainID          string
+	DomainName        string
+	RenewalDate       string
+	RenewalURL        string
+	UsesDNSHEDNS      bool
+	DeletedAt         *time.Time
+	LastSyncAt        *time.Time
+	ProviderUpdatedOn *time.Time
+}
+
+func (s *BackupService) listAllDomainCaches(userID int64) ([]allDomainCache, error) {
+	rows, err := database.DB.Query(
+		`SELECT account_id, domain_id, domain_name, COALESCE(renewal_date, ''), COALESCE(renewal_url, ''), uses_dnshe_dns, deleted_at, last_sync_at, provider_updated_on
+		 FROM domain_cache WHERE user_id = ?`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var caches []allDomainCache
+	for rows.Next() {
+		var c allDomainCache
+		var usesDNSHE int
+		var deletedAt, lastSyncAt, providerUpdatedOn sql.NullTime
+		if err := rows.Scan(&c.AccountID, &c.DomainID, &c.DomainName, &c.RenewalDate, &c.RenewalURL, &usesDNSHE, &deletedAt, &lastSyncAt, &providerUpdatedOn); err != nil {
+			return nil, err
+		}
+		c.UsesDNSHEDNS = usesDNSHE != 0
+		if deletedAt.Valid {
+			c.DeletedAt = &deletedAt.Time
+		}
+		if lastSyncAt.Valid {
+			c.LastSyncAt = &lastSyncAt.Time
+		}
+		if providerUpdatedOn.Valid {
+			c.ProviderUpdatedOn = &providerUpdatedOn.Time
+		}
+		caches = append(caches, c)
+	}
+	return caches, rows.Err()
+}
+
+func (s *BackupService) getWHOISConfig(userID int64) (*backupWHOISConfig, error) {
+	var apiKey string
+	err := database.DB.QueryRow("SELECT api_key FROM whois_config WHERE user_id = ?", userID).Scan(&apiKey)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &backupWHOISConfig{APIKey: apiKey}, nil
+}
+
+func (s *BackupService) getDNSHEAutoRenew(userID int64) (*backupDNSHEAutoRenew, error) {
+	var enabled int
+	var daysBefore int
+	var lastRunAt sql.NullTime
+	err := database.DB.QueryRow("SELECT enabled, days_before, last_run_at FROM dnshe_auto_renew_config WHERE user_id = ?", userID).Scan(&enabled, &daysBefore, &lastRunAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	cfg := &backupDNSHEAutoRenew{Enabled: enabled != 0, DaysBefore: daysBefore}
+	if lastRunAt.Valid {
+		cfg.LastRunAt = lastRunAt.Time.UTC().Format(time.RFC3339)
+	}
+	return cfg, nil
+}
+
+func (s *BackupService) listCFOptimizeConfigs(userID int64, accountKeyMap map[int64]string) ([]backupCFOptimizeConfig, error) {
+	rows, err := database.DB.Query(
+		`SELECT account_id, zone_id, zone_name, origin_ip, COALESCE(origin_record_name, ''), COALESCE(origin_record_id, ''), COALESCE(cname_target, ''), COALESCE(cname_record_name, ''), COALESCE(cname_record_id, ''),
+		 custom_hostname, COALESCE(custom_hostname_id, ''), COALESCE(status, ''), COALESCE(ssl_status, ''), COALESCE(intermediate_record_name, ''), COALESCE(intermediate_record_id, ''), COALESCE(validation_record_ids, '')
+		 FROM cf_optimize WHERE user_id = ? ORDER BY created_at ASC`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var configs []backupCFOptimizeConfig
+	for rows.Next() {
+		var accountID int64
+		var cfg backupCFOptimizeConfig
+		if err := rows.Scan(&accountID, &cfg.ZoneID, &cfg.ZoneName, &cfg.OriginIP, &cfg.OriginRecordName, &cfg.OriginRecordID, &cfg.CnameTarget, &cfg.CnameRecordName, &cfg.CnameRecordID, &cfg.CustomHostname, &cfg.CustomHostnameID, &cfg.Status, &cfg.SSLStatus, &cfg.IntermediateRecordName, &cfg.IntermediateRecordID, &cfg.ValidationRecordIDs); err != nil {
+			return nil, err
+		}
+		cfg.AccountKey = accountKeyMap[accountID]
+		if cfg.AccountKey == "" {
+			cfg.AccountKey = fmt.Sprintf("unknown::%d", accountID)
+		}
+		configs = append(configs, cfg)
+	}
+	return configs, rows.Err()
+}
+
+func (s *BackupService) importNotificationSetting(tx *sql.Tx, userID, accountID int64, dc backupDomainCache, now time.Time, overwrite bool) error {
+	daysBefore := dc.DaysBefore
+	if daysBefore <= 0 {
+		daysBefore = 30
+	}
+	enabled := backupBoolToInt(dc.NotifyEnabled)
+	lastNotifiedAt := parseNullableTime(dc.LastNotifiedAt)
+
+	var notifID int64
+	err := tx.QueryRow(
+		"SELECT id FROM notification_settings WHERE user_id = ? AND account_id = ? AND domain_id = ?",
+		userID, accountID, dc.DomainID,
+	).Scan(&notifID)
+	if err == sql.ErrNoRows {
+		_, err = tx.Exec(
+			`INSERT INTO notification_settings (user_id, domain_id, account_id, days_before, enabled, last_notified_at, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			userID, dc.DomainID, accountID, daysBefore, enabled, lastNotifiedAt, now, now,
+		)
+	} else if err == nil && overwrite {
+		_, err = tx.Exec(
+			"UPDATE notification_settings SET days_before=?, enabled=?, last_notified_at=?, updated_at=? WHERE id=?",
+			daysBefore, enabled, lastNotifiedAt, now, notifID,
+		)
+	}
+	if err != nil {
+		return fmt.Errorf("import notification setting %s: %w", dc.DomainName, err)
+	}
+	return nil
+}
+
+func (s *BackupService) importWHOISConfig(tx *sql.Tx, userID int64, cfg *backupWHOISConfig, overwrite bool) (bool, bool, error) {
+	var id int64
+	err := tx.QueryRow("SELECT id FROM whois_config WHERE user_id = ?", userID).Scan(&id)
+	if err == nil && !overwrite {
+		return false, true, nil
+	}
+	now := time.Now()
+	if err == sql.ErrNoRows {
+		_, err = tx.Exec("INSERT INTO whois_config (user_id, api_key, created_at, updated_at) VALUES (?, ?, ?, ?)", userID, cfg.APIKey, now, now)
+	} else if err == nil {
+		_, err = tx.Exec("UPDATE whois_config SET api_key=?, updated_at=? WHERE user_id=?", cfg.APIKey, now, userID)
+	}
+	if err != nil {
+		return false, false, fmt.Errorf("import whois config: %w", err)
+	}
+	return true, false, nil
+}
+
+func (s *BackupService) importDNSHEAutoRenew(tx *sql.Tx, userID int64, cfg *backupDNSHEAutoRenew, overwrite bool) (bool, bool, error) {
+	var id int64
+	err := tx.QueryRow("SELECT id FROM dnshe_auto_renew_config WHERE user_id = ?", userID).Scan(&id)
+	if err == nil && !overwrite {
+		return false, true, nil
+	}
+	enabled := backupBoolToInt(cfg.Enabled)
+	daysBefore := cfg.DaysBefore
+	if daysBefore <= 0 {
+		daysBefore = 7
+	}
+	lastRunAt := parseNullableTime(cfg.LastRunAt)
+	now := time.Now()
+	if err == sql.ErrNoRows {
+		_, err = tx.Exec("INSERT INTO dnshe_auto_renew_config (user_id, enabled, days_before, last_run_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", userID, enabled, daysBefore, lastRunAt, now, now)
+	} else if err == nil {
+		_, err = tx.Exec("UPDATE dnshe_auto_renew_config SET enabled=?, days_before=?, last_run_at=?, updated_at=? WHERE user_id=?", enabled, daysBefore, lastRunAt, now, userID)
+	}
+	if err != nil {
+		return false, false, fmt.Errorf("import dnshe auto-renew config: %w", err)
+	}
+	return true, false, nil
+}
+
+func (s *BackupService) importCFOptimizeConfig(tx *sql.Tx, userID, accountID int64, cfg backupCFOptimizeConfig, overwrite bool) (bool, bool, error) {
+	var id int64
+	err := tx.QueryRow("SELECT id FROM cf_optimize WHERE user_id = ? AND account_id = ? AND custom_hostname = ?", userID, accountID, cfg.CustomHostname).Scan(&id)
+	if err == nil && !overwrite {
+		return false, true, nil
+	}
+	now := time.Now()
+	if err == sql.ErrNoRows {
+		_, err = tx.Exec(
+			`INSERT INTO cf_optimize (user_id, account_id, zone_id, zone_name, origin_ip, origin_record_name, origin_record_id, cname_target, cname_record_name, cname_record_id,
+			 custom_hostname, custom_hostname_id, status, ssl_status, intermediate_record_name, intermediate_record_id, validation_record_ids, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			userID, accountID, cfg.ZoneID, cfg.ZoneName, cfg.OriginIP, cfg.OriginRecordName, cfg.OriginRecordID, cfg.CnameTarget, cfg.CnameRecordName, cfg.CnameRecordID,
+			cfg.CustomHostname, cfg.CustomHostnameID, defaultString(cfg.Status, "pending"), defaultString(cfg.SSLStatus, "pending"), cfg.IntermediateRecordName, cfg.IntermediateRecordID, cfg.ValidationRecordIDs, now, now,
+		)
+	} else if err == nil {
+		_, err = tx.Exec(
+			`UPDATE cf_optimize SET zone_id=?, zone_name=?, origin_ip=?, origin_record_name=?, origin_record_id=?, cname_target=?, cname_record_name=?, cname_record_id=?,
+			 custom_hostname_id=?, status=?, ssl_status=?, intermediate_record_name=?, intermediate_record_id=?, validation_record_ids=?, updated_at=? WHERE id=?`,
+			cfg.ZoneID, cfg.ZoneName, cfg.OriginIP, cfg.OriginRecordName, cfg.OriginRecordID, cfg.CnameTarget, cfg.CnameRecordName, cfg.CnameRecordID,
+			cfg.CustomHostnameID, defaultString(cfg.Status, "pending"), defaultString(cfg.SSLStatus, "pending"), cfg.IntermediateRecordName, cfg.IntermediateRecordID, cfg.ValidationRecordIDs, now, id,
+		)
+	}
+	if err != nil {
+		return false, false, fmt.Errorf("import cf optimize config %s: %w", cfg.CustomHostname, err)
+	}
+	return true, false, nil
+}
+
+func formatNullTime(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.UTC().Format(time.RFC3339)
+}
+
+func parseNullableTime(value string) any {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	if t, err := time.Parse(time.RFC3339, value); err == nil {
+		return t
+	}
+	if t, err := time.Parse("2006-01-02 15:04:05", value); err == nil {
+		return t
+	}
+	return nil
+}
+
+func backupBoolToInt(v bool) int {
+	if v {
+		return 1
+	}
+	return 0
+}
+
+func defaultString(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
