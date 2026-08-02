@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { ArrowLeft, Search, RefreshCw, Globe, ExternalLink, Calendar, Link as LinkIcon, Edit2, Clock, Server } from 'lucide-react';
 import Modal from '../components/Modal';
@@ -8,6 +8,7 @@ import { useLanguage } from '../LanguageContext';
 const Domains = () => {
     const { t, language } = useLanguage();
     const { accountId } = useParams();
+    const navigate = useNavigate();
     const [domains, setDomains] = useState([]);
     const [filteredDomains, setFilteredDomains] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -228,10 +229,10 @@ const Domains = () => {
     return (
         <div>
             <div style={{ marginBottom: '1.5rem' }}>
-                <Link to="/accounts" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem', transition: 'color 0.15s' }} className="hover-text-primary">
+                <button type="button" onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem', transition: 'color 0.15s', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }} className="hover-text-primary">
                     <ArrowLeft size={14} />
                     {t.domains.backToAccounts}
-                </Link>
+                </button>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: '1 1 0' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>{t.domains.title}</h2>

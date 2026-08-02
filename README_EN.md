@@ -196,7 +196,7 @@ See [DDNS_API.md](DDNS_API.md) for full API documentation.
 
 ### Domain Expiry Notifications
 
-The scheduler runs daily at 9:00 AM (and once on startup) to check for domains approaching expiration. Configure per-domain notification settings and SMTP email in the web UI.
+The scheduler runs daily at 9:00 AM to check for domains approaching expiration. On backend startup, it schedules the next 9:00 AM run and does not run immediately. Configure per-domain notification settings and SMTP email in the web UI.
 
 To change the schedule, edit `backend/service/scheduler_service.go`:
 

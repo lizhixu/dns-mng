@@ -233,17 +233,22 @@ SERVER_PORT=8080
 系统包含自动化的域名到期通知定时任务：
 
 ### 执行时间
-- **首次运行**：后端服务启动后立即执行一次
 - **定时运行**：每天早上 9:00 自动执行
 - **执行间隔**：每 24 小时一次
+- **启动行为**：后端启动时只会计算并等待下一次 9:00 运行，不会立即执行检查
 
 ### 查看日志
 
-启动后端服务后，控制台会显示定时任务日志：
+启动后端服务后，控制台会显示下一次计划执行时间：
 
 ```bash
 Starting domain expiry notification scheduler...
 Next notification check scheduled at: 2026-04-10 09:00:00 (in 15h23m45s)
+```
+
+到达计划时间或手动触发后，会显示检查日志：
+
+```bash
 Checking for expiring domains...
 Found 3 domain(s) that need notification
 Sent notification for domain: example.com (expires in 15 days)
@@ -252,7 +257,7 @@ User 1: Notified about 2 domain(s): [example.com, test.com]
 
 ### 手动测试
 
-重启后端服务即可立即触发一次检查：
+如需立即执行一次检查，可在前端日志管理页面点击“手动执行检查”，或调用手动触发接口。
 
 ```bash
 cd backend

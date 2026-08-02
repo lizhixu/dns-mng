@@ -213,7 +213,7 @@ export const zh = {
 
   domains: {
     title: '域名管理',
-    backToAccounts: '返回账户列表',
+    backToAccounts: '返回上一页',
     searchPlaceholder: '搜索域名...',
     manageRecords: '管理记录',
     noDomains: '此账户暂无域名',

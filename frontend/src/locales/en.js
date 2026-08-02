@@ -213,7 +213,7 @@ export const en = {
 
   domains: {
     title: 'Domains',
-    backToAccounts: 'Back to Accounts',
+    backToAccounts: 'Back',
     searchPlaceholder: 'Search domains...',
     manageRecords: 'Manage Records',
     noDomains: 'No domains found for this account',

@@ -89,7 +89,7 @@ DNS Manager 提供了自动化的域名到期提醒功能，可以在域名到�
 ### 运行时间
 
 - 定时任务每天早上 9:00 自动运行
-- 首次启动后端服务时会立即运行一次
+- 后端启动时会计算下一次 9:00 的执行时间，不会立即执行检查
 
 ### 通知规则
 
@@ -101,11 +101,16 @@ DNS Manager 提供了自动化的域名到期提醒功能，可以在域名到�
 
 ### 日志查看
 
-定时任务的运行日志会输出到后端控制台：
+启动后端服务后，控制台会显示下一次计划执行时间：
 
 ```
 Starting domain expiry notification scheduler...
 Next notification check scheduled at: 2026-04-10 09:00:00
+```
+
+到达计划时间或手动触发后，会显示检查日志：
+
+```
 Checking for expiring domains...
 Found 3 domain(s) that need notification
 Sent notification for domain: example.com (expires in 15 days)
