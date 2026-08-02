@@ -359,9 +359,11 @@ DNSHE 第三方解析域名处理：
 - 语言支持中文/英文，新增功能需同步更新：
   - `frontend/src/locales/zh.js`
   - `frontend/src/locales/en.js`
+- 维护多语言文案时，需要检查是否已有可复用 key，避免新增重复语义或未使用的 locale 字段。
 - 主题支持亮色、暗色、跟随系统。
 - 多个页面使用 `fetchedRef` 防止 React StrictMode 下重复请求。
 - 账户下域名管理页 `/accounts/:accountId/domains` 的顶部返回按钮应返回浏览器上一页，而不是固定跳转账户列表。
+- DNS 记录页 `/accounts/:accountId/domains/:domainId/records` 的顶部返回按钮应返回浏览器上一页，而不是固定跳转域名列表。
 - 新增页面需考虑移动端布局、暗色主题、401 自动跳转登录逻辑。
 
 ## 最近功能/变更线索

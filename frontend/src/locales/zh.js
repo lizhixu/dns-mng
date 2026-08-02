@@ -15,6 +15,7 @@ export const zh = {
     show: '显示',
     copy: '复制',
     close: '关闭',
+    back: '返回上一页',
     confirmDelete: '确认删除',
     confirmDeleteMessage: '确定要删除此项吗？此操作无法撤销。',
     updating: '更新中...',
@@ -213,7 +214,6 @@ export const zh = {
 
   domains: {
     title: '域名管理',
-    backToAccounts: '返回上一页',
     searchPlaceholder: '搜索域名...',
     manageRecords: '管理记录',
     noDomains: '此账户暂无域名',
@@ -226,7 +226,6 @@ export const zh = {
 
   records: {
     title: 'DNS 记录',
-    backToDomains: '返回域名列表',
     addRecord: '添加记录',
     type: '类型',
     nodeName: '主机名',
@@ -250,7 +249,6 @@ export const zh = {
       default: '记录值',
     },
     invalidNodeName: '主机名无效。只能使用字母、数字和连字符，不能以连字符开头或结尾。',
-    backToAllDomains: '返回所有域名',
     rootRecordHint: '留空或输入 @ 表示根域名记录',
     account: '账户',
     updatedAt: '更新时间',

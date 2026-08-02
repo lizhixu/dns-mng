@@ -231,7 +231,7 @@ const Domains = () => {
             <div style={{ marginBottom: '1.5rem' }}>
                 <button type="button" onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem', transition: 'color 0.15s', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }} className="hover-text-primary">
                     <ArrowLeft size={14} />
-                    {t.domains.backToAccounts}
+                    {t.common.back}
                 </button>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: '1 1 0' }}>

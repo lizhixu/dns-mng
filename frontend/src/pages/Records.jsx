@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { ArrowLeft, Plus, Edit2, Trash2, Search, RefreshCw, AlertCircle, Server, CheckCircle } from 'lucide-react';
 import Modal from '../components/Modal';
@@ -14,7 +14,6 @@ const Records = () => {
     const isMobile = useMediaQuery('(max-width: 768px)');
     const { accountId, domainId } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
     const [records, setRecords] = useState([]);
     const [filteredRecords, setFilteredRecords] = useState([]);
     const [domain, setDomain] = useState(null);
@@ -323,23 +322,8 @@ const Records = () => {
         return t.records.contentLabels[type] || t.records.contentLabels.default;
     };
 
-    // Smart back navigation - go back to previous page if it's domains related, otherwise go to account domains
     const handleBack = () => {
-        const from = location.state?.from;
-        if (from === '/domains' || from?.startsWith('/accounts/')) {
-            navigate(-1);
-        } else {
-            navigate(`/accounts/${accountId}/domains`);
-        }
-    };
-
-    // Determine back button text based on navigation source
-    const getBackText = () => {
-        const from = location.state?.from;
-        if (from === '/domains') {
-            return t.records.backToAllDomains;
-        }
-        return t.records.backToDomains;
+        navigate(-1);
     };
 
     return (
@@ -364,7 +348,7 @@ const Records = () => {
                     className="hover-text-primary"
                 >
                     <ArrowLeft size={14} />
-                    {getBackText()}
+                    {t.common.back}
                 </button>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>{t.records.title}</h2>

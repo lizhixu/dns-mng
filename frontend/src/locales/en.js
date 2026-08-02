@@ -15,6 +15,7 @@ export const en = {
     show: 'Show',
     copy: 'Copy',
     close: 'Close',
+    back: 'Back',
     confirmDelete: 'Confirm Delete',
     confirmDeleteMessage: 'Are you sure you want to delete this item? This action cannot be undone.',
     updating: 'Updating...',
@@ -213,7 +214,6 @@ export const en = {
 
   domains: {
     title: 'Domains',
-    backToAccounts: 'Back',
     searchPlaceholder: 'Search domains...',
     manageRecords: 'Manage Records',
     noDomains: 'No domains found for this account',
@@ -226,7 +226,6 @@ export const en = {
 
   records: {
     title: 'DNS Records',
-    backToDomains: 'Back to Domains',
     addRecord: 'Add Record',
     type: 'Type',
     nodeName: 'Node Name',
@@ -250,7 +249,6 @@ export const en = {
       default: 'Content',
     },
     invalidNodeName: 'Invalid node name. Use only letters, numbers, and hyphens. Cannot start or end with a hyphen.',
-    backToAllDomains: 'Back to All Domains',
     rootRecordHint: 'Leave empty or enter @ for root domain record',
     account: 'Account',
     updatedAt: 'Updated At',
