@@ -507,6 +507,10 @@ table tr:hover td {
   background-color: var(--bg-secondary);
 }
 
+.cf-optimize-last-row td {
+  border-bottom: none;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
