@@ -2,10 +2,10 @@ version: '3.8'
 
 services:
   backend:
+    # Use the pre-built image from Docker Hub instead of building locally.
+    # Pushed by .github/workflows/docker-publish.yml on push to main / tags v*.
+    # To re-enable local build, add back a `build:` block and remove this `image:` line.
     image: jacyli/dns-mng:backend
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: dns-mng-backend
     restart: unless-stopped
     ports:
