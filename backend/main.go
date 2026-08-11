@@ -89,6 +89,10 @@ func main() {
 	// Setup router
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware())
+	// Recover the real client IP when behind a reverse proxy / CDN (e.g.
+	// Cloudflare). Must run before APILogger so logged IPs are the real
+	// client, not the proxy node.
+	r.Use(middleware.RealIP())
 	// Add API logger middleware to record all API calls
 	r.Use(middleware.APILogger(logService))
 
