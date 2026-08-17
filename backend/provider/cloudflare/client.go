@@ -395,16 +395,26 @@ func (c *Client) deleteRecordOnce(ctx context.Context, apiToken, zoneID, recordI
 	}
 	defer resp.Body.Close()
 
-	// Cloudflare returns 400 with a JSON body for business-rule errors (e.g.
-	// code 1039). parseResponse only checks the HTTP status and discards the
-	// body, so read and parse the body ourselves to preserve the error code.
+	body, _ := io.ReadAll(resp.Body)
+
+	// Non-2xx: parse the JSON body to extract the Cloudflare error code so
+	// callers can branch on specific codes (e.g. 1039 fallback origin).
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
 		var apiResp APIResponse
 		if json.Unmarshal(body, &apiResp) == nil && len(apiResp.Errors) > 0 {
 			return cfError{code: apiResp.Errors[0].Code, message: apiResp.Errors[0].Message}
 		}
 		return fmt.Errorf("API error: %s - %s", resp.Status, string(body))
+	}
+
+	// 2xx: Cloudflare may still report success:false with errors in the body.
+	// Parse and check the success flag just like the original code did.
+	var apiResp APIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return fmt.Errorf("decode response: %w", err)
+	}
+	if !apiResp.Success && len(apiResp.Errors) > 0 {
+		return cfError{code: apiResp.Errors[0].Code, message: apiResp.Errors[0].Message}
 	}
 
 	return nil
