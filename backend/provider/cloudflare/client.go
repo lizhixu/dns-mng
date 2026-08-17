@@ -365,7 +365,29 @@ func (c *Client) UpdateRecordWithProxied(ctx context.Context, apiToken, zoneID, 
 	return &record, nil
 }
 
+// cfErrorCode1039 is the Cloudflare error code returned when a DNS record is
+// configured as the fallback origin for SSL for SaaS and cannot be deleted
+// until the fallback origin configuration is removed.
+const cfErrorCode1039 = 1039
+
 func (c *Client) DeleteRecord(ctx context.Context, apiToken, zoneID, recordID string) error {
+	if err := c.deleteRecordOnce(ctx, apiToken, zoneID, recordID); err == nil {
+		return nil
+	} else if !isCFErrorCode(err, cfErrorCode1039) {
+		return err
+	}
+
+	// The record is a fallback origin for SSL for SaaS. Remove the fallback
+	// origin configuration first, then retry the record deletion.
+	if err := c.DeleteFallbackOrigin(ctx, apiToken, zoneID); err != nil {
+		return fmt.Errorf("remove fallback origin before deleting record: %w", err)
+	}
+	return c.deleteRecordOnce(ctx, apiToken, zoneID, recordID)
+}
+
+// deleteRecordOnce performs a single DNS record deletion attempt and returns
+// an error that preserves the Cloudflare error code (if any).
+func (c *Client) deleteRecordOnce(ctx context.Context, apiToken, zoneID, recordID string) error {
 	path := "/zones/" + zoneID + "/dns_records/" + recordID
 	resp, err := c.doRequest(ctx, apiToken, "DELETE", path, nil)
 	if err != nil {
@@ -373,20 +395,36 @@ func (c *Client) DeleteRecord(ctx context.Context, apiToken, zoneID, recordID st
 	}
 	defer resp.Body.Close()
 
-	if err := c.parseResponse(resp); err != nil {
-		return err
-	}
-
-	var apiResp APIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return fmt.Errorf("decode response: %w", err)
-	}
-
-	if !apiResp.Success && len(apiResp.Errors) > 0 {
-		return fmt.Errorf("API error: %s", apiResp.Errors[0].Message)
+	// Cloudflare returns 400 with a JSON body for business-rule errors (e.g.
+	// code 1039). parseResponse only checks the HTTP status and discards the
+	// body, so read and parse the body ourselves to preserve the error code.
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		var apiResp APIResponse
+		if json.Unmarshal(body, &apiResp) == nil && len(apiResp.Errors) > 0 {
+			return cfError{code: apiResp.Errors[0].Code, message: apiResp.Errors[0].Message}
+		}
+		return fmt.Errorf("API error: %s - %s", resp.Status, string(body))
 	}
 
 	return nil
+}
+
+// cfError wraps a Cloudflare API error preserving its numeric code so callers
+// can branch on specific error codes (e.g. 1039 fallback origin).
+type cfError struct {
+	code    int
+	message string
+}
+
+func (e cfError) Error() string {
+	return fmt.Sprintf("API error: %s", e.message)
+}
+
+// isCFErrorCode reports whether err is a cfError with the given code.
+func isCFErrorCode(err error, code int) bool {
+	ce, ok := err.(cfError)
+	return ok && ce.code == code
 }
 
 // GetZoneByName finds a zone by name
