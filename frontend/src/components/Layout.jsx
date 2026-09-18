@@ -7,6 +7,7 @@ import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, Databa
 import ThemeSwitcher from './ThemeSwitcher';
 import LanguageSelect from './LanguageSelect';
 import BackToTop from './BackToTop';
+import MessagesModal from './MessagesModal';
 import useMediaQuery from '../hooks/useMediaQuery';
 
 const Layout = () => {
@@ -15,6 +16,7 @@ const Layout = () => {
     const location = useLocation();
 
     const [showSettings, setShowSettings] = useState(false);
+    const [showMessagesModal, setShowMessagesModal] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -141,7 +143,6 @@ const Layout = () => {
         { path: '/dnshe', icon: Globe2, label: t.layout.dnshe },
         { path: '/cf-optimize', icon: Zap, label: t.cfOptimize.title },
         { path: '/whois', icon: FileSearch, label: t.whois.title },
-        { path: '/messages', icon: Bell, label: t.layout.messages },
         { path: '/logs', icon: FileText, label: t.layout.logsManagement },
         { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications },
         { path: '/backup', icon: DatabaseBackup, label: t.backup.title }
@@ -258,30 +259,43 @@ const Layout = () => {
                             }}></div>
                         )}
 
-                        {/* Messages */}
-                        {!isMobile && (
-                            <Link to="/messages" className="nav-link" style={{ position: 'relative', color: 'var(--text-primary)' }}>
-                                <Bell size={15} />
-                                {unreadCount > 0 && (
-                                    <span style={{
-                                        position: 'absolute',
-                                        top: '-5px',
-                                        right: '-6px',
-                                        background: 'var(--danger)',
-                                        color: '#fff',
-                                        fontSize: '10px',
-                                        lineHeight: '14px',
-                                        minWidth: '14px',
-                                        height: '14px',
-                                        padding: '0 4px',
-                                        borderRadius: '999px',
-                                        textAlign: 'center',
-                                    }}>
-                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                    </span>
-                                )}
-                            </Link>
-                        )}
+                        {/* Messages Bell Button */}
+                        <button
+                            type="button"
+                            onClick={() => setShowMessagesModal(true)}
+                            className="login-toolbar-btn"
+                            title={t.messages.title}
+                            aria-label={t.messages.title}
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                position: 'relative',
+                                cursor: 'pointer',
+                                padding: 0
+                            }}
+                        >
+                            <Bell size={14} />
+                            {unreadCount > 0 && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '-4px',
+                                    right: '-4px',
+                                    background: 'var(--danger)',
+                                    color: '#fff',
+                                    fontSize: '10px',
+                                    fontWeight: '600',
+                                    lineHeight: '14px',
+                                    minWidth: '14px',
+                                    height: '14px',
+                                    padding: '0 3px',
+                                    borderRadius: '999px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 0 0 1.5px var(--bg-secondary)',
+                                }}>
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
+                        </button>
 
                         {/* User Settings Dropdown */}
                         <div ref={settingsRef} style={{ position: 'relative', minWidth: 0 }}>
@@ -465,6 +479,11 @@ const Layout = () => {
                     <Outlet />
                 </div>
             </main>
+            <MessagesModal
+                isOpen={showMessagesModal}
+                onClose={() => setShowMessagesModal(false)}
+                onUnreadCountChange={setUnreadCount}
+            />
             <BackToTop />
         </div>
     );
