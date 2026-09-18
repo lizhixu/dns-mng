@@ -267,17 +267,15 @@ const Messages = () => {
                             </div>
                             <div style={{ marginTop: '6px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 {(() => {
-                                    let badgeClass = 'badge-expiry-normal';
+                                    let badgeClass = 'badge-neutral';
                                     if (msg.days_remaining <= 0) {
-                                        badgeClass = 'badge-expiry-expired';
-                                    } else if (msg.days_remaining <= 7) {
-                                        badgeClass = 'badge-expiry-urgent';
+                                        badgeClass = 'badge-danger';
                                     } else if (msg.days_remaining <= 30) {
-                                        badgeClass = 'badge-expiry-warning';
+                                        badgeClass = 'badge-warning';
                                     }
                                     return (
                                         <span
-                                            className={`badge badge-expiry ${badgeClass}`}
+                                            className={`badge ${badgeClass}`}
                                             style={{
                                                 fontSize: '11px',
                                                 padding: '2px 8px',

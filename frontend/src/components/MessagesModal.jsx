@@ -298,17 +298,15 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                     flexWrap: 'wrap',
                                 }}>
                                     {(() => {
-                                        let badgeClass = 'badge-expiry-normal';
+                                        let badgeClass = 'badge-neutral';
                                         if (msg.days_remaining <= 0) {
-                                            badgeClass = 'badge-expiry-expired';
-                                        } else if (msg.days_remaining <= 7) {
-                                            badgeClass = 'badge-expiry-urgent';
+                                            badgeClass = 'badge-danger';
                                         } else if (msg.days_remaining <= 30) {
-                                            badgeClass = 'badge-expiry-warning';
+                                            badgeClass = 'badge-warning';
                                         }
                                         return (
                                             <span
-                                                className={`badge badge-expiry ${badgeClass}`}
+                                                className={`badge ${badgeClass}`}
                                                 style={{
                                                     fontSize: '11px',
                                                     padding: '1px 8px',

@@ -338,30 +338,25 @@ const AllDomains = () => {
                                             ) : domain.renewal_date && (() => {
                                                 const expiryInfo = getExpiryInfo(domain.renewal_date);
                                                 const days = expiryInfo?.days;
-                                                let badgeClass = 'badge-expiry-normal';
+                                                let badgeClass = 'badge-neutral';
                                                 if (days !== null) {
                                                     if (days <= 0) {
-                                                        badgeClass = 'badge-expiry-expired';
-                                                    } else if (days <= 7) {
-                                                        badgeClass = 'badge-expiry-urgent';
+                                                        badgeClass = 'badge-danger';
                                                     } else if (days <= 30) {
-                                                        badgeClass = 'badge-expiry-warning';
+                                                        badgeClass = 'badge-warning';
                                                     }
                                                 }
 
                                                 return (
                                                     <>
                                                         <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => openRenewalModal(domain, e)}
-                                                            className={`badge badge-expiry ${badgeClass}`}
-                                                            style={{ gap: '0.25rem', cursor: 'pointer' }}
-                                                            title={t.allDomains.renewalModalTitle}
+                                                        <span
+                                                            className={`badge ${badgeClass}`}
+                                                            style={{ gap: '0.25rem' }}
                                                         >
                                                             <Calendar size={11} />
                                                             <span>{expiryInfo?.text || domain.renewal_date}</span>
-                                                        </button>
+                                                        </span>
                                                     </>
                                                 );
                                             })()}
