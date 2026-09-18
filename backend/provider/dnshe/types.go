@@ -27,11 +27,11 @@ type RegisterSubdomainResponse struct {
 
 // DeleteSubdomainResponse represents the response from delete subdomain
 type DeleteSubdomainResponse struct {
-	Success          bool   `json:"success"`
-	Message          string `json:"message"`
-	SubdomainID      int    `json:"subdomain_id"`
-	FullDomain       string `json:"full_domain"`
-	DNSRecordsDeleted int   `json:"dns_records_deleted"`
+	Success           bool   `json:"success"`
+	Message           string `json:"message"`
+	SubdomainID       int    `json:"subdomain_id"`
+	FullDomain        string `json:"full_domain"`
+	DNSRecordsDeleted int    `json:"dns_records_deleted"`
 }
 
 // RenewSubdomainResponse represents the response from renew subdomain
@@ -73,23 +73,23 @@ type SubdomainsResponse struct {
 
 // SubdomainDetailResponse represents the response from get subdomain
 type SubdomainDetailResponse struct {
-	Success    bool         `json:"success"`
-	Subdomain  Subdomain    `json:"subdomain"`
-	DNSRecords []DNSRecord  `json:"dns_records"`
-	DNSCount   int          `json:"dns_count"`
+	Success    bool        `json:"success"`
+	Subdomain  Subdomain   `json:"subdomain"`
+	DNSRecords []DNSRecord `json:"dns_records"`
+	DNSCount   int         `json:"dns_count"`
 }
 
 // DNSRecord represents a DNS record in DNSHE
 type DNSRecord struct {
-	ID        int     `json:"id"`
-	Name      string  `json:"name"`
-	Type      string  `json:"type"`
-	Content   string  `json:"content"`
-	TTL       int     `json:"ttl"`
-	Priority  *int    `json:"priority"`
-	Proxied   bool    `json:"proxied"`
-	Status    string  `json:"status"`
-	CreatedAt string  `json:"created_at"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Content   string `json:"content"`
+	TTL       int    `json:"ttl"`
+	Priority  *int   `json:"priority"`
+	Proxied   bool   `json:"proxied"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
 }
 
 // DNSRecordsResponse represents the response from list DNS records

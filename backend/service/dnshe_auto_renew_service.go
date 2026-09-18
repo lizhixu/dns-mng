@@ -134,11 +134,11 @@ func (s *DNSHEAutoRenewService) TriggerRunForUser(ctx context.Context, userID in
 
 // AutoRenewRunResult summarizes a single run.
 type AutoRenewRunResult struct {
-	Checked   int      `json:"checked"`
-	Renewed   int      `json:"renewed"`
-	Failed    int      `json:"failed"`
-	RenewedDomains  []string `json:"renewed_domains"`
-	FailedDomains   []string `json:"failed_domains"`
+	Checked        int      `json:"checked"`
+	Renewed        int      `json:"renewed"`
+	Failed         int      `json:"failed"`
+	RenewedDomains []string `json:"renewed_domains"`
+	FailedDomains  []string `json:"failed_domains"`
 }
 
 // runForUser iterates all DNSHE accounts/domains for a user and renews domains

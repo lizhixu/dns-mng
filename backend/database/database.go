@@ -200,6 +200,27 @@ func createTables() {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_dnshe_auto_renew_user_id ON dnshe_auto_renew_config(user_id)`,
 
+		// Notification messages table
+		`CREATE TABLE IF NOT EXISTS notification_messages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			type TEXT NOT NULL DEFAULT 'domain_expiry',
+			title TEXT NOT NULL,
+			content TEXT NOT NULL,
+			domain_name TEXT DEFAULT '',
+			domain_id TEXT DEFAULT '',
+			account_id INTEGER DEFAULT 0,
+			renewal_date TEXT DEFAULT '',
+			days_remaining INTEGER DEFAULT 0,
+			renewal_url TEXT DEFAULT '',
+			is_read INTEGER DEFAULT 0,
+			read_at DATETIME,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_notification_messages_user_id ON notification_messages(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_notification_messages_user_read ON notification_messages(user_id, is_read, created_at)`,
+
 		// Scheduler logs table
 		`CREATE TABLE IF NOT EXISTS scheduler_logs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

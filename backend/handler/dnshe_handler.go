@@ -57,7 +57,7 @@ func (h *DNSHEHandler) GetQuota(c *gin.Context) {
 }
 
 type dnsheSubdomainRequest struct {
-	Subdomain string `json:"subdomain" binding:"required"`
+	Subdomain  string `json:"subdomain" binding:"required"`
 	Rootdomain string `json:"rootdomain" binding:"required"`
 }
 

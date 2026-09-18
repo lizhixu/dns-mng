@@ -107,12 +107,12 @@ type RefreshDomainsResponse struct {
 
 // DNSHEAutoRenewConfig represents the DNSHE auto-renew configuration for a user
 type DNSHEAutoRenewConfig struct {
-	UserID      int64      `json:"user_id"`
-	Enabled     bool       `json:"enabled"`
-	DaysBefore  int        `json:"days_before"`
-	LastRunAt   *time.Time `json:"last_run_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	UserID     int64      `json:"user_id"`
+	Enabled    bool       `json:"enabled"`
+	DaysBefore int        `json:"days_before"`
+	LastRunAt  *time.Time `json:"last_run_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 // UpdateDNSHEAutoRenewConfigRequest is the request body for updating DNSHE auto-renew config

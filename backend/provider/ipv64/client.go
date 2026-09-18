@@ -18,7 +18,7 @@ const baseURL = "https://ipv64.net/api.php"
 const rateLimitInterval = 2 * time.Second // Minimum interval between requests
 
 type Client struct {
-	httpClient *http.Client
+	httpClient      *http.Client
 	lastRequestTime time.Time
 }
 

@@ -4,15 +4,15 @@ import "time"
 
 // NotificationSetting represents notification settings for a domain
 type NotificationSetting struct {
-	ID             int64     `json:"id"`
-	UserID         int64     `json:"user_id"`
-	DomainID       string    `json:"domain_id"`
-	AccountID      int64     `json:"account_id"`
-	DaysBefore     int       `json:"days_before"`
-	Enabled        bool      `json:"enabled"`
+	ID             int64      `json:"id"`
+	UserID         int64      `json:"user_id"`
+	DomainID       string     `json:"domain_id"`
+	AccountID      int64      `json:"account_id"`
+	DaysBefore     int        `json:"days_before"`
+	Enabled        bool       `json:"enabled"`
 	LastNotifiedAt *time.Time `json:"last_notified_at,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 // EmailConfig represents email configuration for a user
@@ -26,7 +26,7 @@ type EmailConfig struct {
 	FromEmail    string    `json:"from_email"`
 	FromName     string    `json:"from_name,omitempty"`
 	ToEmail      string    `json:"to_email"` // Recipient email
-	Language     string    `json:"language"`  // Email language: zh, en, or empty (follow system)
+	Language     string    `json:"language"` // Email language: zh, en, or empty (follow system)
 	Enabled      bool      `json:"enabled"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
@@ -68,4 +68,22 @@ type ExpiringDomain struct {
 	DaysRemaining int
 	ToEmail       string // Recipient email from config
 	Language      string // Email language from config
+}
+
+// NotificationMessage represents a message in the message center
+type NotificationMessage struct {
+	ID            int64      `json:"id"`
+	UserID        int64      `json:"user_id"`
+	Type          string     `json:"type"`
+	Title         string     `json:"title"`
+	Content       string     `json:"content"`
+	DomainName    string     `json:"domain_name"`
+	DomainID      string     `json:"domain_id"`
+	AccountID     int64      `json:"account_id"`
+	RenewalDate   string     `json:"renewal_date"`
+	DaysRemaining int        `json:"days_remaining"`
+	RenewalURL    string     `json:"renewal_url"`
+	IsRead        bool       `json:"is_read"`
+	ReadAt        *time.Time `json:"read_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
 }

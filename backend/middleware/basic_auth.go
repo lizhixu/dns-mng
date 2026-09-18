@@ -32,4 +32,3 @@ func BasicAuthMiddleware(userService *service.UserService) gin.HandlerFunc {
 		c.Next()
 	}
 }
-

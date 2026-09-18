@@ -70,6 +70,22 @@ export const zh = {
     theme: '主题模式',
     language: '界面语言',
     dnshe: 'DNSHE',
+    messages: '消息中心',
+  },
+
+  messages: {
+    title: '消息中心',
+    subtitle: '续费提醒与系统通知',
+    noMessages: '暂无消息',
+    markAllRead: '全部已读',
+    unread: '未读',
+    all: '全部',
+    domainExpiry: '域名到期',
+    daysRemaining: '还有 {n} 天到期',
+    renewNow: '立即续费',
+    deleted: '消息已删除',
+    markedRead: '已标记为已读',
+    markedAllRead: '所有消息已标记为已读',
   },
 
   accounts: {

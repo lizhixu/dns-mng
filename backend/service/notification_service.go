@@ -118,6 +118,125 @@ func (s *NotificationService) UpdateLastNotifiedAt(userID, accountID int64, doma
 	return err
 }
 
+// CreateMessage creates a new notification message
+func (s *NotificationService) CreateMessage(msg *models.NotificationMessage) error {
+	now := time.Now()
+	result, err := database.DB.Exec(
+		`INSERT INTO notification_messages (user_id, type, title, content, domain_name, domain_id, account_id, renewal_date, days_remaining, renewal_url, is_read, read_at, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?)`,
+		msg.UserID, msg.Type, msg.Title, msg.Content, msg.DomainName, msg.DomainID,
+		msg.AccountID, msg.RenewalDate, msg.DaysRemaining, msg.RenewalURL, now,
+	)
+	if err != nil {
+		return err
+	}
+	msg.ID, _ = result.LastInsertId()
+	msg.CreatedAt = now
+	msg.IsRead = false
+	return nil
+}
+
+// ListMessages gets paginated notification messages for a user
+func (s *NotificationService) ListMessages(userID int64, page, pageSize int, unreadOnly bool) ([]models.NotificationMessage, int, error) {
+	args := []interface{}{userID}
+	where := "WHERE user_id = ?"
+	if unreadOnly {
+		where += " AND is_read = 0"
+	}
+
+	var total int
+	err := database.DB.QueryRow("SELECT COUNT(*) FROM notification_messages "+where, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	args = append(args, pageSize, offset)
+	rows, err := database.DB.Query(
+		"SELECT id, user_id, type, title, content, domain_name, domain_id, account_id, renewal_date, days_remaining, renewal_url, is_read, read_at, created_at "+
+			"FROM notification_messages "+where+" ORDER BY created_at DESC LIMIT ? OFFSET ?",
+		args...,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var messages []models.NotificationMessage
+	for rows.Next() {
+		var msg models.NotificationMessage
+		var isRead int
+		var readAt sql.NullTime
+
+		if err := rows.Scan(&msg.ID, &msg.UserID, &msg.Type, &msg.Title, &msg.Content,
+			&msg.DomainName, &msg.DomainID, &msg.AccountID, &msg.RenewalDate, &msg.DaysRemaining,
+			&msg.RenewalURL, &isRead, &readAt, &msg.CreatedAt); err != nil {
+			return nil, 0, err
+		}
+
+		msg.IsRead = isRead == 1
+		if readAt.Valid {
+			msg.ReadAt = &readAt.Time
+		}
+		messages = append(messages, msg)
+	}
+
+	return messages, total, nil
+}
+
+// MarkMessageRead marks a single message as read
+func (s *NotificationService) MarkMessageRead(userID, messageID int64) error {
+	now := time.Now()
+	result, err := database.DB.Exec(
+		"UPDATE notification_messages SET is_read = 1, read_at = ? WHERE id = ? AND user_id = ? AND is_read = 0",
+		now, messageID, userID,
+	)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// MarkAllMessagesRead marks all messages as read for a user
+func (s *NotificationService) MarkAllMessagesRead(userID int64) error {
+	now := time.Now()
+	_, err := database.DB.Exec(
+		"UPDATE notification_messages SET is_read = 1, read_at = ? WHERE user_id = ? AND is_read = 0",
+		now, userID,
+	)
+	return err
+}
+
+// DeleteMessage deletes a notification message
+func (s *NotificationService) DeleteMessage(userID, messageID int64) error {
+	result, err := database.DB.Exec(
+		"DELETE FROM notification_messages WHERE id = ? AND user_id = ?",
+		messageID, userID,
+	)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// GetUnreadCount gets unread message count for a user
+func (s *NotificationService) GetUnreadCount(userID int64) (int, error) {
+	var count int
+	err := database.DB.QueryRow(
+		"SELECT COUNT(*) FROM notification_messages WHERE user_id = ? AND is_read = 0",
+		userID,
+	).Scan(&count)
+	return count, err
+}
+
 // GetExpiringDomains gets domains that need notification (excluding soft deleted)
 func (s *NotificationService) GetExpiringDomains() ([]models.ExpiringDomain, error) {
 	rows, err := database.DB.Query(`

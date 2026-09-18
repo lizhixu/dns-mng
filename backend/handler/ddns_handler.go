@@ -167,7 +167,7 @@ func (h *DDNSHandler) UpdateDDNS(c *gin.Context) {
 									State:      &record.State,
 									Content:    ipv6,
 									Priority:   record.Priority,
-							},
+								},
 							)
 							if err == nil {
 								domainUpdated = true

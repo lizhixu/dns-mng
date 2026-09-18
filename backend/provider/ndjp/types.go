@@ -34,11 +34,11 @@ type Record struct {
 
 // RRSet represents a resource record set
 type RRSet struct {
-	Name     string          `json:"name"`
-	Type     string          `json:"type"`
-	TTL      int             `json:"ttl"`
-	Records  []RRSetRecord   `json:"records"`
-	Comments []interface{}   `json:"comments"`
+	Name     string        `json:"name"`
+	Type     string        `json:"type"`
+	TTL      int           `json:"ttl"`
+	Records  []RRSetRecord `json:"records"`
+	Comments []interface{} `json:"comments"`
 }
 
 // RRSetRecord represents a single record in an RRSet

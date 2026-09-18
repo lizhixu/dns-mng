@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
+
+	"dns-mng/models"
 )
 
 type SchedulerService struct {
@@ -141,6 +144,44 @@ func (s *SchedulerService) checkExpiringDomains() {
 		err = s.notificationService.UpdateLastNotifiedAt(domain.UserID, domain.AccountID, domain.DomainID)
 		if err != nil {
 			log.Printf("Failed to update last notified timestamp for domain %s: %v", domain.DomainName, err)
+		}
+
+		// Sync to message center
+		lang := domain.Language
+		if lang == "" {
+			lang = "zh"
+		}
+		var title string
+		if lang == "en" {
+			title = fmt.Sprintf("Domain %s is expiring soon", domain.DomainName)
+		} else {
+			title = fmt.Sprintf("域名 %s 即将到期", domain.DomainName)
+		}
+		content := fmt.Sprintf("域名 %s 的到期日为 %s，还有 %d 天到期。", domain.DomainName, domain.RenewalDate, domain.DaysRemaining)
+		if domain.RenewalURL != "" {
+			content += "\n续费地址：" + domain.RenewalURL
+		}
+		if lang == "en" {
+			content = fmt.Sprintf("Domain %s expires on %s, %d days remaining.", domain.DomainName, domain.RenewalDate, domain.DaysRemaining)
+			if domain.RenewalURL != "" {
+				content += "\nRenewal URL: " + domain.RenewalURL
+			}
+		}
+
+		err = s.notificationService.CreateMessage(&models.NotificationMessage{
+			UserID:        domain.UserID,
+			Type:          "domain_expiry",
+			Title:         title,
+			Content:       content,
+			DomainName:    domain.DomainName,
+			DomainID:      domain.DomainID,
+			AccountID:     domain.AccountID,
+			RenewalDate:   domain.RenewalDate,
+			DaysRemaining: domain.DaysRemaining,
+			RenewalURL:    domain.RenewalURL,
+		})
+		if err != nil {
+			log.Printf("Failed to create notification message for domain %s: %v", domain.DomainName, err)
 		}
 
 		userDomains[domain.UserID] = append(userDomains[domain.UserID], domain.DomainName)

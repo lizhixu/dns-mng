@@ -749,8 +749,8 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 		 SET origin_ip = ?, origin_record_name = ?, origin_record_id = ?, cname_target = ?, 
 		     intermediate_record_name = ?, intermediate_record_id = ?, updated_at = ? 
 		 WHERE id = ? AND user_id = ?`,
-		originIP, originRecordName, originRecordID, cnameTarget, 
-		intermediateRecordName, intermediateRecordID, now, 
+		originIP, originRecordName, originRecordID, cnameTarget,
+		intermediateRecordName, intermediateRecordID, now,
 		configID, userID,
 	)
 	if err != nil {
@@ -760,4 +760,3 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 	// Return updated config
 	return s.get(userID, configID)
 }
-

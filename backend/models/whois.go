@@ -25,7 +25,7 @@ type UpdateWHOISConfigRequest struct {
 // debugging/advanced use.
 type WHOISLookupResult struct {
 	Domain      string          `json:"domain"`
-	Registered  bool           `json:"registered"`
+	Registered  bool            `json:"registered"`
 	Message     string          `json:"message,omitempty"`
 	Registrar   *WHOISRegistrar `json:"registrar,omitempty"`
 	Created     string          `json:"created,omitempty"`

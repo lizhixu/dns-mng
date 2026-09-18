@@ -36,7 +36,7 @@ func (c *Client) doRequest(ctx context.Context, method, path, apiKey string, bod
 
 func (c *Client) doRequestWithRetry(ctx context.Context, method, path, apiKey string, body interface{}, maxRetries int) ([]byte, error) {
 	var lastErr error
-	
+
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s
@@ -54,20 +54,20 @@ func (c *Client) doRequestWithRetry(ctx context.Context, method, path, apiKey st
 		}
 
 		lastErr = err
-		
+
 		// Don't retry on client errors (4xx) except 429 (rate limit)
 		if httpErr, ok := err.(*HTTPError); ok {
 			if httpErr.StatusCode >= 400 && httpErr.StatusCode < 500 && httpErr.StatusCode != 429 {
 				return nil, err
 			}
 		}
-		
+
 		// Don't retry on context errors
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
 	}
-	
+
 	return nil, fmt.Errorf("request failed after %d attempts: %w", maxRetries+1, lastErr)
 }
 

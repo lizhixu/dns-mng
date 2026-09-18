@@ -170,6 +170,13 @@ func main() {
 		protected.PUT("/email/config", notificationHandler.UpdateEmailConfig)
 		protected.POST("/email/test", notificationHandler.TestEmailConfig)
 
+		// Message center
+		protected.GET("/messages", notificationHandler.ListMessages)
+		protected.GET("/messages/unread-count", notificationHandler.GetUnreadCount)
+		protected.PUT("/messages/:id/read", notificationHandler.MarkMessageRead)
+		protected.PUT("/messages/read-all", notificationHandler.MarkAllMessagesRead)
+		protected.DELETE("/messages/:id", notificationHandler.DeleteMessage)
+
 		protected.GET("/accounts/:id/domains/:domainId/records", dnsHandler.ListRecords)
 		protected.POST("/accounts/:id/domains/:domainId/records", dnsHandler.CreateRecord)
 		protected.PUT("/accounts/:id/domains/:domainId/records/:recordId", dnsHandler.UpdateRecord)

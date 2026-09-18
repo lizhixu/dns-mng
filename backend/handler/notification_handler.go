@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
 
 	"dns-mng/middleware"
@@ -142,4 +144,109 @@ func (h *NotificationHandler) TestEmailConfig(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "test email sent successfully"})
+}
+
+// ListMessages lists notification messages for the current user
+func (h *NotificationHandler) ListMessages(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	page, _ := parseIntQuery(c, "page", 1)
+	pageSize, _ := parseIntQuery(c, "per_page", 20)
+	unreadOnly := c.Query("unread_only") == "1"
+
+	messages, total, err := h.notificationService.ListMessages(userID, page, pageSize, unreadOnly)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"messages": messages,
+		"total":    total,
+		"page":     page,
+		"per_page": pageSize,
+	})
+}
+
+// MarkMessageRead marks a single message as read
+func (h *NotificationHandler) MarkMessageRead(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	messageID, err := parseIntParam(c, "id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid message id"})
+		return
+	}
+
+	if err := h.notificationService.MarkMessageRead(userID, messageID); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "message not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "marked as read"})
+}
+
+// MarkAllMessagesRead marks all messages as read for the current user
+func (h *NotificationHandler) MarkAllMessagesRead(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	if err := h.notificationService.MarkAllMessagesRead(userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "all messages marked as read"})
+}
+
+// DeleteMessage deletes a notification message
+func (h *NotificationHandler) DeleteMessage(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	messageID, err := parseIntParam(c, "id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid message id"})
+		return
+	}
+
+	if err := h.notificationService.DeleteMessage(userID, messageID); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "message not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
+
+// GetUnreadCount gets unread message count for the current user
+func (h *NotificationHandler) GetUnreadCount(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	count, err := h.notificationService.GetUnreadCount(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+func parseIntQuery(c *gin.Context, key string, def int) (int, error) {
+	val := c.Query(key)
+	if val == "" {
+		return def, nil
+	}
+	var n int
+	_, err := fmt.Sscanf(val, "%d", &n)
+	return n, err
+}
+
+func parseIntParam(c *gin.Context, key string) (int64, error) {
+	val := c.Param(key)
+	var n int64
+	_, err := fmt.Sscanf(val, "%d", &n)
+	return n, err
 }

@@ -51,4 +51,3 @@ func (h *AcmeHandler) Cleanup(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
-

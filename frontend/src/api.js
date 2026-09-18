@@ -293,6 +293,51 @@ export const api = {
         return handleResponse(response);
     },
 
+    // Message center
+    getMessages: async (page = 1, pageSize = 20, unreadOnly = false) => {
+        const params = new URLSearchParams();
+        params.set('page', page);
+        params.set('per_page', pageSize);
+        if (unreadOnly) {
+            params.set('unread_only', '1');
+        }
+        const response = await fetch(`${API_BASE}/messages?${params.toString()}`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    getUnreadCount: async () => {
+        const response = await fetch(`${API_BASE}/messages/unread-count`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    markMessageRead: async (id) => {
+        const response = await fetch(`${API_BASE}/messages/${id}/read`, {
+            method: 'PUT',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    markAllMessagesRead: async () => {
+        const response = await fetch(`${API_BASE}/messages/read-all`, {
+            method: 'PUT',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    deleteMessage: async (id) => {
+        const response = await fetch(`${API_BASE}/messages/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Email configuration
     getEmailConfig: async () => {
         const response = await fetch(`${API_BASE}/email/config`, {

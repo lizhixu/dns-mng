@@ -30,10 +30,10 @@ type CFOptimize struct {
 type CreateCFOptimizeRequest struct {
 	AccountID          int64  `json:"account_id" binding:"required"`
 	ZoneName           string `json:"zone_name" binding:"required"`
-	Hostname           string `json:"hostname" binding:"required"`          // e.g. "www"
-	OriginIP           string `json:"origin_ip" binding:"required"`         // e.g. "1.2.3.4"
-	CnameTarget        string `json:"cname_target"`                         // optional, default "cloudflare.468123.xyz"
-	IntermediatePrefix string `json:"intermediate_prefix"`                  // optional, default "saas"
+	Hostname           string `json:"hostname" binding:"required"`  // e.g. "www"
+	OriginIP           string `json:"origin_ip" binding:"required"` // e.g. "1.2.3.4"
+	CnameTarget        string `json:"cname_target"`                 // optional, default "cloudflare.468123.xyz"
+	IntermediatePrefix string `json:"intermediate_prefix"`          // optional, default "saas"
 }
 
 // UpdateCFOptimizeRequest is the request for updating a CDN optimization configuration

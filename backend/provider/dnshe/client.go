@@ -148,12 +148,12 @@ func (c *Client) CreateDNSRecord(ctx context.Context, apiKey, apiSecret string, 
 		"content":      content,
 		"ttl":          ttl,
 	}
-	
+
 	// Add name if provided (optional field)
 	if recordName != "" {
 		data["name"] = recordName
 	}
-	
+
 	if priority != nil {
 		data["priority"] = *priority
 	}
@@ -248,7 +248,7 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, apiKey, apiSecret string, 
 func (c *Client) RegisterSubdomain(ctx context.Context, apiKey, apiSecret, subdomain, rootdomain string) (*RegisterSubdomainResponse, error) {
 	data := map[string]interface{}{
 		"subdomain":  subdomain,
-		"rootdomain":  rootdomain,
+		"rootdomain": rootdomain,
 	}
 
 	jsonData, err := json.Marshal(data)

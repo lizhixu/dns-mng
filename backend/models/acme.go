@@ -13,4 +13,3 @@ type AcmeDNS01Response struct {
 	Domain   string `json:"domain,omitempty"`
 	NodeName string `json:"node_name,omitempty"`
 }
-

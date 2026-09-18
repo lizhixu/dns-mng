@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../LanguageContext';
 import { api } from '../api';
-import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup, Zap, Globe2, FileSearch } from 'lucide-react';
+import { FileText, Globe, Server, Settings, ChevronDown, X, Github, Menu, DatabaseBackup, Zap, Globe2, FileSearch, Bell } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
 import LanguageSelect from './LanguageSelect';
 import BackToTop from './BackToTop';
@@ -19,6 +19,7 @@ const Layout = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const settingsRef = useRef(null);
     const [passwordForm, setPasswordForm] = useState({
@@ -60,6 +61,27 @@ const Layout = () => {
             document.removeEventListener('touchstart', handlePointerDown);
         };
     }, [showSettings]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const fetchUnread = async () => {
+            try {
+                const data = await api.getUnreadCount();
+                if (!cancelled) {
+                    setUnreadCount(data.count || 0);
+                }
+            } catch {
+                // ignore unread count fetch errors
+            }
+        };
+        fetchUnread();
+        const handleFocus = () => fetchUnread();
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            cancelled = true;
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -119,6 +141,7 @@ const Layout = () => {
         { path: '/dnshe', icon: Globe2, label: t.layout.dnshe },
         { path: '/cf-optimize', icon: Zap, label: t.cfOptimize.title },
         { path: '/whois', icon: FileSearch, label: t.whois.title },
+        { path: '/messages', icon: Bell, label: t.layout.messages },
         { path: '/logs', icon: FileText, label: t.layout.logsManagement },
         { path: '/email-settings', icon: Settings, label: t.layout.emailNotifications },
         { path: '/backup', icon: DatabaseBackup, label: t.backup.title }
@@ -233,6 +256,31 @@ const Layout = () => {
                                 width: '1px',
                                 background: 'var(--border-color)'
                             }}></div>
+                        )}
+
+                        {/* Messages */}
+                        {!isMobile && (
+                            <Link to="/messages" className="nav-link" style={{ position: 'relative', color: 'var(--text-primary)' }}>
+                                <Bell size={15} />
+                                {unreadCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '-5px',
+                                        right: '-6px',
+                                        background: 'var(--danger)',
+                                        color: '#fff',
+                                        fontSize: '10px',
+                                        lineHeight: '14px',
+                                        minWidth: '14px',
+                                        height: '14px',
+                                        padding: '0 4px',
+                                        borderRadius: '999px',
+                                        textAlign: 'center',
+                                    }}>
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </Link>
                         )}
 
                         {/* User Settings Dropdown */}

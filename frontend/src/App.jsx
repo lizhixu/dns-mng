@@ -15,6 +15,7 @@ import Backup from './pages/Backup';
 import CFOptimize from './pages/CFOptimize';
 import DNSHE from './pages/DNSHE';
 import Whois from './pages/Whois';
+import Messages from './pages/Messages';
 
 // Placeholder components until we implement them
 const PrivateRoute = ({ children }) => {
@@ -44,6 +45,7 @@ function App() {
                 <Route path="accounts/:accountId/domains/:domainId/records" element={<Records />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="logs" element={<APILogsManagement />} />
+                <Route path="messages" element={<Messages />} />
                 <Route path="email-settings" element={<EmailSettings />} />
                 <Route path="backup" element={<Backup />} />
                 <Route path="cf-optimize" element={<CFOptimize />} />

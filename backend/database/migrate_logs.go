@@ -52,6 +52,6 @@ func MigrateOperationLogsToAPILogs() error {
 
 	log.Println("Migration completed successfully")
 	log.Println("Note: Old operation_logs table is preserved. You can drop it manually if needed.")
-	
+
 	return nil
 }

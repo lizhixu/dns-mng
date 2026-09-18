@@ -96,13 +96,13 @@ func (c *Client) CreateRecord(ctx context.Context, apiKey string, domain string,
 	request.Value = common.StringPtr(value)
 	request.TTL = common.Uint64Ptr(ttl)
 	request.Status = common.StringPtr(status) // "ENABLE" or "DISABLE"
-	
+
 	if name != "" && name != "@" {
 		request.SubDomain = common.StringPtr(name)
 	} else {
 		request.SubDomain = common.StringPtr("@")
 	}
-	
+
 	if recordType == "MX" && mx > 0 {
 		request.MX = common.Uint64Ptr(mx)
 	}
@@ -129,13 +129,13 @@ func (c *Client) UpdateRecord(ctx context.Context, apiKey string, domain string,
 	request.Value = common.StringPtr(value)
 	request.TTL = common.Uint64Ptr(ttl)
 	request.Status = common.StringPtr(status) // "ENABLE" or "DISABLE"
-	
+
 	if name != "" && name != "@" {
 		request.SubDomain = common.StringPtr(name)
 	} else {
 		request.SubDomain = common.StringPtr("@")
 	}
-	
+
 	if recordType == "MX" && mx > 0 {
 		request.MX = common.Uint64Ptr(mx)
 	}

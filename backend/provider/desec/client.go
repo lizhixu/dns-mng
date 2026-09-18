@@ -123,7 +123,7 @@ func (c *Client) UpdateRRSet(ctx context.Context, token, domain string, rrset RR
 
 	// Wrap the single RRSet in an array
 	rrsets := []RRSetRequest{rrset}
-	
+
 	data, err := json.Marshal(rrsets)
 	if err != nil {
 		return fmt.Errorf("marshal rrset: %w", err)

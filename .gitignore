@@ -3,6 +3,11 @@
 *.dll
 *.so
 *.dylib
+*.bin
+
+# Security tool artifacts
+.mimosa/
+**/.mimosa/
 
 # Go
 *.test

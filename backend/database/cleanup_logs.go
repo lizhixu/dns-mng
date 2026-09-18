@@ -12,7 +12,7 @@ func CleanupOldAPILogs(daysToKeep int) error {
 	}
 
 	cutoffDate := time.Now().AddDate(0, 0, -daysToKeep)
-	
+
 	result, err := DB.Exec(
 		`DELETE FROM api_call_logs WHERE created_at < ?`,
 		cutoffDate,
@@ -23,7 +23,7 @@ func CleanupOldAPILogs(daysToKeep int) error {
 
 	rowsAffected, _ := result.RowsAffected()
 	log.Printf("Cleaned up %d old API call logs (older than %d days)", rowsAffected, daysToKeep)
-	
+
 	return nil
 }
 
@@ -41,11 +41,11 @@ func GetAPILogsStats() (map[string]interface{}, error) {
 
 	// Count by date
 	var today, last7days, last30days int64
-	
+
 	DB.QueryRow(`SELECT COUNT(*) FROM api_call_logs WHERE created_at >= datetime('now', '-1 day')`).Scan(&today)
 	DB.QueryRow(`SELECT COUNT(*) FROM api_call_logs WHERE created_at >= datetime('now', '-7 days')`).Scan(&last7days)
 	DB.QueryRow(`SELECT COUNT(*) FROM api_call_logs WHERE created_at >= datetime('now', '-30 days')`).Scan(&last30days)
-	
+
 	stats["today"] = today
 	stats["last_7_days"] = last7days
 	stats["last_30_days"] = last30days

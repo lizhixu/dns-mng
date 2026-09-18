@@ -212,6 +212,23 @@ Token 管理：
 - 当天已经通知过的域名。
 
 注意：当前 `scheduler_service.go` 实现是计算下一个 09:00 并等待，后端启动不会立即执行定时检查；维护文档时需保持一致。
+- 续费提醒发送后会自动同步写入站内消息中心 (`notification_messages`)，供前端顶部未读小红点及 `/messages` 消息中心查看。
+
+### 消息中心
+
+页面：`/messages`
+
+后端路由：
+
+- `GET /api/messages`：支持 `page`、`per_page`、`unread_only` 分页筛选。
+- `GET /api/messages/unread-count`：获取当前用户未读消息数。
+- `PUT /api/messages/:id/read`：单条标记已读。
+- `PUT /api/messages/read-all`：全部标记已读。
+- `DELETE /api/messages/:id`：删除单条消息。
+
+数据库表：`notification_messages`
+- 保存消息标题、内容、域名信息、到期日、剩余天数、续费链接、已读状态及已读时间。
+- 前端入口在顶部导航栏右上角铃铛图标（显示未读徽标）。
 
 ### 备份与恢复
 
@@ -357,6 +374,7 @@ DNSHE 第三方解析域名处理：
 - `/backup`
 - `/cf-optimize`
 - `/whois`
+- `/messages`
 
 前端维护要求：
 

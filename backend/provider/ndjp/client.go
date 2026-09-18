@@ -141,7 +141,7 @@ func (c *Client) ListRecords(ctx context.Context, apiToken, subdomain string) ([
 // AddRecord adds a DNS record
 func (c *Client) AddRecord(ctx context.Context, apiToken, subdomain string, record Record) error {
 	path := fmt.Sprintf("/domains/%s/records", url.PathEscape(subdomain))
-	
+
 	data, err := json.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("marshal record: %w", err)
@@ -168,7 +168,7 @@ func (c *Client) AddRecord(ctx context.Context, apiToken, subdomain string, reco
 // UpdateRecord updates a DNS record
 func (c *Client) UpdateRecord(ctx context.Context, apiToken, subdomain string, record Record) error {
 	path := fmt.Sprintf("/domains/%s/records", url.PathEscape(subdomain))
-	
+
 	data, err := json.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("marshal record: %w", err)
@@ -198,7 +198,7 @@ func (c *Client) DeleteRecord(ctx context.Context, apiToken, subdomain, recordTy
 		url.PathEscape(subdomain),
 		url.QueryEscape(recordType),
 		url.QueryEscape(name))
-	
+
 	if content != "" {
 		path += "&content=" + url.QueryEscape(content)
 	}

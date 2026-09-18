@@ -35,9 +35,9 @@ type DNSCheckResponse struct {
 
 // Public DNS servers to use
 var publicDNSServers = []string{
-	"8.8.8.8:53",         // Google DNS
-	"1.1.1.1:53",         // Cloudflare DNS
-	"208.67.222.222:53",  // OpenDNS
+	"8.8.8.8:53",        // Google DNS
+	"1.1.1.1:53",        // Cloudflare DNS
+	"208.67.222.222:53", // OpenDNS
 }
 
 // CheckDNS checks if DNS record has propagated
