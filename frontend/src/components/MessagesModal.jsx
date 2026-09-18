@@ -4,7 +4,7 @@ import Modal from './Modal';
 import { RefreshCw, ExternalLink, Check, CheckCheck, Trash2 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
     const { t, language } = useLanguage();
@@ -133,7 +133,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
             isOpen={isOpen}
             onClose={onClose}
             title={t.messages.title}
-            size="large"
+            size="xl"
             closeOnBackdrop={true}
         >
             <div ref={contentRef} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -143,58 +143,51 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
-                    gap: '8px',
-                    paddingBottom: '8px',
+                    gap: '12px',
                     borderBottom: '1px solid var(--border-color)',
+                    paddingBottom: '2px',
                 }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div className="tab-nav" style={{ margin: 0, border: 'none', gap: '1.25rem' }}>
                         <button
                             type="button"
                             onClick={() => setFilterUnread(false)}
-                            className="btn"
-                            style={{
-                                padding: '4px 10px',
-                                fontSize: '12px',
-                                height: '28px',
-                                background: !filterUnread ? 'var(--primary)' : 'var(--bg-secondary)',
-                                color: !filterUnread ? '#fff' : 'var(--text-primary)',
-                                border: `1px solid ${!filterUnread ? 'var(--primary)' : 'var(--border-color)'}`,
-                            }}
+                            className={`tab-nav-btn${!filterUnread ? ' active' : ''}`}
+                            style={{ padding: '8px 2px', fontSize: '13px' }}
                         >
                             {t.messages.all}
+                            {pagination.total > 0 && !filterUnread && (
+                                <span style={{
+                                    fontSize: '11px',
+                                    padding: '1px 6px',
+                                    borderRadius: '999px',
+                                    background: 'var(--bg-tertiary)',
+                                    color: 'var(--text-secondary)',
+                                    fontWeight: 'normal',
+                                }}>
+                                    {pagination.total}
+                                </span>
+                            )}
                         </button>
                         <button
                             type="button"
                             onClick={() => setFilterUnread(true)}
-                            className="btn"
-                            style={{
-                                padding: '4px 10px',
-                                fontSize: '12px',
-                                height: '28px',
-                                background: filterUnread ? 'var(--primary)' : 'var(--bg-secondary)',
-                                color: filterUnread ? '#fff' : 'var(--text-primary)',
-                                border: `1px solid ${filterUnread ? 'var(--primary)' : 'var(--border-color)'}`,
-                            }}
+                            className={`tab-nav-btn${filterUnread ? ' active' : ''}`}
+                            style={{ padding: '8px 2px', fontSize: '13px' }}
                         >
                             {t.messages.unread}
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingBottom: '6px' }}>
                         <button
                             type="button"
                             onClick={handleMarkAllRead}
                             disabled={markingAllRead || !hasUnread}
-                            className="btn"
+                            className="btn btn-secondary"
                             style={{
-                                padding: '4px 10px',
+                                height: '30px',
+                                padding: '0 10px',
                                 fontSize: '12px',
-                                height: '28px',
-                                background: 'var(--bg-secondary)',
-                                color: hasUnread ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                border: '1px solid var(--border-color)',
-                                cursor: hasUnread ? 'pointer' : 'not-allowed',
-                                opacity: hasUnread ? 1 : 0.6,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '4px',
@@ -206,17 +199,11 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                         <button
                             type="button"
                             onClick={handleRefresh}
-                            className="btn"
+                            className="login-toolbar-btn"
                             style={{
-                                padding: '4px 8px',
-                                fontSize: '12px',
-                                height: '28px',
-                                background: 'var(--bg-secondary)',
-                                color: 'var(--text-primary)',
-                                border: '1px solid var(--border-color)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                width: '30px',
+                                height: '30px',
+                                cursor: 'pointer',
                             }}
                             title={t.common.refresh}
                         >
@@ -239,16 +226,16 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                 )}
 
                 {/* Content */}
-                <div style={{ minHeight: '180px', maxHeight: '55vh', overflowY: 'auto' }}>
+                <div style={{ minHeight: '220px', maxHeight: '65vh', overflowY: 'auto' }}>
                     {loading && (
-                        <div style={{ padding: '36px 0', textAlign: 'center' }}>
+                        <div style={{ padding: '40px 0', textAlign: 'center' }}>
                             <div className="spinner" />
                         </div>
                     )}
 
                     {!loading && messages.length === 0 && (
                         <div style={{
-                            padding: '40px 16px',
+                            padding: '48px 16px',
                             textAlign: 'center',
                             color: 'var(--text-tertiary)',
                             fontSize: '13px',
@@ -261,14 +248,14 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                         <div
                             key={msg.id}
                             style={{
-                                padding: '12px 14px',
-                                borderBottom: '1px solid var(--border-color)',
+                                padding: '14px 16px',
+                                border: '1px solid var(--border-color)',
                                 display: 'flex',
                                 alignItems: 'flex-start',
-                                gap: '10px',
-                                background: msg.is_read ? 'transparent' : 'rgba(33, 150, 243, 0.04)',
+                                gap: '12px',
+                                background: msg.is_read ? 'var(--bg-primary)' : 'rgba(0, 112, 243, 0.04)',
                                 borderRadius: 'var(--radius-sm)',
-                                marginBottom: '6px',
+                                marginBottom: '8px',
                                 transition: 'var(--transition)',
                             }}
                         >
@@ -280,7 +267,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                         width: '7px',
                                         height: '7px',
                                         borderRadius: '50%',
-                                        background: 'var(--primary)',
+                                        background: 'var(--accent-primary)',
                                     }} />
                                 )}
                             </div>
@@ -288,15 +275,15 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                             {/* Main message text */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{
-                                    fontSize: '13px',
+                                    fontSize: '14px',
                                     fontWeight: msg.is_read ? '500' : '600',
                                     color: 'var(--text-primary)',
-                                    marginBottom: '3px',
+                                    marginBottom: '4px',
                                 }}>
                                     {msg.title}
                                 </div>
                                 <div style={{
-                                    fontSize: '12px',
+                                    fontSize: '13px',
                                     color: 'var(--text-secondary)',
                                     lineHeight: '1.5',
                                     whiteSpace: 'pre-wrap',
@@ -304,7 +291,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                     {msg.content}
                                 </div>
                                 <div style={{
-                                    marginTop: '6px',
+                                    marginTop: '8px',
                                     display: 'flex',
                                     gap: '8px',
                                     alignItems: 'center',
@@ -316,7 +303,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                         background: 'var(--bg-secondary)',
                                         border: '1px solid var(--border-color)',
                                         borderRadius: '999px',
-                                        padding: '1px 7px',
+                                        padding: '1px 8px',
                                     }}>
                                         {msg.days_remaining >= 0
                                             ? t.messages.daysRemaining.replace('{n}', msg.days_remaining)
@@ -328,16 +315,16 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                             target="_blank"
                                             rel="noreferrer"
                                             style={{
-                                                fontSize: '11px',
-                                                color: 'var(--primary)',
+                                                fontSize: '12px',
+                                                color: 'var(--accent-primary)',
                                                 textDecoration: 'none',
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
-                                                gap: '2px',
+                                                gap: '3px',
                                             }}
                                         >
                                             {t.messages.renewNow}
-                                            <ExternalLink size={10} />
+                                            <ExternalLink size={11} />
                                         </a>
                                     )}
                                 </div>
@@ -348,13 +335,13 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'flex-end',
-                                gap: '6px',
+                                gap: '8px',
                                 flexShrink: 0,
                             }}>
                                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
                                     {formatTime(msg.created_at)}
                                 </span>
-                                <div style={{ display: 'flex', gap: '4px' }}>
+                                <div style={{ display: 'flex', gap: '6px' }}>
                                     {!msg.is_read && (
                                         <button
                                             type="button"
@@ -365,14 +352,14 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                                 borderRadius: 'var(--radius-sm)',
                                                 color: 'var(--text-secondary)',
                                                 cursor: 'pointer',
-                                                padding: '3px 5px',
+                                                padding: '4px 6px',
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                             }}
                                             title={t.messages.markedRead}
                                         >
-                                            <Check size={12} />
+                                            <Check size={13} />
                                         </button>
                                     )}
                                     <button
@@ -384,14 +371,14 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                             borderRadius: 'var(--radius-sm)',
                                             color: 'var(--text-secondary)',
                                             cursor: 'pointer',
-                                            padding: '3px 5px',
+                                            padding: '4px 6px',
                                             display: 'inline-flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                         }}
                                         title={t.common.delete}
                                     >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={13} />
                                     </button>
                                 </div>
                             </div>
@@ -406,7 +393,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '8px',
-                        paddingTop: '8px',
+                        paddingTop: '10px',
                         borderTop: '1px solid var(--border-color)',
                         flexWrap: 'wrap',
                     }}>
@@ -414,14 +401,11 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                             type="button"
                             onClick={() => handlePageChange(pagination.page - 1)}
                             disabled={pagination.page <= 1}
-                            className="btn"
+                            className="btn btn-secondary"
                             style={{
-                                padding: '4px 10px',
+                                padding: '4px 12px',
                                 fontSize: '12px',
                                 height: '28px',
-                                background: 'var(--bg-secondary)',
-                                color: 'var(--text-primary)',
-                                border: '1px solid var(--border-color)',
                                 opacity: pagination.page <= 1 ? 0.5 : 1,
                                 cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
                             }}
@@ -435,14 +419,11 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                             type="button"
                             onClick={() => handlePageChange(pagination.page + 1)}
                             disabled={pagination.page >= pagination.totalPages}
-                            className="btn"
+                            className="btn btn-secondary"
                             style={{
-                                padding: '4px 10px',
+                                padding: '4px 12px',
                                 fontSize: '12px',
                                 height: '28px',
-                                background: 'var(--bg-secondary)',
-                                color: 'var(--text-primary)',
-                                border: '1px solid var(--border-color)',
                                 opacity: pagination.page >= pagination.totalPages ? 0.5 : 1,
                                 cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
                             }}

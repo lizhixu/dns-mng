@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, footer, size = 'default', closeOnBackdrop = false }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, size = 'default', closeOnBackdrop = false, style }) => {
     const modalRef = useRef(null);
 
     useEffect(() => {
@@ -28,9 +28,13 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'default', clo
 
     if (!isOpen) return null;
 
+    const sizeClass = size === 'large'
+        ? 'modal-container-large'
+        : (size === 'xl' || size === 'extra-large' ? 'modal-container-xl' : '');
+
     return (
         <div className="modal-overlay" onClick={handleBackdropClick}>
-            <div className={`modal-container ${size === 'large' ? 'modal-container-large' : ''}`} ref={modalRef}>
+            <div className={`modal-container ${sizeClass}`} style={style} ref={modalRef}>
                 {/* Fixed Header */}
                 <div className="modal-header">
                     <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>{title}</h3>

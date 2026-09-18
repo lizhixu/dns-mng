@@ -146,33 +146,44 @@ const Messages = () => {
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>{t.messages.subtitle}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button
-                        type="button"
-                        onClick={() => setFilterUnread(!filterUnread)}
-                        className={`btn ${filterUnread ? 'btn-primary' : ''}`}
-                        style={{
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            height: '32px',
-                            background: filterUnread ? 'var(--primary)' : 'var(--bg-secondary)',
-                            color: filterUnread ? '#fff' : 'var(--text-primary)',
-                            border: `1px solid ${filterUnread ? 'var(--primary)' : 'var(--border-color)'}`,
-                        }}
-                    >
-                        {filterUnread ? t.messages.unread : t.messages.all}
-                    </button>
+                    <div className="tab-nav" style={{ margin: 0, border: 'none', gap: '1.25rem' }}>
+                        <button
+                            type="button"
+                            onClick={() => setFilterUnread(false)}
+                            className={`tab-nav-btn${!filterUnread ? ' active' : ''}`}
+                            style={{ padding: '6px 2px', fontSize: '13px' }}
+                        >
+                            {t.messages.all}
+                            {pagination.total > 0 && !filterUnread && (
+                                <span style={{
+                                    fontSize: '11px',
+                                    padding: '1px 6px',
+                                    borderRadius: '999px',
+                                    background: 'var(--bg-tertiary)',
+                                    color: 'var(--text-secondary)',
+                                }}>
+                                    {pagination.total}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setFilterUnread(true)}
+                            className={`tab-nav-btn${filterUnread ? ' active' : ''}`}
+                            style={{ padding: '6px 2px', fontSize: '13px' }}
+                        >
+                            {t.messages.unread}
+                        </button>
+                    </div>
                     <button
                         type="button"
                         onClick={handleMarkAllRead}
                         disabled={markingAllRead || messages.every(msg => msg.is_read)}
-                        className="btn"
+                        className="btn btn-secondary"
                         style={{
                             padding: '6px 12px',
                             fontSize: '12px',
                             height: '32px',
-                            background: 'var(--bg-secondary)',
-                            color: messages.some(msg => !msg.is_read) ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                            border: '1px solid var(--border-color)',
                             cursor: messages.some(msg => !msg.is_read) ? 'pointer' : 'not-allowed',
                             opacity: messages.some(msg => !msg.is_read) ? 1 : 0.6,
                         }}
@@ -183,14 +194,11 @@ const Messages = () => {
                     <button
                         type="button"
                         onClick={handleRefresh}
-                        className="btn"
+                        className="login-toolbar-btn"
                         style={{
-                            padding: '6px 10px',
-                            fontSize: '12px',
+                            width: '32px',
                             height: '32px',
-                            background: 'var(--bg-secondary)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border-color)',
+                            cursor: 'pointer',
                         }}
                     >
                         <RefreshCw size={13} />
@@ -244,7 +252,7 @@ const Messages = () => {
                                     width: '8px',
                                     height: '8px',
                                     borderRadius: '50%',
-                                    background: 'var(--primary)',
+                                    background: 'var(--accent-primary)',
                                     flexShrink: 0,
                                 }} />
                             )}
@@ -261,7 +269,7 @@ const Messages = () => {
                                 <span style={{
                                     fontSize: '11px',
                                     color: getStatusColor(msg.days_remaining),
-                                    background: 'rgba(255,255,255,0.7)',
+                                    background: 'var(--bg-secondary)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: '999px',
                                     padding: '2px 8px',
@@ -273,7 +281,7 @@ const Messages = () => {
                                         href={msg.renewal_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        style={{ fontSize: '11px', color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                        style={{ fontSize: '11px', color: 'var(--accent-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                                     >
                                         {t.messages.renewNow}
                                         <ExternalLink size={10} />
