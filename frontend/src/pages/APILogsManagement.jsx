@@ -897,21 +897,91 @@ const APILogsManagement = () => {
                                                             marginTop: '0.5rem'
                                                         }}>
                                                             {details.total_domains !== undefined && (
-                                                                <div style={{ marginBottom: '0.25rem' }}>
-                                                                    📊 {t.logsManagement.schedulerDetails.totalDomains}: {details.total_domains} {t.logsManagement.schedulerDetails.domainsUnit}
+                                                                <div style={{ marginBottom: '0.25rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                                    <span>📊 {t.logsManagement.schedulerDetails.totalDomains}: {details.total_domains} {t.logsManagement.schedulerDetails.domainsUnit}</span>
                                                                     {details.success_count !== undefined && (
-                                                                        <span style={{ marginLeft: '1rem', color: '#10b981' }}>
+                                                                        <span style={{ color: '#10b981' }}>
                                                                             ✓ {t.logsManagement.schedulerDetails.success}: {details.success_count}
                                                                         </span>
                                                                     )}
                                                                     {details.error_count !== undefined && details.error_count > 0 && (
-                                                                        <span style={{ marginLeft: '1rem', color: '#ef4444' }}>
+                                                                        <span style={{ color: '#ef4444' }}>
                                                                             ✗ {t.logsManagement.schedulerDetails.failed}: {details.error_count}
+                                                                        </span>
+                                                                    )}
+                                                                    {details.trigger && (
+                                                                        <span className="badge" style={{ fontSize: '10px', height: '18px', padding: '0 5px' }}>
+                                                                            {details.trigger === 'manual' ? (language === 'en' ? 'Manual' : '手动触发') : (language === 'en' ? 'Scheduled' : '定时执行')}
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            {details.user_domains && Object.keys(details.user_domains).length > 0 && (
+                                                            {details.message && details.total_domains === 0 && (
+                                                                <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '0.25rem' }}>
+                                                                    ℹ️ {details.message}
+                                                                </div>
+                                                            )}
+                                                            {details.items && details.items.length > 0 && (
+                                                                <div style={{ 
+                                                                    marginTop: '0.5rem',
+                                                                    padding: '0.5rem 0.75rem',
+                                                                    backgroundColor: 'var(--bg-secondary)',
+                                                                    borderRadius: 'var(--radius-sm)',
+                                                                    border: '1px solid var(--border-color)',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '6px'
+                                                                }}>
+                                                                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                                                        📋 {language === 'en' ? 'Notification Breakdown:' : '通知明细：'}
+                                                                    </div>
+                                                                    {details.items.map((item, idx) => (
+                                                                        <div key={idx} style={{ 
+                                                                            display: 'flex', 
+                                                                            alignItems: 'center', 
+                                                                            justifyContent: 'space-between',
+                                                                            flexWrap: 'wrap',
+                                                                            gap: '6px',
+                                                                            fontSize: '12px',
+                                                                            padding: '4px 0',
+                                                                            borderBottom: idx < details.items.length - 1 ? '1px dashed var(--border-color)' : 'none'
+                                                                        }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.domain}</span>
+                                                                                <span style={{
+                                                                                    fontSize: '11px',
+                                                                                    color: item.days_remaining <= 7 ? 'var(--danger)' : 'var(--warning)',
+                                                                                    background: 'var(--bg-primary)',
+                                                                                    padding: '1px 6px',
+                                                                                    borderRadius: '999px',
+                                                                                    border: '1px solid var(--border-color)'
+                                                                                }}>
+                                                                                    {language === 'en' ? `${item.days_remaining}d remaining` : `还有 ${item.days_remaining} 天到期`}
+                                                                                </span>
+                                                                                {item.renewal_date && (
+                                                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                                                                                        ({item.renewal_date})
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                                                                                {item.to_email && (
+                                                                                    <span>📧 {item.to_email}</span>
+                                                                                )}
+                                                                                <span style={{ color: item.email_status === 'success' ? '#10b981' : '#ef4444', fontWeight: '500' }}>
+                                                                                    {item.email_status === 'success' ? (language === 'en' ? '✓ Email Sent' : '✓ 邮件已发送') : `${language === 'en' ? '✗ Email Failed: ' : '✗ 邮件失败: '}${item.email_status}`}
+                                                                                </span>
+                                                                                {item.message_status && (
+                                                                                    <span style={{ color: item.message_status === 'synced' ? 'var(--accent-primary)' : '#ef4444' }}>
+                                                                                        {item.message_status === 'synced' ? (language === 'en' ? '✓ Message Synced' : '✓ 站内信已同步') : `${language === 'en' ? '✗ Message Failed: ' : '✗ 站内信失败: '}${item.message_status}`}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {!details.items && details.user_domains && Object.keys(details.user_domains).length > 0 && (
                                                                 <div style={{ 
                                                                     marginTop: '0.5rem',
                                                                     padding: '0.5rem',

@@ -33,6 +33,11 @@ func (s *SchedulerLogService) StartTask(taskName string, details interface{}) (i
 
 // UpdateTask updates a running task with completion status
 func (s *SchedulerLogService) UpdateTask(logID int64, status string, message string) error {
+	return s.UpdateTaskWithDetails(logID, status, message, nil)
+}
+
+// UpdateTaskWithDetails updates a running task with completion status and details
+func (s *SchedulerLogService) UpdateTaskWithDetails(logID int64, status string, message string, details interface{}) error {
 	completedAt := time.Now()
 
 	// Get the started_at time first
@@ -47,12 +52,22 @@ func (s *SchedulerLogService) UpdateTask(logID int64, status string, message str
 
 	durationMs := completedAt.Sub(startedAt).Milliseconds()
 
-	_, err = database.DB.Exec(
-		`UPDATE scheduler_logs 
-		 SET status = ?, message = ?, completed_at = ?, duration_ms = ?
-		 WHERE id = ?`,
-		status, message, completedAt, durationMs, logID,
-	)
+	if details != nil {
+		detailsJSON, _ := json.Marshal(details)
+		_, err = database.DB.Exec(
+			`UPDATE scheduler_logs 
+			 SET status = ?, message = ?, details = ?, completed_at = ?, duration_ms = ?
+			 WHERE id = ?`,
+			status, message, string(detailsJSON), completedAt, durationMs, logID,
+		)
+	} else {
+		_, err = database.DB.Exec(
+			`UPDATE scheduler_logs 
+			 SET status = ?, message = ?, completed_at = ?, duration_ms = ?
+			 WHERE id = ?`,
+			status, message, completedAt, durationMs, logID,
+		)
+	}
 	return err
 }
 
