@@ -268,7 +268,7 @@ const Messages = () => {
                             <div style={{ marginTop: '6px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 {(() => {
                                     let badgeClass = 'badge-neutral';
-                                    if (msg.days_remaining <= 0) {
+                                    if (msg.days_remaining < 0) {
                                         badgeClass = 'badge-danger';
                                     } else if (msg.days_remaining <= 30) {
                                         badgeClass = 'badge-warning';

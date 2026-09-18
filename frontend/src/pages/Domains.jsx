@@ -174,56 +174,38 @@ const Domains = () => {
     // Calculate days until expiry
     const getDaysUntilExpiry = (renewalDate) => {
         if (!renewalDate || renewalDate === 'permanent') return null;
+        const parts = String(renewalDate).split(/[-/T\s]/);
+        if (parts.length < 3) return null;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+
+        const expiry = new Date(year, month - 1, day);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const expiry = new Date(renewalDate);
-        expiry.setHours(0, 0, 0, 0);
-        const diffTime = expiry - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
+
+        const diffTime = expiry.getTime() - today.getTime();
+        return Math.round(diffTime / (1000 * 60 * 60 * 24));
     };
 
     // Get expiry display info
     const getExpiryInfo = (renewalDate) => {
         const days = getDaysUntilExpiry(renewalDate);
         if (days === null) return null;
-        
+
         let text = '';
-        let color = 'var(--text-tertiary)';
-        let bgColor = 'transparent';
-        let fontWeight = 'normal';
-        
         if (days < 0) {
             text = t.expiry.expiredDaysAgo.replace('{days}', Math.abs(days));
-            color = '#fff';
-            bgColor = 'var(--danger)';
-            fontWeight = '600';
         } else if (days === 0) {
             text = t.expiry.expiresToday;
-            color = '#fff';
-            bgColor = 'var(--danger)';
-            fontWeight = '600';
         } else if (days === 1) {
             text = t.expiry.expiresTomorrow;
-            color = '#fff';
-            bgColor = '#ff6b35';
-            fontWeight = '600';
-        } else if (days <= 7) {
-            text = t.expiry.expiresInDays.replace('{days}', days);
-            color = '#fff';
-            bgColor = '#ff8c42';
-            fontWeight = '600';
-        } else if (days <= 30) {
-            text = t.expiry.expiresInDays.replace('{days}', days);
-            color = '#fff';
-            bgColor = '#ffa726';
-            fontWeight = '500';
         } else {
             text = t.expiry.expiresInDays.replace('{days}', days);
-            color = 'var(--text-tertiary)';
         }
-        
-        return { text, color, bgColor, fontWeight, days };
+
+        return { text, days };
     };
 
     return (
@@ -305,7 +287,7 @@ const Domains = () => {
                                                 const days = expiryInfo?.days;
                                                 let badgeClass = 'badge-neutral';
                                                 if (days !== null) {
-                                                    if (days <= 0) {
+                                                    if (days < 0) {
                                                         badgeClass = 'badge-danger';
                                                     } else if (days <= 30) {
                                                         badgeClass = 'badge-warning';

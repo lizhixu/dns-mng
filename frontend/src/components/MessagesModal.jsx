@@ -299,7 +299,7 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                 }}>
                                     {(() => {
                                         let badgeClass = 'badge-neutral';
-                                        if (msg.days_remaining <= 0) {
+                                        if (msg.days_remaining < 0) {
                                             badgeClass = 'badge-danger';
                                         } else if (msg.days_remaining <= 30) {
                                             badgeClass = 'badge-warning';
