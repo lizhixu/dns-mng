@@ -282,12 +282,12 @@ const APILogsManagement = () => {
 
     const getStatusIcon = (status) => {
         const icons = {
-            success: '✓',
-            partial_success: '⚠',
-            error: '✗',
-            running: '⟳'
+            success: '[OK]',
+            partial_success: '[WARN]',
+            error: '[ERR]',
+            running: '...'
         };
-        return icons[status] || '•';
+        return icons[status] || '-';
     };
 
     const formatDate = (dateString) => {
@@ -557,7 +557,7 @@ const APILogsManagement = () => {
 
                                             {/* Duration */}
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
-                                                ⏱ {log.duration_ms}ms
+                                                {log.duration_ms}ms
                                             </div>
 
                                             {/* Username */}
@@ -602,7 +602,7 @@ const APILogsManagement = () => {
                                                     flex: '1 1 100%',
                                                     wordBreak: 'break-word'
                                                 }}>
-                                                    ⚠ {log.error_message}
+                                                    {log.error_message}
                                                 </div>
                                             )}
                                         </div>
@@ -898,15 +898,15 @@ const APILogsManagement = () => {
                                                         }}>
                                                             {details.total_domains !== undefined && (
                                                                 <div style={{ marginBottom: '0.25rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                                    <span>📊 {t.logsManagement.schedulerDetails.totalDomains}: {details.total_domains} {t.logsManagement.schedulerDetails.domainsUnit}</span>
+                                                                    <span>{t.logsManagement.schedulerDetails.totalDomains}: {details.total_domains} {t.logsManagement.schedulerDetails.domainsUnit}</span>
                                                                     {details.success_count !== undefined && (
                                                                         <span style={{ color: '#10b981' }}>
-                                                                            ✓ {t.logsManagement.schedulerDetails.success}: {details.success_count}
+                                                                            [OK] {t.logsManagement.schedulerDetails.success}: {details.success_count}
                                                                         </span>
                                                                     )}
                                                                     {details.error_count !== undefined && details.error_count > 0 && (
                                                                         <span style={{ color: '#ef4444' }}>
-                                                                            ✗ {t.logsManagement.schedulerDetails.failed}: {details.error_count}
+                                                                            [FAIL] {t.logsManagement.schedulerDetails.failed}: {details.error_count}
                                                                         </span>
                                                                     )}
                                                                     {details.trigger && (
@@ -918,7 +918,7 @@ const APILogsManagement = () => {
                                                             )}
                                                             {details.message && details.total_domains === 0 && (
                                                                 <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '0.25rem' }}>
-                                                                    ℹ️ {details.message}
+                                                                    {details.message}
                                                                 </div>
                                                             )}
                                                             {details.items && details.items.length > 0 && (
@@ -933,7 +933,7 @@ const APILogsManagement = () => {
                                                                     gap: '6px'
                                                                 }}>
                                                                     <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
-                                                                        📋 {language === 'en' ? 'Notification Breakdown:' : '通知明细：'}
+                                                                        {language === 'en' ? 'Notification Breakdown:' : '通知明细：'}
                                                                     </div>
                                                                     {details.items.map((item, idx) => (
                                                                         <div key={idx} style={{ 
@@ -966,14 +966,14 @@ const APILogsManagement = () => {
                                                                             </div>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                                                                                 {item.to_email && (
-                                                                                    <span>📧 {item.to_email}</span>
+                                                                                    <span>{item.to_email}</span>
                                                                                 )}
                                                                                 <span style={{ color: item.email_status === 'success' ? '#10b981' : '#ef4444', fontWeight: '500' }}>
-                                                                                    {item.email_status === 'success' ? (language === 'en' ? '✓ Email Sent' : '✓ 邮件已发送') : `${language === 'en' ? '✗ Email Failed: ' : '✗ 邮件失败: '}${item.email_status}`}
+                                                                                    {item.email_status === 'success' ? (language === 'en' ? 'Email: Sent' : '邮件: 已发送') : `${language === 'en' ? 'Email: Failed ' : '邮件: 失败 '}${item.email_status}`}
                                                                                 </span>
                                                                                 {item.message_status && (
                                                                                     <span style={{ color: item.message_status === 'synced' ? 'var(--accent-primary)' : '#ef4444' }}>
-                                                                                        {item.message_status === 'synced' ? (language === 'en' ? '✓ Message Synced' : '✓ 站内信已同步') : `${language === 'en' ? '✗ Message Failed: ' : '✗ 站内信失败: '}${item.message_status}`}
+                                                                                        {item.message_status === 'synced' ? (language === 'en' ? 'Message: Synced' : '站内信: 已同步') : `${language === 'en' ? 'Message: Failed ' : '站内信: 失败 '}${item.message_status}`}
                                                                                     </span>
                                                                                 )}
                                                                             </div>
@@ -990,7 +990,7 @@ const APILogsManagement = () => {
                                                                 }}>
                                                                     {Object.entries(details.user_domains).map(([userId, domains]) => (
                                                                         <div key={userId} style={{ marginBottom: '0.25rem' }}>
-                                                                            👤 {t.logsManagement.schedulerDetails.user} {userId}: {domains.join(', ')}
+                                                                            {t.logsManagement.schedulerDetails.user} {userId}: {domains.join(', ')}
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -1006,7 +1006,7 @@ const APILogsManagement = () => {
                                                                 }}>
                                                                     {details.errors.map((err, idx) => (
                                                                         <div key={idx} style={{ marginBottom: '0.25rem' }}>
-                                                                            ⚠ {err.domain}: {err.error}
+                                                                            {err.domain}: {err.error}
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -1020,7 +1020,7 @@ const APILogsManagement = () => {
                                                     </div>
                                                     {log.duration_ms && (
                                                         <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                                                            ⏱ {log.duration_ms}ms
+                                                            {log.duration_ms}ms
                                                         </div>
                                                     )}
                                                 </div>

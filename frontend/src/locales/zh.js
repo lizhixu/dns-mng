@@ -151,6 +151,7 @@ export const zh = {
     renewalUrl: '续费地址',
     renewalModalTitle: '编辑续费信息',
     permanentFree: '永久免费',
+    renew: '续费',
   },
 
   dnshe: {

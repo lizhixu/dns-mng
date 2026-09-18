@@ -151,6 +151,7 @@ export const en = {
     renewalUrl: 'Renewal URL',
     renewalModalTitle: 'Edit Renewal Info',
     permanentFree: 'Permanent Free',
+    renew: 'Renew',
   },
 
   dnshe: {

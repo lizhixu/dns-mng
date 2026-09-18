@@ -243,7 +243,7 @@ func (s *EmailService) SendExpiryNotification(userID int64, domain models.Expiri
 <body>
     <div class="container">
         <div class="header">
-            <h2 style="margin: 0; color: #1f2937;">🔔 %s</h2>
+            <h2 style="margin: 0; color: #1f2937;">%s</h2>
         </div>
         <div class="content">
             <p>%s</p>
@@ -299,7 +299,7 @@ func (s *EmailService) TestEmailConfig(userID int64) error {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #3b82f6;">✅ %s</h2>
+        <h2 style="color: #3b82f6;">%s</h2>
         <p>%s</p>
         <p>%s</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">

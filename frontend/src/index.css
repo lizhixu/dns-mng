@@ -449,6 +449,45 @@ input[type="checkbox"] {
   }
 }
 
+/* Domain Card Renew Button */
+.btn-renew {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 10px;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background-color: var(--warning);
+  color: #000000;
+  border: 1px solid var(--warning);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-renew:hover {
+  background-color: #e59518;
+  border-color: #e59518;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.4);
+}
+
+.btn-renew-danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+.btn-renew-danger:hover {
+  background-color: #cc0000;
+  border-color: #cc0000;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
+}
+
 /* Tab Navigation - Vercel Underline Style */
 .tab-nav {
   display: flex;

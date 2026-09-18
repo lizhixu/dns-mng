@@ -314,17 +314,16 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                             href={msg.renewal_url}
                                             target="_blank"
                                             rel="noreferrer"
+                                            className={msg.days_remaining <= 7 ? 'btn-renew btn-renew-danger' : 'btn-renew'}
                                             style={{
-                                                fontSize: '12px',
-                                                color: 'var(--accent-primary)',
-                                                textDecoration: 'none',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
+                                                height: '24px',
+                                                padding: '0 8px',
+                                                fontSize: '11px',
                                                 gap: '3px',
                                             }}
                                         >
-                                            {t.messages.renewNow}
                                             <ExternalLink size={11} />
+                                            {t.messages.renewNow}
                                         </a>
                                     )}
                                 </div>

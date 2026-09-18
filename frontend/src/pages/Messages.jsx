@@ -276,17 +276,23 @@ const Messages = () => {
                                 }}>
                                     {msg.days_remaining >= 0 ? t.messages.daysRemaining.replace('{n}', msg.days_remaining) : `${Math.abs(msg.days_remaining)} 天前过期`}
                                 </span>
-                                {msg.renewal_url && (
-                                    <a
-                                        href={msg.renewal_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        style={{ fontSize: '11px', color: 'var(--accent-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
-                                    >
-                                        {t.messages.renewNow}
-                                        <ExternalLink size={10} />
-                                    </a>
-                                )}
+                                    {msg.renewal_url && (
+                                        <a
+                                            href={msg.renewal_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={msg.days_remaining <= 7 ? 'btn-renew btn-renew-danger' : 'btn-renew'}
+                                            style={{
+                                                height: '24px',
+                                                padding: '0 8px',
+                                                fontSize: '11px',
+                                                gap: '3px',
+                                            }}
+                                        >
+                                            <ExternalLink size={10} />
+                                            {t.messages.renewNow}
+                                        </a>
+                                    )}
                             </div>
                         </div>
 
