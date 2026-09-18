@@ -331,8 +331,7 @@ const DNSHE = () => {
             <div style={{ marginBottom: '1.5rem' }}>
                 <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Globe2 size={22} />
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', margin: 0 }}>
                             {t.dnshe.title}
                         </h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
