@@ -338,46 +338,30 @@ const AllDomains = () => {
                                             ) : domain.renewal_date && (() => {
                                                 const expiryInfo = getExpiryInfo(domain.renewal_date);
                                                 const days = expiryInfo?.days;
-                                                const isExpired = days !== null && days <= 0;
-                                                const isUrgent = days !== null && days > 0 && days <= 7;
-                                                const isWarning = days !== null && days > 7 && days <= 30;
-
-                                                let badgeClass = 'badge-neutral';
-                                                let badgeStyle = { gap: '0.25rem' };
-
-                                                if (isExpired) {
-                                                    badgeStyle = {
-                                                        gap: '0.25rem',
-                                                        backgroundColor: 'var(--danger)',
-                                                        color: '#ffffff',
-                                                        borderColor: 'var(--danger)',
-                                                        fontWeight: '600',
-                                                    };
-                                                } else if (isUrgent) {
-                                                    badgeStyle = {
-                                                        gap: '0.25rem',
-                                                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                                                        color: 'var(--danger)',
-                                                        borderColor: 'rgba(239, 68, 68, 0.4)',
-                                                        fontWeight: '600',
-                                                    };
-                                                } else if (isWarning) {
-                                                    badgeStyle = {
-                                                        gap: '0.25rem',
-                                                        backgroundColor: 'rgba(245, 166, 35, 0.15)',
-                                                        color: 'var(--warning)',
-                                                        borderColor: 'rgba(245, 166, 35, 0.4)',
-                                                        fontWeight: '600',
-                                                    };
+                                                let badgeClass = 'badge-expiry-normal';
+                                                if (days !== null) {
+                                                    if (days <= 0) {
+                                                        badgeClass = 'badge-expiry-expired';
+                                                    } else if (days <= 7) {
+                                                        badgeClass = 'badge-expiry-urgent';
+                                                    } else if (days <= 30) {
+                                                        badgeClass = 'badge-expiry-warning';
+                                                    }
                                                 }
 
                                                 return (
                                                     <>
                                                         <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>•</span>
-                                                        <span className="badge" style={badgeStyle}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => openRenewalModal(domain, e)}
+                                                            className={`badge badge-expiry ${badgeClass}`}
+                                                            style={{ gap: '0.25rem', cursor: 'pointer' }}
+                                                            title={t.allDomains.renewalModalTitle}
+                                                        >
                                                             <Calendar size={11} />
                                                             <span>{expiryInfo?.text || domain.renewal_date}</span>
-                                                        </span>
+                                                        </button>
                                                     </>
                                                 );
                                             })()}
@@ -403,23 +387,6 @@ const AllDomains = () => {
                                     </div>
                                 </div>
                                 <div className="domain-card-actions" style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                                    {domain.renewal_url && (() => {
-                                        const expiryInfo = getExpiryInfo(domain.renewal_date);
-                                        const days = expiryInfo?.days;
-                                        const isUrgent = days !== null && days <= 7;
-                                        return (
-                                            <a
-                                                href={domain.renewal_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className={isUrgent ? 'btn-renew btn-renew-danger' : 'btn-renew'}
-                                                title={domain.renewal_url}
-                                            >
-                                                <ExternalLink size={13} />
-                                                {t.allDomains.renew}
-                                            </a>
-                                        );
-                                    })()}
                                     <button
                                         onClick={(e) => openRenewalModal(domain, e)}
                                         className="btn btn-secondary"

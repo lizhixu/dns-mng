@@ -297,33 +297,46 @@ const MessagesModal = ({ isOpen, onClose, onUnreadCountChange }) => {
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                 }}>
-                                    <span style={{
-                                        fontSize: '11px',
-                                        color: getStatusColor(msg.days_remaining),
-                                        background: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '999px',
-                                        padding: '1px 8px',
-                                    }}>
-                                        {msg.days_remaining >= 0
-                                            ? t.messages.daysRemaining.replace('{n}', msg.days_remaining)
-                                            : (language === 'en' ? `${Math.abs(msg.days_remaining)} days ago` : `${Math.abs(msg.days_remaining)} 天前过期`)}
-                                    </span>
+                                    {(() => {
+                                        let badgeClass = 'badge-expiry-normal';
+                                        if (msg.days_remaining <= 0) {
+                                            badgeClass = 'badge-expiry-expired';
+                                        } else if (msg.days_remaining <= 7) {
+                                            badgeClass = 'badge-expiry-urgent';
+                                        } else if (msg.days_remaining <= 30) {
+                                            badgeClass = 'badge-expiry-warning';
+                                        }
+                                        return (
+                                            <span
+                                                className={`badge badge-expiry ${badgeClass}`}
+                                                style={{
+                                                    fontSize: '11px',
+                                                    padding: '1px 8px',
+                                                    borderRadius: '999px',
+                                                }}
+                                            >
+                                                {msg.days_remaining >= 0
+                                                    ? t.messages.daysRemaining.replace('{n}', msg.days_remaining)
+                                                    : (language === 'en' ? `${Math.abs(msg.days_remaining)} days ago` : `${Math.abs(msg.days_remaining)} 天前过期`)}
+                                            </span>
+                                        );
+                                    })()}
                                     {msg.renewal_url && (
                                         <a
                                             href={msg.renewal_url}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className={msg.days_remaining <= 7 ? 'btn-renew btn-renew-danger' : 'btn-renew'}
                                             style={{
-                                                height: '24px',
-                                                padding: '0 8px',
-                                                fontSize: '11px',
+                                                fontSize: '12px',
+                                                color: 'var(--accent-primary)',
+                                                textDecoration: 'none',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
                                                 gap: '3px',
                                             }}
                                         >
-                                            <ExternalLink size={11} />
                                             {t.messages.renewNow}
+                                            <ExternalLink size={11} />
                                         </a>
                                     )}
                                 </div>
