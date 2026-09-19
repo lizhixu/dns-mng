@@ -23,6 +23,9 @@ type Domain struct {
 	// UsesDNSHEDNS indicates whether the domain uses DNSHE's own DNS resolution.
 	// Only set for DNSHE-account domains. nil for non-DNSHE domains.
 	UsesDNSHEDNS *bool `json:"uses_dnshe_dns,omitempty"`
+	// Notification settings from notification_settings table (nil if not configured)
+	NotifyDaysBefore *int  `json:"notify_days_before,omitempty"`
+	NotifyEnabled    *bool `json:"notify_enabled,omitempty"`
 }
 
 // DomainCache represents cached domain data with renewal info

@@ -152,14 +152,20 @@ func (s *DomainCacheService) UpsertCache(userID, accountID int64, domainID, doma
 		}
 	}
 
-	// Update notification settings if provided
-	if req.NotifyDaysBefore > 0 {
-		notificationService := NewNotificationService()
-		notificationService.UpsertNotificationSetting(userID, accountID, domainID, &models.UpdateNotificationSettingRequest{
-			DaysBefore: req.NotifyDaysBefore,
-			Enabled:    req.NotifyEnabled,
-		})
-	}
+		// Update notification settings if provided
+		if req.NotifyDaysBefore > 0 {
+			notificationService := NewNotificationService()
+			notificationService.UpsertNotificationSetting(userID, accountID, domainID, &models.UpdateNotificationSettingRequest{
+				DaysBefore: req.NotifyDaysBefore,
+				Enabled:    req.NotifyEnabled,
+			})
+		} else if !req.NotifyEnabled {
+			// Explicitly disable notifications if NotifyDaysBefore is 0
+			_, _ = database.DB.Exec(
+				`UPDATE notification_settings SET enabled = 0, updated_at = ? WHERE user_id = ? AND account_id = ? AND domain_id = ?`,
+				now, userID, accountID, domainID,
+			)
+		}
 
 	return s.GetCache(userID, accountID, domainID)
 }

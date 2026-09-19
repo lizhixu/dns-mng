@@ -133,7 +133,7 @@ const AllDomains = () => {
             const payload = {
                 renewal_date: renewalForm.is_permanent_free ? 'permanent' : renewalForm.renewal_date,
                 renewal_url: renewalForm.renewal_url,
-                notify_days_before: renewalForm.notify_enabled ? renewalForm.notify_days_before : 0,
+                notify_days_before: renewalForm.notify_days_before,
                 notify_enabled: renewalForm.notify_enabled
             };
             
@@ -149,7 +149,9 @@ const AllDomains = () => {
                     return {
                         ...d,
                         renewal_date: payload.renewal_date,
-                        renewal_url: payload.renewal_url
+                        renewal_url: payload.renewal_url,
+                        notify_days_before: payload.notify_days_before,
+                        notify_enabled: payload.notify_enabled
                     };
                 }
                 return d;
@@ -324,8 +326,10 @@ const AllDomains = () => {
                                                 if (days !== null) {
                                                     if (days < 0) {
                                                         badgeClass = 'badge-danger';
-                                                    } else if (days <= 30) {
-                                                        badgeClass = 'badge-warning';
+                                                    } else if (domain.notify_enabled && typeof domain.notify_days_before === 'number') {
+                                                        if (days <= domain.notify_days_before) {
+                                                            badgeClass = 'badge-warning';
+                                                        }
                                                     }
                                                 }
 

@@ -78,15 +78,16 @@ func (s *DNSService) ListAllDomainsFromCache(ctx context.Context, userID int64) 
 		domains = append(domains, domain)
 	}
 
-	// 补充账户名称
-	for i := range domains {
-		if name, ok := accountMap[domains[i].AccountID]; ok {
-			domains[i].AccountName = name
+		// 补充账户名称
+		for i := range domains {
+			if name, ok := accountMap[domains[i].AccountID]; ok {
+				domains[i].AccountName = name
+			}
 		}
-	}
 
-	return domains, nil
-}
+		s.populateNotificationSettings(userID, domains)
+		return domains, nil
+	}
 
 // ListAllDomainsFromProvider fetches domains from DNS providers and updates cache
 func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int64) ([]models.Domain, error) {
@@ -192,6 +193,7 @@ func (s *DNSService) ListAllDomainsFromProvider(ctx context.Context, userID int6
 		filtered = append(filtered, d)
 	}
 
+	s.populateNotificationSettings(userID, filtered)
 	return filtered, nil
 }
 func (s *DNSService) listDomainsFromProviderForAccount(ctx context.Context, userID int64, account models.Account) ([]models.Domain, []string, error) {
@@ -354,16 +356,17 @@ func (s *DNSService) ListDomainsFromCache(ctx context.Context, userID, accountID
 				uses := cache.UsesDNSHEDNS
 				domain.UsesDNSHEDNS = &uses
 			}
-			domains = append(domains, domain)
+				domains = append(domains, domain)
+			}
 		}
+
+		s.populateNotificationSettings(userID, domains)
+		return domains, nil
 	}
 
-	return domains, nil
-}
-
-// ListDomainsFromProvider fetches domains from DNS provider and updates cache
-// Returns domains and a list of domain IDs that exist in cache but not in provider (should be soft deleted)
-func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accountID int64) ([]models.Domain, []string, error) {
+	// ListDomainsFromProvider fetches domains from DNS provider and updates cache
+	// Returns domains and a list of domain IDs that exist in cache but not in provider (should be soft deleted)
+	func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accountID int64) ([]models.Domain, []string, error) {
 	account, err := s.accountService.Get(userID, accountID)
 	if err != nil {
 		return nil, nil, err
@@ -437,76 +440,79 @@ func (s *DNSService) ListDomainsFromProvider(ctx context.Context, userID, accoun
 					}
 				}
 				// Always save to cache (UpsertCache preserves existing renewal info when new values are empty)
-				s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
-					RenewalDate: domains[i].RenewalDate,
-					RenewalURL:  domains[i].RenewalURL,
-				})
+					s.domainCacheService.UpsertCache(userID, domains[i].AccountID, domains[i].ID, domains[i].Name, &models.UpdateDomainCacheRequest{
+						RenewalDate: domains[i].RenewalDate,
+						RenewalURL:  domains[i].RenewalURL,
+					})
+				}
 			}
 		}
+
+		s.populateNotificationSettings(userID, domains)
+		return domains, domainsToDelete, nil
 	}
 
-	return domains, domainsToDelete, nil
-}
-
-func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, domainID string) (*models.Domain, error) {
-	// 先获取账户判断是否 DNSHE
-	account, err := s.accountService.Get(userID, accountID)
-	if err != nil {
-		return nil, err
-	}
-	isDNSHE := account.ProviderType == "dnshe"
-
-	// 优先从缓存读取
-	if s.domainCacheService != nil {
-		cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
-		if err == nil && cache != nil {
-			domain := &models.Domain{
-				ID:          cache.DomainID,
-				Name:        cache.DomainName,
-				AccountID:   cache.AccountID,
-				RenewalDate: cache.RenewalDate,
-				RenewalURL:  cache.RenewalURL,
-				CacheSynced: true,
-			}
-			if cache.ProviderUpdatedOn != nil {
-				domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
-			}
-			// 补充账户名称
-			domain.AccountName = account.Name
-			if isDNSHE {
-				uses := cache.UsesDNSHEDNS
-				domain.UsesDNSHEDNS = &uses
-			}
-			return domain, nil
+	func (s *DNSService) GetDomain(ctx context.Context, userID, accountID int64, domainID string) (*models.Domain, error) {
+		// 先获取账户判断是否 DNSHE
+		account, err := s.accountService.Get(userID, accountID)
+		if err != nil {
+			return nil, err
 		}
-	}
+		isDNSHE := account.ProviderType == "dnshe"
 
-	// 缓存未命中，从供应商获取
-	p, err := provider.Get(account.ProviderType)
-	if err != nil {
-		return nil, err
-	}
-
-	domain, err := p.GetDomain(ctx, account.APIKey, domainID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Merge domain cache data
-	if s.domainCacheService != nil && domain != nil {
-		cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
-		if err == nil && cache != nil {
-			domain.RenewalDate = cache.RenewalDate
-			domain.RenewalURL = cache.RenewalURL
-			domain.CacheSynced = true
-			if isDNSHE {
-				uses := cache.UsesDNSHEDNS
-				domain.UsesDNSHEDNS = &uses
+		// 优先从缓存读取
+		if s.domainCacheService != nil {
+			cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
+			if err == nil && cache != nil {
+				domain := &models.Domain{
+					ID:          cache.DomainID,
+					Name:        cache.DomainName,
+					AccountID:   cache.AccountID,
+					RenewalDate: cache.RenewalDate,
+					RenewalURL:  cache.RenewalURL,
+					CacheSynced: true,
+				}
+				if cache.ProviderUpdatedOn != nil {
+					domain.UpdatedOn = cache.ProviderUpdatedOn.Format("2006-01-02T15:04:05Z")
+				}
+				// 补充账户名称
+				domain.AccountName = account.Name
+				if isDNSHE {
+					uses := cache.UsesDNSHEDNS
+					domain.UsesDNSHEDNS = &uses
+				}
+				s.populateSingleDomainNotification(userID, accountID, domain)
+				return domain, nil
 			}
 		}
-	}
 
-	return domain, nil
+		// 缓存未命中，从供应商获取
+		p, err := provider.Get(account.ProviderType)
+		if err != nil {
+			return nil, err
+		}
+
+		domain, err := p.GetDomain(ctx, account.APIKey, domainID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Merge domain cache data
+		if s.domainCacheService != nil && domain != nil {
+			cache, err := s.domainCacheService.GetCache(userID, accountID, domainID)
+			if err == nil && cache != nil {
+				domain.RenewalDate = cache.RenewalDate
+				domain.RenewalURL = cache.RenewalURL
+				domain.CacheSynced = true
+				if isDNSHE {
+					uses := cache.UsesDNSHEDNS
+					domain.UsesDNSHEDNS = &uses
+				}
+			}
+		}
+
+		s.populateSingleDomainNotification(userID, accountID, domain)
+		return domain, nil
 }
 
 func (s *DNSService) ListRecords(ctx context.Context, userID, accountID int64, domainID string) ([]models.Record, error) {
@@ -663,4 +669,45 @@ func (s *DNSService) BatchRestoreDomains(ctx context.Context, userID int64, item
 	}
 
 	return s.domainCacheService.BatchRestoreCache(userID, items)
+}
+
+func (s *DNSService) populateNotificationSettings(userID int64, domains []models.Domain) {
+	if len(domains) == 0 {
+		return
+	}
+	notificationService := NewNotificationService()
+	settings, err := notificationService.GetAllNotificationSettings(userID)
+	if err != nil || len(settings) == 0 {
+		return
+	}
+
+	settingMap := make(map[string]models.NotificationSetting, len(settings))
+	for _, st := range settings {
+		key := fmt.Sprintf("%d:%s", st.AccountID, st.DomainID)
+		settingMap[key] = st
+	}
+
+	for i := range domains {
+		key := fmt.Sprintf("%d:%s", domains[i].AccountID, domains[i].ID)
+		if st, ok := settingMap[key]; ok {
+			days := st.DaysBefore
+			enabled := st.Enabled
+			domains[i].NotifyDaysBefore = &days
+			domains[i].NotifyEnabled = &enabled
+		}
+	}
+}
+
+func (s *DNSService) populateSingleDomainNotification(userID, accountID int64, domain *models.Domain) {
+	if domain == nil {
+		return
+	}
+	notificationService := NewNotificationService()
+	setting, err := notificationService.GetNotificationSetting(userID, accountID, domain.ID)
+	if err == nil && setting != nil {
+		days := setting.DaysBefore
+		enabled := setting.Enabled
+		domain.NotifyDaysBefore = &days
+		domain.NotifyEnabled = &enabled
+	}
 }
