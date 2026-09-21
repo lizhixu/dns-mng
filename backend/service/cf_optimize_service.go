@@ -124,14 +124,7 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 
 	cleanHost := cleanSubdomain(hostname, zoneName)
 	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
-
-	cnameSeg := getCNAMESegment(cnameTarget)
-	baseIntermediate := extractBaseIntermediatePrefix(cleanIntermediate, cnameSeg)
-	if cnameSeg != "" {
-		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, baseIntermediate)
-	} else {
-		cleanIntermediate = baseIntermediate
-	}
+	cleanIntermediate = extractBaseIntermediatePrefix(cleanIntermediate, getCNAMESegment(cnameTarget))
 
 	// 2. Find zone by name
 	zone, err := s.client.GetZoneByName(ctx, apiToken, zoneName)
@@ -625,20 +618,6 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 	}
 	intermediatePrefix := strings.TrimSpace(req.IntermediatePrefix)
 
-	// Clean intermediate prefix subdomain
-	cleanSubdomain := func(sub, zone string) string {
-		subLower := strings.ToLower(sub)
-		zoneLower := strings.ToLower(zone)
-		if subLower == zoneLower || sub == "@" || sub == "" {
-			return ""
-		}
-		suffix := "." + zoneLower
-		if strings.HasSuffix(subLower, suffix) {
-			return sub[:len(sub)-len(suffix)]
-		}
-		return sub
-	}
-
 	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
 	cleanHost := cleanSubdomain(config.CustomHostname, zoneName)
 	originRecordName := "origin." + zoneName
@@ -649,12 +628,7 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 	oldCnameSeg := getCNAMESegment(config.CnameTarget)
 	newCnameSeg := getCNAMESegment(cnameTarget)
 
-	baseIntermediate := extractBaseIntermediatePrefix(cleanIntermediate, oldCnameSeg, newCnameSeg)
-	if newCnameSeg != "" {
-		cleanIntermediate = fmt.Sprintf("%s-%s", newCnameSeg, baseIntermediate)
-	} else {
-		cleanIntermediate = baseIntermediate
-	}
+	cleanIntermediate = extractBaseIntermediatePrefix(cleanIntermediate, oldCnameSeg, newCnameSeg)
 	intermediateRecordName := fmt.Sprintf("%s.%s", cleanIntermediate, zoneName)
 
 	// Fetch all existing records in the zone for smart reuse/updating
@@ -717,6 +691,7 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 	intermediateRecordID := config.IntermediateRecordID
 	intermediateChanged := (intermediateRecordName != config.IntermediateRecordName)
 	targetChanged := (cnameTarget != config.CnameTarget)
+	syncSharedIntermediateTargetID := ""
 
 	if intermediateChanged || targetChanged {
 		if intermediateChanged {
@@ -743,8 +718,10 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 						return nil, fmt.Errorf("failed to update intermediate CNAME record: %w", err)
 					}
 					intermediateRecordID = updated.ID
+					syncSharedIntermediateTargetID = updated.ID
 				} else {
 					intermediateRecordID = existingNewInter.ID
+					syncSharedIntermediateTargetID = existingNewInter.ID
 				}
 			} else {
 				log.Printf("[CF Optimize] Creating new intermediate CNAME record: %s -> %s", intermediateRecordName, cnameTarget)
@@ -762,6 +739,7 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 				if err != nil {
 					return nil, fmt.Errorf("failed to update intermediate CNAME record: %w", err)
 				}
+				syncSharedIntermediateTargetID = intermediateRecordID
 			}
 		}
 	}
@@ -778,6 +756,17 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 
 	// 6. Save changes to DB
 	now := time.Now()
+	if syncSharedIntermediateTargetID != "" {
+		_, err = database.DB.Exec(
+			`UPDATE cf_optimize SET cname_target = ?, updated_at = ?
+			 WHERE zone_id = ? AND intermediate_record_id = ? AND id != ?`,
+			cnameTarget, now, zoneID, syncSharedIntermediateTargetID, configID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to sync shared intermediate CNAME target: %w", err)
+		}
+	}
+
 	_, err = database.DB.Exec(
 		`UPDATE cf_optimize 
 		 SET origin_ip = ?, origin_record_name = ?, origin_record_id = ?, cname_target = ?, 
