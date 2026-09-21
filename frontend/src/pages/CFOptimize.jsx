@@ -7,6 +7,45 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { useLanguage } from '../LanguageContext';
 import useMediaQuery from '../hooks/useMediaQuery';
 
+const extractBaseIntermediatePrefix = (recordName, zoneName, cnameTarget) => {
+    if (!recordName) return 'saas';
+    let prefix = recordName;
+    if (zoneName) {
+        const zoneRegex = new RegExp('\\.?' + zoneName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+        prefix = prefix.replace(zoneRegex, '');
+    } else {
+        prefix = prefix.split('.')[0];
+    }
+    prefix = prefix.trim().toLowerCase();
+    if (!prefix) return 'saas';
+
+    const knownSegments = ['cloudflare-dl', 'cloudflare', 'cf'];
+    if (cnameTarget) {
+        const seg = cnameTarget.split('.')[0].trim().toLowerCase();
+        if (seg && !knownSegments.includes(seg)) {
+            knownSegments.push(seg);
+        }
+    }
+
+    knownSegments.sort((a, b) => b.length - a.length);
+
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const seg of knownSegments) {
+            const target = seg + '-';
+            if (prefix.startsWith(target)) {
+                prefix = prefix.slice(target.length);
+                changed = true;
+                break;
+            }
+        }
+    }
+
+    prefix = prefix.replace(/^-+|-+$/g, '');
+    return prefix || 'saas';
+};
+
 const CFOptimize = () => {
     const { t } = useLanguage();
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -91,7 +130,7 @@ const CFOptimize = () => {
                 hostname: config.custom_hostname ? config.custom_hostname.split('.')[0] : '',
                 origin_ip: config.origin_ip,
                 cname_target: config.cname_target,
-                intermediate_prefix: config.intermediate_record_name ? config.intermediate_record_name.split('.')[0] : 'saas',
+                intermediate_prefix: extractBaseIntermediatePrefix(config.intermediate_record_name, config.zone_name, config.cname_target),
             });
             const isPreset = cnamePresets.some(p => p.value === config.cname_target);
             setCnameMode(isPreset ? 'preset' : 'custom');

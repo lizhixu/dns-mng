@@ -8,6 +8,7 @@ import (
 	"dns-mng/provider/cloudflare"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 )
@@ -34,6 +35,71 @@ func findRecord(records []cloudflare.Record, name, recordType string) *cloudflar
 	return nil
 }
 
+// cleanSubdomain extracts subdomain prefix if full domain is provided
+func cleanSubdomain(sub, zone string) string {
+	subLower := strings.ToLower(strings.TrimSpace(sub))
+	zoneLower := strings.ToLower(strings.TrimSpace(zone))
+	if subLower == zoneLower || subLower == "@" || subLower == "" {
+		return ""
+	}
+	suffix := "." + zoneLower
+	if strings.HasSuffix(subLower, suffix) {
+		return sub[:len(sub)-len(suffix)]
+	}
+	return sub
+}
+
+// getCNAMESegment extracts first segment of CNAME target
+func getCNAMESegment(cname string) string {
+	cname = strings.TrimSpace(strings.ToLower(cname))
+	parts := strings.Split(cname, ".")
+	if len(parts) > 0 && parts[0] != "" {
+		return parts[0]
+	}
+	return ""
+}
+
+// extractBaseIntermediatePrefix extracts the base intermediate prefix by stripping
+// any existing CNAME segments (such as "cloudflare-", "cf-", or custom target segments)
+func extractBaseIntermediatePrefix(prefix string, extraSegs ...string) string {
+	prefix = strings.TrimSpace(strings.ToLower(prefix))
+	if prefix == "" {
+		return "saas"
+	}
+
+	knownSegs := []string{"cloudflare-dl", "cloudflare", "cf"}
+	for _, seg := range extraSegs {
+		seg = strings.TrimSpace(strings.ToLower(seg))
+		if seg != "" {
+			knownSegs = append(knownSegs, seg)
+		}
+	}
+
+	// Sort by length descending to match longer prefixes first (e.g. cloudflare-dl before cloudflare)
+	sort.Slice(knownSegs, func(i, j int) bool {
+		return len(knownSegs[i]) > len(knownSegs[j])
+	})
+
+	changed := true
+	for changed {
+		changed = false
+		for _, seg := range knownSegs {
+			target := seg + "-"
+			if strings.HasPrefix(prefix, target) {
+				prefix = strings.TrimPrefix(prefix, target)
+				changed = true
+				break
+			}
+		}
+	}
+
+	prefix = strings.Trim(prefix, "-")
+	if prefix == "" {
+		return "saas"
+	}
+	return prefix
+}
+
 // Create performs one-click CDN optimization
 func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID int64, req *models.CreateCFOptimizeRequest) (*models.CFOptimize, error) {
 	// 1. Get account and verify ownership
@@ -56,39 +122,15 @@ func (s *CFOptimizeService) Create(ctx context.Context, userID int64, accountID 
 		cnameTarget = "cloudflare.468123.xyz"
 	}
 
-	// Helper to extract subdomain prefix if full domain is provided
-	cleanSubdomain := func(sub, zone string) string {
-		subLower := strings.ToLower(sub)
-		zoneLower := strings.ToLower(zone)
-		if subLower == zoneLower || sub == "@" || sub == "" {
-			return ""
-		}
-		suffix := "." + zoneLower
-		if strings.HasSuffix(subLower, suffix) {
-			return sub[:len(sub)-len(suffix)]
-		}
-		return sub
-	}
-
 	cleanHost := cleanSubdomain(hostname, zoneName)
 	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
-	if cleanIntermediate == "" {
-		cleanIntermediate = "saas"
-	}
-
-	// Helper to extract first segment of CNAME target
-	getCNAMESegment := func(cname string) string {
-		cname = strings.TrimSpace(strings.ToLower(cname))
-		parts := strings.Split(cname, ".")
-		if len(parts) > 0 && parts[0] != "" {
-			return parts[0]
-		}
-		return ""
-	}
 
 	cnameSeg := getCNAMESegment(cnameTarget)
+	baseIntermediate := extractBaseIntermediatePrefix(cleanIntermediate, cnameSeg)
 	if cnameSeg != "" {
-		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, cleanIntermediate)
+		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, baseIntermediate)
+	} else {
+		cleanIntermediate = baseIntermediate
 	}
 
 	// 2. Find zone by name
@@ -598,28 +640,20 @@ func (s *CFOptimizeService) Update(ctx context.Context, userID, configID int64, 
 	}
 
 	cleanIntermediate := cleanSubdomain(intermediatePrefix, zoneName)
-	if cleanIntermediate == "" {
-		cleanIntermediate = "saas"
-	}
-
 	cleanHost := cleanSubdomain(config.CustomHostname, zoneName)
 	originRecordName := "origin." + zoneName
 	if cleanHost != "" {
 		originRecordName = fmt.Sprintf("origin-%s.%s", cleanHost, zoneName)
 	}
 
-	getCNAMESegment := func(cname string) string {
-		cname = strings.TrimSpace(strings.ToLower(cname))
-		parts := strings.Split(cname, ".")
-		if len(parts) > 0 && parts[0] != "" {
-			return parts[0]
-		}
-		return ""
-	}
+	oldCnameSeg := getCNAMESegment(config.CnameTarget)
+	newCnameSeg := getCNAMESegment(cnameTarget)
 
-	cnameSeg := getCNAMESegment(cnameTarget)
-	if cnameSeg != "" {
-		cleanIntermediate = fmt.Sprintf("%s-%s", cnameSeg, cleanIntermediate)
+	baseIntermediate := extractBaseIntermediatePrefix(cleanIntermediate, oldCnameSeg, newCnameSeg)
+	if newCnameSeg != "" {
+		cleanIntermediate = fmt.Sprintf("%s-%s", newCnameSeg, baseIntermediate)
+	} else {
+		cleanIntermediate = baseIntermediate
 	}
 	intermediateRecordName := fmt.Sprintf("%s.%s", cleanIntermediate, zoneName)
 
